@@ -1,12 +1,14 @@
+import { useState, useEffect } from 'react';
+
 const LoadingPage = () => {
-  // 필요시 자동 페이지 이동 구현
-  // const navigate = useNavigate();
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     navigate('/login');
-  //   }, 3000);
-  //   return () => clearTimeout(timer);
-  // }, [navigate]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -22,18 +24,57 @@ const LoadingPage = () => {
         <div className="h-16 bg-[#949494] mt-8"></div>
 
         {/* 중앙 콘텐츠 */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4">
+        <div className="flex-1 flex flex-col items-center px-4 justify-start pt-12">
           {/* STARRY 로고 이미지 */}
           <img
             src="/Logo.png"
             alt="STARRY"
-            className="w-64 md:w-96 mb-2 drop-shadow-2xl"
+            className={`mb-2 drop-shadow-2xl transition-all duration-1000 ease-out ${
+              isLoaded ? 'w-32 md:w-40 translate-y-0' : 'w-64 md:w-96 translate-y-[calc(50vh-12rem)]'
+            }`}
           />
 
           {/* 서브타이틀 */}
-          <p className="text-white text-lg md:text-xl font-normal tracking-wide">
+          <p className={`text-white font-normal tracking-wide transition-all duration-1000 ease-out ${
+            isLoaded ? 'text-sm md:text-base mb-8 translate-y-0' : 'text-lg md:text-xl translate-y-[calc(50vh-12rem)]'
+          }`}>
             당신을 닮은, 단 하나의 별자리
           </p>
+
+          {/* 로그인 폼 */}
+          {isLoaded && (
+            <div className="w-full max-w-sm space-y-4 animate-fade-in">
+              {/* 이메일 입력 */}
+              <input
+                type="email"
+                placeholder="이메일"
+                className="w-full px-4 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+
+              {/* 비밀번호 입력 */}
+              <input
+                type="password"
+                placeholder="비밀번호"
+                className="w-full px-4 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+
+              {/* 로그인 버튼 */}
+              <button className="w-full py-3 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
+                로그인
+              </button>
+
+              {/* 간편 로그인 */}
+              <div className="text-center">
+                <p className="text-white/70 text-sm mb-3">간편 로그인</p>
+                <div className="flex justify-center space-x-4">
+                  <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
+                  <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
+                  <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
+                  <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 하단 정보 */}

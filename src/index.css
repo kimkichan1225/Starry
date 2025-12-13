@@ -22,12 +22,27 @@
     animation: glow 2s ease-in-out infinite alternate;
   }
 
+  .animate-fade-in {
+    animation: fadeInUp 0.8s ease-out;
+  }
+
   @keyframes glow {
     from {
       text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ffd700;
     }
     to {
       text-shadow: 0 0 20px #fff, 0 0 30px #ffd700, 0 0 40px #ffd700;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }
