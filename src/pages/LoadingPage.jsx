@@ -49,14 +49,14 @@ const LoadingPage = () => {
               <input
                 type="email"
                 placeholder="이메일"
-                className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
 
               {/* 비밀번호 입력 */}
               <input
                 type="password"
                 placeholder="비밀번호"
-                className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
 
               {/* 로그인 버튼 */}
