@@ -24,26 +24,27 @@ const LoadingPage = () => {
         <div className="h-16 bg-[#949494] mt-8"></div>
 
         {/* 중앙 콘텐츠 */}
-        <div className="flex-1 flex flex-col items-center px-4 justify-start pt-12">
+        <div className="flex-1 flex flex-col items-center px-4 justify-center">
           {/* STARRY 로고 이미지 */}
           <img
             src="/Logo.png"
             alt="STARRY"
             className={`mb-2 drop-shadow-2xl transition-all duration-1000 ease-out ${
-              isLoaded ? 'w-32 md:w-40 translate-y-0' : 'w-64 md:w-96 translate-y-[calc(50vh-12rem)]'
+              isLoaded ? 'w-32 md:w-40' : 'w-64 md:w-96'
             }`}
           />
 
           {/* 서브타이틀 */}
           <p className={`text-white font-normal tracking-wide transition-all duration-1000 ease-out ${
-            isLoaded ? 'text-sm md:text-base mb-8 translate-y-0' : 'text-lg md:text-xl translate-y-[calc(50vh-12rem)]'
+            isLoaded ? 'text-xs md:text-base mb-8' : 'text-lg md:text-xl'
           }`}>
             당신을 닮은, 단 하나의 별자리
           </p>
 
           {/* 로그인 폼 */}
-          {isLoaded && (
-            <div className="w-full max-w-sm space-y-4 animate-fade-in">
+          <div className={`w-full max-w-sm space-y-4 transition-all duration-1000 ease-out overflow-hidden ${
+            isLoaded ? 'max-h-[500px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-20'
+          }`}>
               {/* 이메일 입력 */}
               <input
                 type="email"
@@ -65,7 +66,11 @@ const LoadingPage = () => {
 
               {/* 간편 로그인 */}
               <div className="text-center">
-                <p className="text-white/70 text-sm mb-3">간편 로그인</p>
+                <div className="flex items-center mb-3 text-white/70 text-xs">
+                  <div className="flex-1 h-px bg-white"></div>
+                  <span className="px-2">간편 로그인</span>
+                  <div className="flex-1 h-px bg-white"></div>
+                </div>
                 <div className="flex justify-center space-x-4">
                   <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
                   <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
@@ -73,8 +78,7 @@ const LoadingPage = () => {
                   <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* 하단 정보 */}
