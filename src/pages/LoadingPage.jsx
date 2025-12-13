@@ -24,7 +24,26 @@ const LoadingPage = () => {
         <div className="h-16 bg-[#949494] mt-8"></div>
 
         {/* 중앙 콘텐츠 */}
-        <div className="flex-1 flex flex-col items-center px-4 justify-center">
+        <div className="flex-1 flex flex-col items-center px-4 justify-center relative">
+          {/* 언어 선택 버튼 */}
+          <button className={`absolute top-6 left-6 flex items-center space-x-0.5 text-white/80 hover:text-white transition-all duration-500 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* 바깥 원 */}
+              <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+              {/* 가로선 (위) */}
+              <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+              {/* 가로선 (중앙) */}
+              <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+              {/* 가로선 (아래) */}
+              <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+              {/* 세로 곡선 */}
+              <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+            </svg>
+            <span className="text-sm font-light -translate-y-[0.1rem]">English</span>
+          </button>
+
           {/* STARRY 로고 이미지 */}
           <img
             src="/Logo.png"
