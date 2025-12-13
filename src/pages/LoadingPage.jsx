@@ -42,30 +42,30 @@ const LoadingPage = () => {
           </p>
 
           {/* 로그인 폼 */}
-          <div className={`w-full max-w-sm space-y-4 transition-all duration-1000 ease-out overflow-hidden ${
-            isLoaded ? 'max-h-[500px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-20'
+          <div className={`w-full max-w-[280px] space-y-4 transition-all duration-1000 ease-out overflow-hidden ${
+            isLoaded ? 'max-h-[700px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-20'
           }`}>
               {/* 이메일 입력 */}
               <input
                 type="email"
                 placeholder="이메일"
-                className="w-full px-4 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
 
               {/* 비밀번호 입력 */}
               <input
                 type="password"
                 placeholder="비밀번호"
-                className="w-full px-4 py-3 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
 
               {/* 로그인 버튼 */}
-              <button className="w-full py-3 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
+              <button className="w-full py-3 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
                 로그인
               </button>
 
               {/* 간편 로그인 */}
-              <div className="text-center">
+              <div className="text-center !mt-10">
                 <div className="flex items-center mb-3 text-white/70 text-xs">
                   <div className="flex-1 h-px bg-white"></div>
                   <span className="px-2">간편 로그인</span>
