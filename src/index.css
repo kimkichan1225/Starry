@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply m-0 min-h-screen bg-starry-dark text-white antialiased;
+  }
+
+  * {
+    @apply box-border;
+  }
+}
+
+@layer components {
+  /* 커스텀 컴포넌트 스타일은 여기에 추가 */
+}
+
+@layer utilities {
+  /* 커스텀 유틸리티는 여기에 추가 */
+  .star-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ffd700;
+    }
+    to {
+      text-shadow: 0 0 20px #fff, 0 0 30px #ffd700, 0 0 40px #ffd700;
+    }
+  }
+}
