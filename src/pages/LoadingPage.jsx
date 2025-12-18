@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LoadingPage = () => {
+  const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -95,6 +97,18 @@ const LoadingPage = () => {
                   <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
                   <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
                   <button className="w-14 h-14 rounded-2xl bg-gray-300 hover:bg-gray-400 transition-colors"></button>
+                </div>
+
+                {/* 회원가입 / 이메일/비밀번호 찾기 */}
+                <div className="flex items-center justify-center space-x-2 mt-4 text-white/80 text-[10px]">
+                  <button
+                    onClick={() => navigate('/signup')}
+                    className="hover:text-white transition-colors"
+                  >
+                    회원가입
+                  </button>
+                  <span className="text-white/40"></span>
+                  <button className="hover:text-white transition-colors">이메일/비밀번호 찾기</button>
                 </div>
               </div>
           </div>
