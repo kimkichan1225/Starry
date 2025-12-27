@@ -24,9 +24,9 @@ function MainPage() {
         </div>
 
         {/* 상단 네비게이션 */}
-        <nav className="bg-[#2d3142] px-4 py-3 flex justify-between items-center shadow-md">
+        <nav className="px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="text-yellow-400 text-xl">⭐</span>
+            <span className="text-white text-xl">⭐</span>
             <span className="text-white font-medium text-sm">User1 님의 밤하늘</span>
           </div>
           <button className="text-white text-2xl leading-none">
@@ -40,7 +40,7 @@ function MainPage() {
         </div>
 
         {/* 플로팅 버튼들 */}
-        <div className="fixed right-4 top-[25rem] flex flex-col gap-3 z-20">
+        <div className="absolute right-4 top-[25rem] flex flex-col gap-3 z-20">
           {/* 공유 버튼 */}
           <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition">
             <svg className="w-7 h-7 text-[#6155F5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
