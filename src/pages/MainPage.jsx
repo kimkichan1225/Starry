@@ -41,15 +41,26 @@ function MainPage() {
 
         {/* 플로팅 버튼들 */}
         <div className="fixed right-4 top-[28rem] flex flex-col gap-3 z-20">
+          {/* 이미지 캡쳐 버튼 */}
           <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition border-2 border-purple-400">
-            <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              {/* 왼쪽 상단 모서리 */}
+              <path strokeLinecap="round" d="M4 9V6a2 2 0 012-2h3" />
+              {/* 오른쪽 상단 모서리 */}
+              <path strokeLinecap="round" d="M15 4h3a2 2 0 012 2v3" />
+              {/* 왼쪽 하단 모서리 */}
+              <path strokeLinecap="round" d="M4 15v3a2 2 0 002 2h3" />
+              {/* 오른쪽 하단 모서리 */}
+              <path strokeLinecap="round" d="M15 20h3a2 2 0 002-2v-3" />
+              {/* 중앙 카메라 렌즈 */}
+              <circle cx="12" cy="12" r="3" strokeWidth="2" />
+              <circle cx="12" cy="12" r="1" fill="currentColor" />
             </svg>
           </button>
+          {/* 밤하늘 제작 버튼 */}
           <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition">
             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
         </div>
