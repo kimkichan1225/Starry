@@ -34,34 +34,39 @@ function MainPage() {
           </button>
         </nav>
 
+        {/* 별자리 표시 영역 */}
+        <div className="relative min-h-[430px] flex items-center justify-center py-8">
+          {/* 여기에 별자리 시각화가 들어갈 예정 */}
+        </div>
+
         {/* 플로팅 버튼들 */}
-        <div className="fixed right-4 top-24 flex flex-col gap-3 z-20">
-          <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition">
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="fixed right-4 top-[28rem] flex flex-col gap-3 z-20">
+          <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition border-2 border-purple-400">
+            <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
-          <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition">
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition">
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
           </button>
         </div>
 
-        {/* 흰색 컨텐츠 카드 */}
-        <div className="flex-1 bg-white rounded-t-[24px] mt-6 px-4 py-6 pb-8">
-          {/* 별자리 선택 드롭다운 */}
-          <div className="mb-6">
+        {/* 메인 컨텐츠 영역 */}
+        <div className="flex-1 px-4 pb-8">
+          {/* 별자리 선택 드롭다운 - Pill 형태 */}
+          <div className="mb-4">
             <select
               value={selectedConstellation}
               onChange={(e) => setSelectedConstellation(e.target.value)}
-              className="w-full px-4 py-3 bg-white rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none appearance-none cursor-pointer text-sm"
+              className="w-full px-5 py-3 bg-white rounded-full shadow-md border-none focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none cursor-pointer text-sm font-medium"
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234F46E5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
-                backgroundSize: '1.5rem'
+                backgroundPosition: 'right 1rem center',
+                backgroundSize: '1.25rem'
               }}
             >
               <option>ABCD만 EFG대서대</option>
@@ -70,13 +75,13 @@ function MainPage() {
             </select>
           </div>
 
-          {/* 선물받은 별들 섹션 */}
-          <div className="mb-6">
+          {/* 선물받은 별들 섹션 - 독립된 카드 */}
+          <div className="bg-white rounded-3xl shadow-lg p-5 mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-base font-medium">
                 <span className="text-purple-600">User1님의 선물받은 별들</span>
               </h2>
-              <span className="text-gray-500 text-sm">01 / 02</span>
+              <span className="text-gray-500 text-sm">11 / 20</span>
             </div>
 
             {/* 카드 그리드 */}
@@ -102,9 +107,9 @@ function MainPage() {
             </div>
           </div>
 
-          {/* 로그인 안내 박스 */}
-          <div className="border-2 border-dashed border-gray-400 rounded-xl p-6 mb-6">
-            <div className="flex flex-col items-center gap-2 text-center">
+          {/* 로그인 안내 박스 - 독립된 카드 */}
+          <div className="bg-white rounded-3xl shadow-lg p-6 mb-6">
+            <div className="flex flex-col items-center gap-2 text-center border-2 border-dashed border-gray-300 rounded-xl p-6">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -115,13 +120,29 @@ function MainPage() {
             </div>
           </div>
 
-          {/* 푸터 */}
-          <footer className="text-center text-gray-600 text-xs space-y-1">
-            <div className="font-bold text-gray-800 text-base mb-2">STAR=SY</div>
-            <div className="text-[10px]">문의 이메일 | starsy.official@gmail.com</div>
-            <div className="text-[10px]">사이트 문의 | https://www.instagram.com</div>
-            <div className="pt-2 text-gray-500 text-[10px]">
-              Copyright ⓒ STAR=SY. All rights reserved.
+          {/* 푸터 - 독립된 카드 */}
+          <footer className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg pb-6 pt-4 px-6 text-center">
+            <div className="flex items-center justify-center space-x-4 text-gray-600 text-sm">
+              <img
+                src="/Logo(Black).png"
+                alt="STARRY"
+                className="h-3 -translate-y-[11px]"
+              />
+              <div className="h-6 w-px bg-gray-400 -translate-y-[11px]"></div>
+              <div className="text-left space-y-1">
+                <div className="text-[9px] leading-snug">
+                  광고 문의: 123456789@gmail.com <br />
+                  Copyright ©2025 123456789. All rights reserved.
+                </div>
+                {/* 개발자/디자이너 정보 */}
+                <div className="text-gray-500 text-[9px] flex items-center space-x-1">
+                  <span className="font-semibold text-gray-700">개발자</span>
+                  <span>김기찬</span>
+                  <span className="text-gray-400">·</span>
+                  <span className="font-semibold text-gray-700">디자이너</span>
+                  <span>김태희</span>
+                </div>
+              </div>
             </div>
           </footer>
         </div>
