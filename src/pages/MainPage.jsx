@@ -10,7 +10,7 @@ function MainPage() {
   }));
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       {/* 배경 이미지 */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -18,14 +18,18 @@ function MainPage() {
       ></div>
 
       {/* 메인 콘텐츠 */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* 광고 배너 영역 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
+        </div>
+
         {/* 상단 네비게이션 */}
-        <nav className="bg-[#2d3142] px-4 py-3 flex justify-between items-center">
+        <nav className="bg-[#2d3142] px-4 py-3 flex justify-between items-center shadow-md">
           <div className="flex items-center gap-2">
             <span className="text-yellow-400 text-xl">⭐</span>
-            <span className="text-white font-medium">User1 님의 밤하늘</span>
+            <span className="text-white font-medium text-sm">User1 님의 밤하늘</span>
           </div>
-          <button className="text-white text-2xl">
+          <button className="text-white text-2xl leading-none">
             ≡
           </button>
         </nav>
@@ -45,14 +49,14 @@ function MainPage() {
           </button>
         </div>
 
-        {/* 메인 컨텐츠 영역 */}
-        <div className="max-w-md mx-auto px-4 py-6 pb-8">
+        {/* 흰색 컨텐츠 카드 */}
+        <div className="flex-1 bg-white rounded-t-[24px] mt-6 px-4 py-6 pb-8">
           {/* 별자리 선택 드롭다운 */}
           <div className="mb-6">
             <select
               value={selectedConstellation}
               onChange={(e) => setSelectedConstellation(e.target.value)}
-              className="w-full px-4 py-3 bg-white rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none appearance-none cursor-pointer"
+              className="w-full px-4 py-3 bg-white rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none appearance-none cursor-pointer text-sm"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
@@ -69,10 +73,10 @@ function MainPage() {
           {/* 선물받은 별들 섹션 */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium">
-                <span className="text-purple-400">User1님의 선물받은 별들</span>
+              <h2 className="text-base font-medium">
+                <span className="text-purple-600">User1님의 선물받은 별들</span>
               </h2>
-              <span className="text-gray-400 text-sm">01 / 02</span>
+              <span className="text-gray-500 text-sm">01 / 02</span>
             </div>
 
             {/* 카드 그리드 */}
@@ -80,7 +84,7 @@ function MainPage() {
               {cards.map((card) => (
                 <div
                   key={card.id}
-                  className="aspect-square bg-transparent border-2 border-blue-400 rounded-2xl p-2 hover:border-blue-300 transition cursor-pointer"
+                  className="aspect-square bg-white border-2 border-blue-400 rounded-2xl p-2 hover:border-blue-300 transition cursor-pointer"
                 >
                   <div className="text-blue-400 text-xs font-medium">
                     DAY {card.day}
@@ -89,7 +93,7 @@ function MainPage() {
               ))}
 
               {/* 추가 버튼 카드 */}
-              <div className="aspect-square bg-transparent border-2 border-blue-400 border-dashed rounded-2xl flex flex-col items-center justify-center hover:border-blue-300 transition cursor-pointer">
+              <div className="aspect-square bg-white border-2 border-blue-400 border-dashed rounded-2xl flex flex-col items-center justify-center hover:border-blue-300 transition cursor-pointer">
                 <div className="text-blue-400 text-4xl mb-1">+</div>
                 <div className="text-blue-400 text-xs text-center px-2">
                   별을 받아보세요!
@@ -98,12 +102,25 @@ function MainPage() {
             </div>
           </div>
 
+          {/* 로그인 안내 박스 */}
+          <div className="border-2 border-dashed border-gray-400 rounded-xl p-6 mb-6">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <div className="text-gray-700">
+                <div className="font-medium">로그인하시면</div>
+                <div className="text-sm">본인의 밤하늘을 확인하실 수 있어요!</div>
+              </div>
+            </div>
+          </div>
+
           {/* 푸터 */}
-          <footer className="text-center text-gray-400 text-xs space-y-1">
-            <div className="font-bold text-white text-lg mb-2">STAR=SY</div>
-            <div>문의 이메일 | starsy.official@gmail.com</div>
-            <div>사이트 문의 | https://www.instagram.com</div>
-            <div className="pt-2 text-gray-500">
+          <footer className="text-center text-gray-600 text-xs space-y-1">
+            <div className="font-bold text-gray-800 text-base mb-2">STAR=SY</div>
+            <div className="text-[10px]">문의 이메일 | starsy.official@gmail.com</div>
+            <div className="text-[10px]">사이트 문의 | https://www.instagram.com</div>
+            <div className="pt-2 text-gray-500 text-[10px]">
               Copyright ⓒ STAR=SY. All rights reserved.
             </div>
           </footer>
