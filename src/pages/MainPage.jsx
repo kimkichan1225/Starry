@@ -12,9 +12,9 @@ function MainPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* 배경 이미지 */}
+      {/* 배경 이미지 - 상단 고정 */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed top-0 left-0 right-0 h-[600px] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url(/BackGround.jpg)' }}
       ></div>
 
@@ -130,8 +130,10 @@ function MainPage() {
             )}
           </div>
 
-          {/* 선물받은 별들 섹션 - 독립된 카드 */}
-          <div className="bg-white rounded-3xl shadow-lg p-5 mb-6">
+          {/* 하단 영역 - FAF5FF 배경 */}
+          <div className="bg-[#FAF5FF] -mx-4 px-4 pb-8">
+            {/* 선물받은 별들 섹션 - 독립된 카드 */}
+            <div className="bg-white rounded-3xl shadow-lg p-5 mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-base font-medium">
                 <span className="text-purple-600">User1님의 선물받은 별들</span>
@@ -200,6 +202,7 @@ function MainPage() {
               </div>
             </div>
           </footer>
+          </div>
         </div>
       </div>
     </div>
