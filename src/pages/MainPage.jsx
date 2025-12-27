@@ -82,7 +82,7 @@ function MainPage() {
             {/* 헤더 (클릭 가능) */}
             <button
               onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
-              className="w-full px-5 py-4 flex justify-between items-center text-left"
+              className="w-full px-5 py-3 flex justify-between items-center text-left shadow-[inset_-4px_-4px_8px_rgba(97,85,245,0.3)]"
             >
               <span className="text-black font-medium">
                 {isConstellationExpanded ? 'User1 님은' : 'ABCD한 EFGE자리'}
@@ -113,18 +113,18 @@ function MainPage() {
                 </h3>
 
                 {/* 카드 2개 */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="border-2 border-blue-300 rounded-2xl p-4 min-h-[120px] flex items-center justify-center">
-                    <span className="text-[#6155F5] text-sm text-center">집 이름이는 별자리</span>
+                <div className="grid grid-cols-2 gap-3 mb-4 max-w-[330px] mx-auto">
+                  <div className="aspect-[4/5] bg-white rounded-2xl p-4 flex items-start justify-center shadow-[0_4px_12px_rgba(0,89,255,0.3)]">
+                    <span className="text-[#6155F5] text-sm text-center">잘 어울리는 별자리</span>
                   </div>
-                  <div className="border-2 border-blue-300 rounded-2xl p-4 min-h-[120px] flex items-center justify-center">
+                  <div className="aspect-[4/5] bg-white rounded-2xl p-4 flex items-start justify-center shadow-[0_4px_12px_rgba(0,89,255,0.3)]">
                     <span className="text-[#6155F5] text-sm text-center">조금 어려운 별자리</span>
                   </div>
                 </div>
 
                 {/* 전체 통계 보기 버튼 */}
                 <button className="w-full py-3 bg-[#6155F5] text-white font-medium rounded-full hover:bg-[#5044d4] transition">
-                  전체 다변 통계 보기
+                  전체 답변 통계 보기
                 </button>
               </div>
             )}
@@ -153,7 +153,7 @@ function MainPage() {
               {cards.map((card) => (
                 <div
                   key={card.id}
-                  className="aspect-[4/5] bg-white border-2 border-[#6155F5] rounded-2xl p-2 hover:border-[#6155F5]/70 transition cursor-pointer"
+                  className="aspect-[4/5] bg-white border-2 border-[#6155F5] rounded-2xl p-2 hover:border-[#6155F5]/70 transition cursor-pointer shadow-[inset_4px_4px_8px_rgba(97,85,245,0.3)]"
                 >
                   <div className="text-[#6155F5] text-xs font-medium">
                     no.{card.id}
@@ -162,7 +162,7 @@ function MainPage() {
               ))}
 
               {/* 추가 버튼 카드 */}
-              <div className="aspect-[4/5] bg-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer">
+              <div className="aspect-[4/5] bg-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer shadow-[inset_4px_4px_8px_rgba(97,85,245,0.3)]">
                 <div className="text-[#6155F5] text-4xl mb-1">+</div>
                 <div className="text-[#6155F5] text-xs text-center px-2">
                   링크 공유하고
@@ -176,7 +176,7 @@ function MainPage() {
 
           {/* 광고 안내 박스 */}
           <div className="mb-6 max-w-[340px] mx-auto">
-            <div className="flex flex-col items-center gap-2 text-center bg-white border-2 border-dashed border-[#727272] rounded-xl p-6">
+            <div className="flex flex-col items-center gap-2 text-center bg-white border-2 border-dashed border-[#727272] rounded-xl p-6 shadow-[inset_6px_6px_12px_rgba(114,114,114,0.3)]">
               <svg className="w-8 h-8 text-[#727272]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
