@@ -82,7 +82,7 @@ function MainPage() {
             {/* 헤더 (클릭 가능) */}
             <button
               onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
-              className="w-full px-5 py-3 flex justify-between items-center text-left shadow-[inset_-4px_-4px_8px_rgba(97,85,245,0.3)]"
+              className={`w-full px-5 py-3 flex justify-between items-center text-left ${!isConstellationExpanded ? 'shadow-[inset_-4px_-4px_8px_rgba(97,85,245,0.3)]' : ''}`}
             >
               <span className="text-black font-medium">
                 {isConstellationExpanded ? 'User1 님은' : 'ABCD한 EFGE자리'}
@@ -99,7 +99,7 @@ function MainPage() {
 
             {/* 확장된 내용 */}
             {isConstellationExpanded && (
-              <div className="px-5 pb-5">
+              <div className="px-5 pb-5 shadow-[inset_-4px_-4px_8px_rgba(97,85,245,0.3)]">
                 {/* 중앙 원형 이미지 영역 */}
                 <div className="flex justify-center mb-4">
                   <div className="w-40 h-40 bg-gray-300 rounded-full flex items-center justify-center">
