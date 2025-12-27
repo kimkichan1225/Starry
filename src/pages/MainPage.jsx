@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 function MainPage() {
   const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
+  const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
 
   // 임시 카드 데이터 (11개 + 1개는 추가 버튼)
   const cards = Array.from({ length: 11 }, (_, i) => ({
@@ -76,23 +77,57 @@ function MainPage() {
 
         {/* 메인 컨텐츠 영역 */}
         <div className="flex-1 px-4 pb-8">
-          {/* 별자리 선택 드롭다운 - Pill 형태 */}
-          <div className="mb-4">
-            <select
-              value={selectedConstellation}
-              onChange={(e) => setSelectedConstellation(e.target.value)}
-              className="w-full px-5 py-3 bg-white rounded-full shadow-md border-none focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none cursor-pointer text-sm font-medium"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234F46E5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 1rem center',
-                backgroundSize: '1.25rem'
-              }}
+          {/* 별자리 선택 드롭다운 - 커스텀 확장형 */}
+          <div className="mb-4 bg-white rounded-3xl shadow-lg overflow-hidden">
+            {/* 헤더 (클릭 가능) */}
+            <button
+              onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
+              className="w-full px-5 py-4 flex justify-between items-center text-left"
             >
-              <option>ABCD만 EFG대서대</option>
-              <option>다른 별자리 1</option>
-              <option>다른 별자리 2</option>
-            </select>
+              <span className="text-black font-medium">
+                {isConstellationExpanded ? 'User1 님은' : 'ABCD한 EFGE자리'}
+              </span>
+              <svg
+                className={`w-6 h-6 text-[#6155F5] transition-transform ${isConstellationExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* 확장된 내용 */}
+            {isConstellationExpanded && (
+              <div className="px-5 pb-5">
+                {/* 중앙 원형 이미지 영역 */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-40 h-40 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-gray-600 font-medium">결과 이미지</span>
+                  </div>
+                </div>
+
+                {/* 별자리 이름 */}
+                <h3 className="text-[#6155F5] text-xl font-bold text-center mb-4">
+                  ABCD한 EFGE 자리
+                </h3>
+
+                {/* 카드 2개 */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="border-2 border-blue-300 rounded-2xl p-4 min-h-[120px] flex items-center justify-center">
+                    <span className="text-[#6155F5] text-sm text-center">집 이름이는 별자리</span>
+                  </div>
+                  <div className="border-2 border-blue-300 rounded-2xl p-4 min-h-[120px] flex items-center justify-center">
+                    <span className="text-[#6155F5] text-sm text-center">조금 어려운 별자리</span>
+                  </div>
+                </div>
+
+                {/* 전체 통계 보기 버튼 */}
+                <button className="w-full py-3 bg-[#6155F5] text-white font-medium rounded-full hover:bg-[#5044d4] transition">
+                  전체 다변 통계 보기
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 선물받은 별들 섹션 - 독립된 카드 */}
