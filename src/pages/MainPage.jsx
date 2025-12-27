@@ -139,11 +139,13 @@ function MainPage() {
 
             {/* 선물받은 별들 섹션 */}
             <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-base font-medium">
-                <span className="text-[#6155F5]">User1님의 선물받은 별들</span>
-              </h2>
-              <span className="text-[#9C9C9C] text-sm">11 / 20</span>
+            <div className="max-w-[340px] mx-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium">
+                  <span className="text-[#6155F5]">User1님의 <span className="font-bold">선물받은 별들</span></span>
+                </h2>
+                <span className="text-[#9C9C9C] text-sm">11 / 20</span>
+              </div>
             </div>
 
             {/* 카드 그리드 */}
@@ -160,17 +162,20 @@ function MainPage() {
               ))}
 
               {/* 추가 버튼 카드 */}
-              <div className="aspect-[3/4] bg-white border-2 border-[#6155F5] border-dashed rounded-2xl flex flex-col items-center justify-center hover:border-[#6155F5]/70 transition cursor-pointer">
+              <div className="aspect-[4/5] bg-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer">
                 <div className="text-[#6155F5] text-4xl mb-1">+</div>
                 <div className="text-[#6155F5] text-xs text-center px-2">
-                  별을 받아보세요!
+                  링크 공유하고
+                </div>
+                <div className="text-[#6155F5] text-xs text-center px-2">
+                  별 선물받기
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 로그인 안내 박스 */}
-          <div className="mb-6">
+          {/* 광고 안내 박스 */}
+          <div className="mb-6 max-w-[340px] mx-auto">
             <div className="flex flex-col items-center gap-2 text-center bg-white border-2 border-dashed border-[#727272] rounded-xl p-6">
               <svg className="w-8 h-8 text-[#727272]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
