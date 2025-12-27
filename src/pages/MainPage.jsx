@@ -40,18 +40,24 @@ function MainPage() {
         </div>
 
         {/* 플로팅 버튼들 */}
-        <div className="fixed right-4 top-[28rem] flex flex-col gap-3 z-20">
+        <div className="fixed right-4 top-[25rem] flex flex-col gap-3 z-20">
+          {/* 공유 버튼 */}
+          <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition">
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
           {/* 이미지 캡쳐 버튼 */}
           <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition border-2 border-purple-400">
             <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               {/* 왼쪽 상단 모서리 */}
-              <path strokeLinecap="round" d="M2 11V4a1 1 0 011-1h6" />
+              <path strokeLinecap="round" d="M2 9V4a1 1 0 011-1h4" />
               {/* 오른쪽 상단 모서리 */}
-              <path strokeLinecap="round" d="M15 3h6a1 1 0 011 1v7" />
+              <path strokeLinecap="round" d="M17 3h4a1 1 0 011 1v5" />
               {/* 왼쪽 하단 모서리 */}
-              <path strokeLinecap="round" d="M2 13v7a1 1 0 001 1h6" />
+              <path strokeLinecap="round" d="M2 16v5a1 1 0 001 1h4" />
               {/* 오른쪽 하단 모서리 */}
-              <path strokeLinecap="round" d="M15 21h6a1 1 0 001-1v-7" />
+              <path strokeLinecap="round" d="M17 22h4a1 1 0 001-1v-5" />
               {/* 중앙 카메라 렌즈 */}
               <circle cx="12" cy="12" r="3" strokeWidth="2" />
             </svg>
