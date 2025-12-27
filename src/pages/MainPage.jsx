@@ -147,11 +147,11 @@ function MainPage() {
             </div>
 
             {/* 카드 그리드 */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3 max-w-[340px] mx-auto">
               {cards.map((card) => (
                 <div
                   key={card.id}
-                  className="aspect-[3/4] bg-white border-2 border-[#6155F5] rounded-2xl p-2 hover:border-[#6155F5]/70 transition cursor-pointer"
+                  className="aspect-[4/5] bg-white border-2 border-[#6155F5] rounded-2xl p-2 hover:border-[#6155F5]/70 transition cursor-pointer"
                 >
                   <div className="text-[#6155F5] text-xs font-medium">
                     no.{card.id}
