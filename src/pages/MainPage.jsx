@@ -45,16 +45,15 @@ function MainPage() {
           <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition border-2 border-purple-400">
             <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               {/* 왼쪽 상단 모서리 */}
-              <path strokeLinecap="round" d="M4 9V6a2 2 0 012-2h3" />
+              <path strokeLinecap="round" d="M2 11V4a1 1 0 011-1h6" />
               {/* 오른쪽 상단 모서리 */}
-              <path strokeLinecap="round" d="M15 4h3a2 2 0 012 2v3" />
+              <path strokeLinecap="round" d="M15 3h6a1 1 0 011 1v7" />
               {/* 왼쪽 하단 모서리 */}
-              <path strokeLinecap="round" d="M4 15v3a2 2 0 002 2h3" />
+              <path strokeLinecap="round" d="M2 13v7a1 1 0 001 1h6" />
               {/* 오른쪽 하단 모서리 */}
-              <path strokeLinecap="round" d="M15 20h3a2 2 0 002-2v-3" />
+              <path strokeLinecap="round" d="M15 21h6a1 1 0 001-1v-7" />
               {/* 중앙 카메라 렌즈 */}
               <circle cx="12" cy="12" r="3" strokeWidth="2" />
-              <circle cx="12" cy="12" r="1" fill="currentColor" />
             </svg>
           </button>
           {/* 밤하늘 제작 버튼 */}
