@@ -131,14 +131,19 @@ function MainPage() {
           </div>
 
           {/* 하단 영역 - FAF5FF 배경 */}
-          <div className="bg-[#FAF5FF] -mx-4 px-4 pb-8">
-            {/* 선물받은 별들 섹션 - 독립된 카드 */}
-            <div className="bg-white rounded-3xl shadow-lg p-5 mb-6">
+          <div className="bg-[#FAF5FF] -mx-4 px-4 pb-8 rounded-t-[40px]">
+            {/* 드래그 핸들 */}
+            <div className="flex justify-center pt-3 pb-5">
+              <div className="w-20 h-1 bg-[#6155F5]/50 rounded-full"></div>
+            </div>
+
+            {/* 선물받은 별들 섹션 */}
+            <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-base font-medium">
-                <span className="text-purple-600">User1님의 선물받은 별들</span>
+                <span className="text-[#6155F5]">User1님의 선물받은 별들</span>
               </h2>
-              <span className="text-gray-500 text-sm">11 / 20</span>
+              <span className="text-[#9C9C9C] text-sm">11 / 20</span>
             </div>
 
             {/* 카드 그리드 */}
@@ -146,57 +151,57 @@ function MainPage() {
               {cards.map((card) => (
                 <div
                   key={card.id}
-                  className="aspect-square bg-white border-2 border-blue-400 rounded-2xl p-2 hover:border-blue-300 transition cursor-pointer"
+                  className="aspect-[3/4] bg-white border-2 border-[#6155F5] rounded-2xl p-2 hover:border-[#6155F5]/70 transition cursor-pointer"
                 >
-                  <div className="text-blue-400 text-xs font-medium">
-                    DAY {card.day}
+                  <div className="text-[#6155F5] text-xs font-medium">
+                    no.{card.id}
                   </div>
                 </div>
               ))}
 
               {/* 추가 버튼 카드 */}
-              <div className="aspect-square bg-white border-2 border-blue-400 border-dashed rounded-2xl flex flex-col items-center justify-center hover:border-blue-300 transition cursor-pointer">
-                <div className="text-blue-400 text-4xl mb-1">+</div>
-                <div className="text-blue-400 text-xs text-center px-2">
+              <div className="aspect-[3/4] bg-white border-2 border-[#6155F5] border-dashed rounded-2xl flex flex-col items-center justify-center hover:border-[#6155F5]/70 transition cursor-pointer">
+                <div className="text-[#6155F5] text-4xl mb-1">+</div>
+                <div className="text-[#6155F5] text-xs text-center px-2">
                   별을 받아보세요!
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 로그인 안내 박스 - 독립된 카드 */}
-          <div className="bg-white rounded-3xl shadow-lg p-6 mb-6">
-            <div className="flex flex-col items-center gap-2 text-center border-2 border-dashed border-gray-300 rounded-xl p-6">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* 로그인 안내 박스 */}
+          <div className="mb-6">
+            <div className="flex flex-col items-center gap-2 text-center bg-white border-2 border-dashed border-[#727272] rounded-xl p-6">
+              <svg className="w-8 h-8 text-[#727272]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
-              <div className="text-gray-700">
-                <div className="font-medium">로그인하시면</div>
-                <div className="text-sm">본인의 밤하늘을 확인하실 수 있어요!</div>
+              <div className="text-[#727272]">
+                <div className="font-sm">광고 보고</div>
+                <div className="text-sm">별 보관함 확장하기 (+3)</div>
               </div>
             </div>
           </div>
 
-          {/* 푸터 - 독립된 카드 */}
-          <footer className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg pb-6 pt-4 px-6 text-center">
-            <div className="flex items-center justify-center space-x-4 text-gray-600 text-sm">
+          {/* 푸터 */}
+          <footer className="pb-6 pt-4 text-center">
+            <div className="flex items-center justify-center space-x-4 text-[#222222] text-sm">
               <img
                 src="/Logo(Black).png"
                 alt="STARRY"
                 className="h-3 -translate-y-[11px]"
               />
-              <div className="h-6 w-px bg-gray-400 -translate-y-[11px]"></div>
+              <div className="h-6 w-px bg-[#222222] -translate-y-[11px]"></div>
               <div className="text-left space-y-1">
-                <div className="text-[9px] leading-snug">
+                <div className="text-[10px] leading-snug">
                   광고 문의: 123456789@gmail.com <br />
                   Copyright ©2025 123456789. All rights reserved.
                 </div>
                 {/* 개발자/디자이너 정보 */}
-                <div className="text-gray-500 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-gray-700">개발자</span>
+                <div className="text-[#222222] text-[10px] flex items-center space-x-1">
+                  <span className="font-semibold">개발자</span>
                   <span>김기찬</span>
-                  <span className="text-gray-400">·</span>
-                  <span className="font-semibold text-gray-700">디자이너</span>
+                  <span>·</span>
+                  <span className="font-semibold">디자이너</span>
                   <span>김태희</span>
                 </div>
               </div>
