@@ -78,7 +78,7 @@ function MainPage() {
         {/* 메인 컨텐츠 영역 */}
         <div className="flex-1 px-4 pb-8">
           {/* 별자리 선택 드롭다운 - 커스텀 확장형 */}
-          <div className="mb-4 bg-white rounded-3xl shadow-lg overflow-hidden">
+          <div className={`mb-4 bg-white rounded-3xl shadow-lg overflow-hidden ${isConstellationExpanded ? 'shadow-[inset_-4px_-4px_8px_rgba(97,85,245,0.3)]' : ''}`}>
             {/* 헤더 (클릭 가능) */}
             <button
               onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
@@ -99,7 +99,7 @@ function MainPage() {
 
             {/* 확장된 내용 */}
             {isConstellationExpanded && (
-              <div className="px-5 pb-5 shadow-[inset_-4px_-4px_8px_rgba(97,85,245,0.3)]">
+              <div className="px-5 pb-5">
                 {/* 중앙 원형 이미지 영역 */}
                 <div className="flex justify-center mb-4">
                   <div className="w-40 h-40 bg-gray-300 rounded-full flex items-center justify-center">
