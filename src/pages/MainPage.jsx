@@ -11,10 +11,10 @@ function MainPage() {
   }));
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* 배경 이미지 - 상단 고정 */}
+    <div className="relative min-h-screen overflow-hidden bg-[#FAF5FF]">
+      {/* 배경 이미지 - 상단 영역 */}
       <div
-        className="fixed top-0 left-0 right-0 h-[600px] bg-cover bg-center bg-no-repeat"
+        className="absolute top-0 left-0 right-0 h-[1200px] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url(/BackGround.jpg)' }}
       ></div>
 
