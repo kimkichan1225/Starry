@@ -113,7 +113,7 @@ function HomePage() {
 
         {/* 확장된 내용 */}
         {isConstellationExpanded && (
-          <div className="px-5 pb-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
+          <div className="px-5 pb-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 24rem)' }}>
             {/* 중앙 원형 이미지 영역 */}
             <div className="flex justify-center mb-4">
               <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
