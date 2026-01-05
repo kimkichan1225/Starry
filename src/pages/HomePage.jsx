@@ -95,7 +95,7 @@ function HomePage() {
             onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
             className="w-full px-5 pt-2 pb-4 flex justify-center items-center"
           >
-            <span className={`text-2xl font-medium ${isConstellationExpanded ? 'text-[#6155F5]' : 'text-black'}`}>
+            <span className={`text-2xl ${isConstellationExpanded ? 'text-[#6155F5] font-bold' : 'text-black font-medium'}`}>
               ABCD한 EFGE자리
             </span>
           </button>
@@ -116,23 +116,23 @@ function HomePage() {
           <div className="px-5 pb-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
             {/* 중앙 원형 이미지 영역 */}
             <div className="flex justify-center mb-4">
-              <div className="w-40 h-40 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 font-medium text-sm">별자리 커스텀 이미지</span>
+              <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
+                <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>별자리 커스텀 이미지</span>
               </div>
             </div>
 
             {/* 카드 2개 */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                <span className="text-[#6155F5] text-sm text-center">궁합 좋은 별자리</span>
+                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">궁합 좋은</span> 별자리</span>
               </div>
               <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                <span className="text-[#6155F5] text-sm text-center">궁합 안 좋은 별자리</span>
+                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">궁합 안 좋은</span> 별자리</span>
               </div>
             </div>
 
             {/* AI 별자리 이름 바꾸기 버튼 */}
-            <button className="w-full py-3 bg-gray-400 text-white font-medium rounded-full hover:bg-gray-500 transition">
+            <button className="w-full py-3 bg-[#A6A6A6] text-white font-semibold rounded-full hover:bg-[#959595] transition">
               AI 별자리 이름 바꾸기
             </button>
           </div>
