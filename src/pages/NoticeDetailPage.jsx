@@ -122,28 +122,51 @@ Google AdSense
               </div>
             </div>
 
-            {/* 목록으로 버튼 */}
+            {/* 구분선 */}
+            <div className="flex justify-center my-2">
+              <div className="w-full h-px bg-white/50"></div>
+            </div>
+
+            {/* 이전글/다음글 네비게이션 */}
+            <div className="text-xs mb-2">
+              <div className="grid grid-cols-[40px_1fr_70px] gap-2 py-2 text-white">
+                <div className="text-center">이전</div>
+                <div className="text-center">STARRY(스타리) 이용안내</div>
+                <div className="text-center">25.12.25</div>
+              </div>
+              <div className="grid grid-cols-[40px_1fr_70px] gap-2 py-2 text-white">
+                <div className="text-center">다음</div>
+                <div className="text-center">SNS 이벤트 당첨자 발표</div>
+                <div className="text-center">25.12.25</div>
+              </div>
+            </div>
+
+            {/* 구분선 */}
+            <div className="flex justify-center mb-4">
+              <div className="w-full h-px bg-white/50"></div>
+            </div>
+
+            {/* 목록보기 버튼 */}
             <button
               onClick={() => navigate('/notice')}
-              className="w-full py-3 bg-[#6155F5] text-white font-bold rounded-full hover:bg-[#5044d4] transition"
+              className="w-full py-3 text-white font-bold text-sm transition"
             >
-              목록으로
+              목록보기
             </button>
           </div>
 
           {/* 푸터 */}
-          <footer className="pt-6 text-center">
+          <footer className="text-center">
             <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
               <img
                 src="/Logo.png"
                 alt="STARRY"
-                className="h-3 -translate-y-[18px]"
+                className="h-3 -translate-y-[12px]"
               />
-              <div className="h-6 w-px bg-white/40 -translate-y-[18px]"></div>
+              <div className="h-6 w-px bg-white/40 -translate-y-[12px]"></div>
               <div className="text-left space-y-1">
                 <div className="text-[9px] leading-snug">
                   광고 문의: 123456789@gmail.com <br />
-                  기타 문의: 987654321@gmail.com <br />
                   Copyright ©2025 123456789. All rights reserved.
                 </div>
                 {/* 개발자/디자이너 정보 */}

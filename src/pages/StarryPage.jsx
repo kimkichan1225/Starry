@@ -6,8 +6,8 @@ function StarryPage() {
   // 임시 공지사항 데이터
   const notices = [
     { id: 1, category: '중요', title: '개인정보 수집 및 이용 안내', date: '25.12.25' },
-    { id: 2, category: '1', title: 'STARRY(스타리) 사용법 안내', date: '25.12.25' },
-    { id: 3, category: '2', title: '유지 보수 업데이트 안내', date: '25.12.25' },
+    { id: 2, category: '1', title: 'STARRY(스타리) 이용 안내', date: '25.12.25' },
+    { id: 3, category: '2', title: 'SNS 이벤트 당첨자 발표', date: '25.12.25' },
   ];
 
   return (
