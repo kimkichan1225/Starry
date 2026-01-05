@@ -1,13 +1,127 @@
 import NavBar from '../components/NavBar';
 
 function StarryPage() {
+  // 임시 공지사항 데이터
+  const notices = [
+    { id: 1, category: '공지', title: '게시판 공지 수정 예정 안내', date: '2X.2X.2X' },
+    { id: 2, category: '공지', title: 'STARRY(스타리) 사용법 안내', date: '2X.2X.2X' },
+    { id: 3, category: '공지', title: '유지 보수 업데이트 안내', date: '2X.2X.2X' },
+  ];
+
   return (
-    <div className="relative min-h-screen bg-[#FAF5FF]">
-      <div className="flex flex-col min-h-screen pb-20">
-        <div className="flex-1 flex items-center justify-center">
-          <h1 className="text-2xl font-bold text-[#6155F5]">스타리 페이지</h1>
+    <div className="relative min-h-screen overflow-hidden bg-[#030025]">
+      {/* 배경 이미지 */}
+      <div
+        className="absolute top-0 left-0 right-0 bottom-0 bg-cover bg-center bg-no-repeat opacity-30"
+        style={{ backgroundImage: 'url(/BackGround.jpg)' }}
+      ></div>
+
+      {/* 메인 콘텐츠 */}
+      <div className="relative z-10 flex flex-col min-h-screen pb-20">
+        {/* 광고 배너 영역 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
+        </div>
+
+        {/* 상단 네비게이션 */}
+        <nav className="pl-6 pr-6 py-5 flex justify-between items-center">
+          <div className="flex items-center gap-1">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <span className="text-white font-bold text-2xl">Starry의 이야기</span>
+          </div>
+        </nav>
+
+        {/* 메인 컨텐츠 영역 */}
+        <div className="flex-1 px-6 pt-3 pb-8">
+          {/* 소개 텍스트 섹션 */}
+          <div className="mb-8 text-white px-6">
+            <h2 className="text-sm font-bold mb-3">모두는 하나의 별</h2>
+            <p className="text-sm leading-relaxed mb-6">
+              모든 사람은 저마다의 개성을 가진 별이라고 생각했어요. 각자의 빛은 다르지만 모두 소중하니까요.
+            </p>
+
+            <h2 className="text-sm font-bold mb-3">관계가 그려지는 별자리</h2>
+            <p className="text-sm leading-relaxed">
+              사람 사이의 마음과 관계를 어둠속에 두고 싶지 않았어요. 그래서 별을 주고 받고, 그 별과 별을 이어, 감정을 별자리로 시각화하는 서비스를 개발했어요.
+            </p>
+          </div>
+
+          {/* 명함 섹션 */}
+          <div className="my-12 -mx-4">
+            <div className="bg-white rounded-3xl p-8 mb-4 shadow-lg transform rotate-12 -translate-x-4 w-80 h-44">
+              <div className="text-center text-red-500 font-bold">
+                제작자 명함 (레이아웃)
+              </div>
+            </div>
+            <div className="bg-white rounded-3xl p-8 shadow-lg transform -rotate-12 translate-x-4 w-80 h-44 ml-auto">
+              <div className="text-center text-red-500 font-bold">
+                디자이너 명함 (레이아웃)
+              </div>
+            </div>
+          </div>
+
+          {/* 서비스 개발 히스토리 버튼 */}
+          <button className="w-full py-4 bg-[#6155F5] text-white font-bold rounded-full mb-8 hover:bg-[#5044d4] transition">
+            서비스 개발 히스토리
+          </button>
+
+          {/* 공지사항 섹션 */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <h2 className="text-white font-bold text-lg">공지사항</h2>
+              </div>
+              <span className="text-gray-400 text-sm">더보기 〉</span>
+            </div>
+
+            {/* 공지사항 테이블 */}
+            <div className="bg-[#1a1a3e] rounded-lg overflow-hidden">
+              {/* 테이블 헤더 */}
+              <div className="grid grid-cols-[80px_1fr_100px] gap-2 px-4 py-3 bg-[#0d0d2b] text-gray-400 text-xs">
+                <div>분류</div>
+                <div>제목</div>
+                <div className="text-right">작성일</div>
+              </div>
+
+              {/* 테이블 바디 */}
+              <div className="divide-y divide-gray-700">
+                {notices.map((notice) => (
+                  <div
+                    key={notice.id}
+                    className="grid grid-cols-[80px_1fr_100px] gap-2 px-4 py-3 text-white text-sm hover:bg-[#252547] transition cursor-pointer"
+                  >
+                    <div className="text-gray-400">{notice.category}</div>
+                    <div className="truncate">{notice.title}</div>
+                    <div className="text-gray-400 text-xs text-right">{notice.date}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 푸터 */}
+          <footer className="pt-6 text-center">
+            <div className="flex flex-col items-center space-y-2 text-white text-xs">
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-4 mb-2"
+              />
+              <div className="text-gray-400 text-[10px]">
+                문의: 123456789@gmail.com<br />
+                제작: 123456789@gmail.com<br />
+                Copyright ©2025 123456789. All rights reserved.
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
+
+      {/* 네비게이션 바 */}
       <NavBar />
     </div>
   );
