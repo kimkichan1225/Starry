@@ -46,7 +46,7 @@ function HomePage() {
         </div>
 
         {/* 플로팅 버튼들 */}
-        <div className="fixed right-4 bottom-44 flex flex-col gap-3 z-40">
+        <div className={`fixed right-4 bottom-44 flex flex-col gap-3 z-40 transition-opacity duration-300 ${isConstellationExpanded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           {/* 공유 버튼 */}
           <button className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition">
             <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,8 +80,8 @@ function HomePage() {
 
       {/* 바텀시트 - 별자리 정보 */}
       <div
-        className={`fixed left-5 right-5 bg-white rounded-t-3xl shadow-lg transition-all duration-300 z-30 ${
-          isConstellationExpanded ? 'top-44 bottom-32' : 'bottom-20 h-auto'
+        className={`fixed left-5 right-5 bg-white shadow-lg transition-all duration-300 ease-in-out z-30 ${
+          isConstellationExpanded ? 'top-44 bottom-32 rounded-3xl' : 'bottom-20 h-auto rounded-t-3xl'
         }`}
       >
         {/* 드래그 핸들 */}
