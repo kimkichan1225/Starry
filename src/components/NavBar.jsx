@@ -25,14 +25,16 @@ function NavBar() {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className="flex flex-col items-center justify-center gap-0.5 py-1 transition-all px-1"
+              className={`flex flex-col items-center justify-center gap-0.5 py-1 transition-all px-1 ${
+                isActive ? 'drop-shadow-[0_0_16px_rgba(97,85,245,1)]' : ''
+              }`}
             >
               <img
                 src={iconSrc}
                 alt={item.name}
                 className="h-9 w-auto object-contain"
               />
-              <span className={`text-[7px] ${isActive ? 'text-white' : 'text-gray-400'}`}>
+              <span className={`text-[8px] ${isActive ? 'text-white' : 'text-gray-400'}`}>
                 {item.name}
               </span>
             </button>
