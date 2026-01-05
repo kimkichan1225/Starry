@@ -14,6 +14,9 @@ function NavBar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[#030025] z-50">
+      {/* 상단 전체 선 - 6155F5 50% */}
+      <div className="absolute top-0 left-0 right-0 h-[4px] bg-[#6155F5]/50"></div>
+
       <div className="flex justify-center items-center gap-6 py-3 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           // /notice 경로일 때는 스타리 버튼을 활성화
@@ -27,10 +30,14 @@ function NavBar() {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center justify-center gap-0.5 py-1 transition-all px-1 ${
+              className={`relative flex flex-col items-center justify-center gap-0.5 py-1 transition-all px-1 ${
                 isActive ? 'drop-shadow-[0_0_16px_rgba(97,85,245,1)]' : ''
               }`}
             >
+              {/* 활성화된 아이콘 위에만 표시되는 선 - A199FF 100% */}
+              {isActive && (
+                <div className="absolute -top-3 left-0 right-0 h-[4px] bg-[#A199FF]"></div>
+              )}
               <img
                 src={iconSrc}
                 alt={item.name}
