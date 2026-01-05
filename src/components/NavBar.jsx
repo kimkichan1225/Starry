@@ -14,7 +14,7 @@ function NavBar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[#030025] z-50">
-      <div className="flex justify-around items-center py-1 max-w-screen-xl mx-auto">
+      <div className="flex justify-center items-center gap-6 py-3 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const iconSrc = isActive
@@ -25,14 +25,14 @@ function NavBar() {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-all"
+              className="flex flex-col items-center justify-center gap-0.5 py-1 transition-all px-1"
             >
               <img
                 src={iconSrc}
                 alt={item.name}
-                className="h-16 w-auto object-contain"
+                className="h-9 w-auto object-contain"
               />
-              <span className={`text-[10px] ${isActive ? 'text-white' : 'text-gray-400'}`}>
+              <span className={`text-[7px] ${isActive ? 'text-white' : 'text-gray-400'}`}>
                 {item.name}
               </span>
             </button>
