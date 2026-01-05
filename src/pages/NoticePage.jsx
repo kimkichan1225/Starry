@@ -67,7 +67,10 @@ function NoticePage() {
               <div>
                 {notices.map((notice, index) => (
                   <div key={notice.id}>
-                    <div className="grid grid-cols-[60px_1fr_90px] gap-2 px-4 py-3 text-white hover:bg-[#252547]/30 transition cursor-pointer">
+                    <div
+                      onClick={() => navigate(`/notice/${notice.id}`)}
+                      className="grid grid-cols-[60px_1fr_90px] gap-2 px-4 py-3 text-white hover:bg-[#252547]/30 transition cursor-pointer"
+                    >
                       <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category}</div>
                       <div className="text-center text-xs">{notice.title}</div>
                       <div className="text-gray-400 text-xs text-center">{notice.date}</div>

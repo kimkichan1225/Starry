@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import StatPage from './pages/StatPage';
 import UserPage from './pages/UserPage';
 import NoticePage from './pages/NoticePage';
+import NoticeDetailPage from './pages/NoticeDetailPage';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/stat" element={<StatPage />} />
         <Route path="/user" element={<UserPage />} />
         <Route path="/notice" element={<NoticePage />} />
+        <Route path="/notice/:id" element={<NoticeDetailPage />} />
 
         {/* 추후 페이지 라우트 추가 예정 */}
         {/* <Route path="/login" element={<LoginPage />} /> */}
