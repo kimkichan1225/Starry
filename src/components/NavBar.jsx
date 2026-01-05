@@ -16,7 +16,9 @@ function NavBar() {
     <nav className="fixed bottom-0 left-0 right-0 bg-[#030025] z-50">
       <div className="flex justify-center items-center gap-6 py-3 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          // /notice 경로일 때는 스타리 버튼을 활성화
+          const isActive = location.pathname === item.path ||
+                          (location.pathname === '/notice' && item.path === '/starry');
           const iconSrc = isActive
             ? `/${item.icon}_On.png`
             : `/${item.icon}_Off.png`;
