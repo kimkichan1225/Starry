@@ -81,7 +81,7 @@ function HomePage() {
       {/* 바텀시트 - 별자리 정보 */}
       <div
         className={`fixed left-5 right-5 bg-white rounded-t-3xl shadow-lg transition-all duration-300 z-30 ${
-          isConstellationExpanded ? 'bottom-20 h-[calc(100vh-5rem)]' : 'bottom-20 h-auto'
+          isConstellationExpanded ? 'top-44 bottom-32' : 'bottom-20 h-auto'
         }`}
       >
         {/* 드래그 핸들 */}
@@ -95,7 +95,7 @@ function HomePage() {
             onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
             className="w-full px-5 pt-2 pb-4 flex justify-center items-center"
           >
-            <span className="text-black text-2xl font-medium">
+            <span className={`text-2xl font-medium ${isConstellationExpanded ? 'text-[#6155F5]' : 'text-black'}`}>
               ABCD한 EFGE자리
             </span>
           </button>
