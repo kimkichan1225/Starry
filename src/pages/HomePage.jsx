@@ -80,8 +80,8 @@ function HomePage() {
 
       {/* 바텀시트 - 별자리 정보 */}
       <div
-        className={`fixed left-5 right-5 bg-white shadow-lg transition-all duration-300 ease-in-out z-30 ${
-          isConstellationExpanded ? 'top-44 bottom-32 rounded-3xl' : 'bottom-20 h-auto rounded-t-3xl'
+        className={`fixed left-5 right-5 top-44 bottom-32 bg-white shadow-lg transition-all duration-500 ease-out z-30 ${
+          isConstellationExpanded ? 'translate-y-0 rounded-3xl' : 'translate-y-[calc(100%-2rem)] rounded-t-3xl'
         }`}
       >
         {/* 드래그 핸들 */}
