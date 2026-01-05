@@ -1,10 +1,88 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+
+  // 폼 상태
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    passwordConfirm: '',
+    nickname: '',
+    birthdate: '',
+    phone: '',
+    verificationCode: ''
+  });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // 입력 변경 핸들러
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // 회원가입 핸들러
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    // 유효성 검사
+    if (!agreePrivacy) {
+      setError('개인정보 수집 및 활용에 동의해주세요.');
+      return;
+    }
+
+    if (formData.password !== formData.passwordConfirm) {
+      setError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Supabase 회원가입
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            nickname: formData.nickname,
+            birthdate: formData.birthdate,
+            phone: formData.phone,
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setSuccessMessage('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      }
+    } catch (error) {
+      setError(error.message || '회원가입에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -41,12 +119,28 @@ const SignupPage = () => {
           />
 
           {/* 회원가입 폼 */}
-          <div className="w-full max-w-[280px] space-y-4">
+          <form onSubmit={handleSignup} className="w-full max-w-[280px] space-y-4">
+            {/* 에러/성공 메시지 */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-500 text-red-100 px-4 py-2 rounded-lg text-xs text-center">
+                {error}
+              </div>
+            )}
+            {successMessage && (
+              <div className="bg-green-500/20 border border-green-500 text-green-100 px-4 py-2 rounded-lg text-xs text-center">
+                {successMessage}
+              </div>
+            )}
+
             {/* 이메일 */}
             <div>
               <label className="block text-white text-sm mb-2">아이디</label>
               <input
                 type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
@@ -56,6 +150,10 @@ const SignupPage = () => {
               <label className="block text-white text-sm mb-2">비밀번호</label>
               <input
                 type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
@@ -65,6 +163,10 @@ const SignupPage = () => {
               <label className="block text-white text-sm mb-2">비밀번호 확인</label>
               <input
                 type="password"
+                name="passwordConfirm"
+                value={formData.passwordConfirm}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
@@ -74,6 +176,10 @@ const SignupPage = () => {
               <label className="block text-white text-sm mb-2">이름 또는 닉네임</label>
               <input
                 type="text"
+                name="nickname"
+                value={formData.nickname}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
@@ -83,6 +189,10 @@ const SignupPage = () => {
               <label className="block text-white text-sm mb-2">생년월일</label>
               <input
                 type="date"
+                name="birthdate"
+                value={formData.birthdate}
+                onChange={handleChange}
+                required
                 className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
@@ -94,14 +204,21 @@ const SignupPage = () => {
                 <div className="flex space-x-2">
                   <input
                     type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
                     className="flex-1 px-2 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
-                  <button className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap">
+                  <button type="button" className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap">
                     인증하기
                   </button>
                 </div>
                 <input
                   type="text"
+                  name="verificationCode"
+                  value={formData.verificationCode}
+                  onChange={handleChange}
                   placeholder="인증번호 입력"
                   className="w-full px-4 py-[6px] text-center text-xs rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                 />
@@ -230,10 +347,14 @@ const SignupPage = () => {
             </div>
 
             {/* 가입하기 버튼 */}
-            <button className="w-full py-2.5 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors !mt-6">
-              가입하기
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors !mt-6 disabled:bg-purple-400 disabled:cursor-not-allowed"
+            >
+              {loading ? '가입 중...' : '가입하기'}
             </button>
-          </div>
+          </form>
         </div>
 
         {/* 하단 정보 */}
