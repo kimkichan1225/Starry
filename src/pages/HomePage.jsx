@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import NavBar from '../components/NavBar';
 
-function MainPage() {
+function HomePage() {
   const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
 
@@ -223,4 +223,4 @@ function MainPage() {
   );
 }
 
-export default MainPage;
+export default HomePage;
