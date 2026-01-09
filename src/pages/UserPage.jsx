@@ -130,49 +130,49 @@ function UserPage() {
             </div>
 
             {/* 비밀번호 변경 */}
-            <div>
-              <label className="text-white text-sm mb-2 block">비밀번호</label>
-              <div className="space-y-2">
+            <div className="mt-4">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">비밀번호</label>
+              <div className="ml-12 space-y-2 max-w-[240px]">
                 <input
                   type="password"
                   placeholder="현재 비밀번호"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm placeholder-white/50 focus:outline-none focus:border-[#6155F5]"
+                  className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                 />
-                <div className="flex items-center gap-2">
-                  <input
-                    type="password"
-                    placeholder="새로운 비밀번호"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm placeholder-white/50 focus:outline-none focus:border-[#6155F5]"
-                  />
-                  <button
-                    onClick={handlePasswordChange}
-                    disabled={loading}
-                    className="px-4 py-3 bg-[#6155F5] text-white text-sm rounded-lg hover:bg-[#5044d4] transition whitespace-nowrap disabled:bg-gray-500"
-                  >
-                    {loading ? '변경중...' : '변경하기'}
-                  </button>
-                </div>
+                <input
+                  type="password"
+                  placeholder="새로운 비밀번호"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
+                />
                 <input
                   type="password"
                   placeholder="새로운 비밀번호 확인"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm placeholder-white/50 focus:outline-none focus:border-[#6155F5]"
+                  className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                 />
+                <div className="flex justify-end">
+                  <button
+                    onClick={handlePasswordChange}
+                    disabled={loading}
+                    className="px-6 py-2 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {loading ? '변경중...' : '변경'}
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* 소셜 계정 연동 관리 */}
-            <div>
-              <label className="text-white text-sm mb-3 block">소셜 계정 연동 관리</label>
-              <div className="flex gap-3">
+            <div className="mt-6">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">소셜 계정 연동 관리</label>
+              <div className="ml-12 flex gap-3">
                 {/* 구글 */}
-                <button className="flex-1 aspect-square bg-white/10 border border-white/30 rounded-xl flex items-center justify-center hover:bg-white/20 transition">
-                  <svg className="w-8 h-8" viewBox="0 0 48 48">
+                <button className="w-12 h-12 rounded-xl bg-white hover:bg-gray-100 transition-colors flex items-center justify-center">
+                  <svg className="w-6 h-6" viewBox="0 0 48 48">
                     <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
                     <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
                     <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
@@ -180,23 +180,20 @@ function UserPage() {
                   </svg>
                 </button>
                 {/* 카카오 */}
-                <button className="flex-1 aspect-square bg-white/10 border border-white/30 rounded-xl flex items-center justify-center hover:bg-white/20 transition">
-                  <svg className="w-8 h-8" viewBox="0 0 48 48">
-                    <path fill="#FEE500" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
-                    <path fill="#3C1E1E" d="M24,10c9.389,0,17,5.701,17,12.938S33.389,35.875,24,35.875c-0.844,0-1.675-0.051-2.487-0.15l-8.644,4.637l1.947-7.106C10.302,30.604,7,27.012,7,22.938C7,15.701,14.611,10,24,10z"/>
+                <button className="w-12 h-12 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] transition-colors flex items-center justify-center">
+                  <svg className="w-6 h-6" viewBox="0 0 48 48">
+                    <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
                   </svg>
                 </button>
                 {/* 네이버 */}
-                <button className="flex-1 aspect-square bg-white/10 border border-white/30 rounded-xl flex items-center justify-center hover:bg-white/20 transition">
-                  <svg className="w-8 h-8" viewBox="0 0 48 48">
-                    <path fill="#03C75A" d="M4 4h40v40H4z"/>
+                <button className="w-12 h-12 rounded-xl bg-[#03C75A] hover:bg-[#02b350] transition-colors flex items-center justify-center">
+                  <svg className="w-6 h-6" viewBox="0 0 48 48">
                     <path fill="white" d="M26.5 24.5L18 12h-4v24h7.5v-12.5L30 36h4V12h-7.5z"/>
                   </svg>
                 </button>
                 {/* 페이스북 */}
-                <button className="flex-1 aspect-square bg-white/10 border border-white/30 rounded-xl flex items-center justify-center hover:bg-white/20 transition">
-                  <svg className="w-8 h-8" viewBox="0 0 48 48">
-                    <path fill="#1877F2" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"/>
+                <button className="w-12 h-12 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] transition-colors flex items-center justify-center">
+                  <svg className="w-6 h-6" viewBox="0 0 48 48">
                     <path fill="white" d="M26.707 29.301V24h2.854l.427-3.316h-3.281V18.77c0-.958.266-1.611 1.639-1.611h1.755v-2.967c-.304-.041-1.347-.131-2.561-.131-2.534 0-4.269 1.547-4.269 4.388v2.445h-2.866V24h2.866v5.301h3.436z"/>
                   </svg>
                 </button>
@@ -204,27 +201,31 @@ function UserPage() {
             </div>
 
             {/* 언어설정 */}
-            <div>
-              <label className="text-white text-sm mb-3 block">언어설정</label>
-              <select className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#6155F5]">
-                <option value="ko" className="bg-gray-800">한국어</option>
-                <option value="en" className="bg-gray-800">English</option>
-              </select>
+            <div className="mt-6">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">언어설정</label>
+              <div className="ml-12 max-w-[240px]">
+                <select className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#6155F5]">
+                  <option value="ko" className="bg-gray-800">한국어</option>
+                  <option value="en" className="bg-gray-800">English</option>
+                </select>
+              </div>
             </div>
 
             {/* 내 밤하늘 QR코드 */}
-            <div>
-              <label className="text-white text-sm mb-3 block">내 밤하늘 QR코드</label>
-              <div className="bg-white rounded-2xl p-6 flex flex-col items-center">
-                <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-gray-500 text-sm">QR 코드</span>
+            <div className="mt-6">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">내 밤하늘 QR코드</label>
+              <div className="ml-12 max-w-[240px]">
+                <div className="bg-white rounded-2xl p-6 flex flex-col items-center">
+                  <div className="w-40 h-40 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
+                    <span className="text-gray-500 text-sm">QR 코드</span>
+                  </div>
+                  <button
+                    onClick={handleCopyLink}
+                    className="w-full py-3 bg-[#6155F5] text-white font-medium rounded-full hover:bg-[#5044d4] transition"
+                  >
+                    링크 복사하기
+                  </button>
                 </div>
-                <button
-                  onClick={handleCopyLink}
-                  className="w-full py-3 bg-[#6155F5] text-white font-medium rounded-full hover:bg-[#5044d4] transition"
-                >
-                  링크 복사하기
-                </button>
               </div>
             </div>
           </div>
