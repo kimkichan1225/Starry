@@ -9,6 +9,15 @@ function SurveyStartPage() {
   const [targetUserNickname, setTargetUserNickname] = useState('User1');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // 로딩 애니메이션
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 대상 사용자 닉네임 가져오기
   useEffect(() => {
@@ -51,14 +60,6 @@ function SurveyStartPage() {
     alert(`${surveyorName}님, 설문을 시작합니다!`);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#030025] flex items-center justify-center">
-        <div className="text-white">로딩 중...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* 배경 이미지 */}
@@ -70,7 +71,9 @@ function SurveyStartPage() {
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 상단 네비게이션 */}
-        <nav className="px-6 py-5 flex justify-between items-center relative">
+        <nav className={`px-6 py-5 flex justify-between items-center relative transition-all duration-1000 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}>
           <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
@@ -85,7 +88,9 @@ function SurveyStartPage() {
           <img
             src="/Logo.png"
             alt="STARRY"
-            className="h-5 absolute left-1/2 transform -translate-x-1/2"
+            className={`h-5 absolute left-1/2 transform -translate-x-1/2 transition-opacity duration-1000 ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
           />
 
           <button className="text-white">
@@ -96,51 +101,80 @@ function SurveyStartPage() {
         </nav>
 
         {/* 중앙 콘텐츠 */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-          {/* 타이틀 */}
-          <div className="text-center mb-12">
-            <h1 className="text-white text-3xl font-bold mb-2">
-              {targetUserNickname} 님의
-            </h1>
-            <h2 className="text-white text-2xl">
-              밤하늘에 별을 선물하세요!
-            </h2>
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20 relative">
+          {/* 로고 이미지 (중앙에서 상단으로 이동) */}
+          <img
+            src="/Logo.png"
+            alt="STARRY"
+            className={`drop-shadow-2xl transition-all duration-1000 ease-out mb-2 ${
+              isLoaded
+                ? 'h-5 -translate-y-[calc(50vh-4rem)] opacity-0'
+                : 'w-64 md:w-96 translate-y-0 opacity-100'
+            }`}
+          />
 
-          {/* 입력 폼 */}
-          <div className="w-full max-w-[280px] space-y-4">
-            {/* 에러 메시지 */}
-            {error && (
-              <div className="bg-red-500/20 border border-red-500 text-red-100 px-4 py-2 rounded-lg text-sm text-center">
-                {error}
-              </div>
+          {/* 서브타이틀 (위로 올라가면서 사라짐) */}
+          <p className={`text-white font-normal tracking-wide text-lg md:text-xl transition-all duration-1000 ease-out ${
+            isLoaded ? 'opacity-0 -translate-y-[calc(50vh-4rem)]' : 'opacity-100 translate-y-0'
+          }`}>
+            당신을 닮은, 단 하나의 별자리
+          </p>
+
+          {/* 메인 콘텐츠 (로딩 후 나타남) */}
+          <div className={`w-full max-w-[320px] transition-all duration-1000 ease-out overflow-hidden ${
+            isLoaded ? 'max-h-[700px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-20'
+          }`}>
+            {loading ? (
+              <div className="text-white text-center">로딩 중...</div>
+            ) : (
+              <>
+                {/* 타이틀 */}
+                <div className="text-center mb-12">
+                  <h1 className="text-white text-3xl font-bold mb-2">
+                    {targetUserNickname} 님의
+                  </h1>
+                  <h2 className="text-white text-2xl">
+                    밤하늘에 별을 선물하세요!
+                  </h2>
+                </div>
+
+                {/* 입력 폼 */}
+                <div className="w-full max-w-[280px] mx-auto space-y-4">
+                  {/* 에러 메시지 */}
+                  {error && (
+                    <div className="bg-red-500/20 border border-red-500 text-red-100 px-4 py-2 rounded-lg text-sm text-center">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* 이름 입력 */}
+                  <input
+                    type="text"
+                    placeholder="이름을 입력해주세요."
+                    value={surveyorName}
+                    onChange={(e) => {
+                      setSurveyorName(e.target.value);
+                      setError('');
+                    }}
+                    className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-transparent shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:border-purple-500"
+                  />
+
+                  {/* 다음 버튼 */}
+                  <button
+                    onClick={handleNext}
+                    className="w-full py-3 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    다음
+                  </button>
+
+                  {/* 안내 문구 */}
+                  <p className="text-white/70 text-xs text-center leading-relaxed mt-8">
+                    * 한 번 입력한 이름은 바꿀 수 없어요.<br />
+                   * 신중하게 입력하고 '다음'으로 넘어가주세요.
+                  </p>
+                </div>
+              </>
             )}
-
-            {/* 이름 입력 */}
-            <input
-              type="text"
-              placeholder="이름을 입력해주세요."
-              value={surveyorName}
-              onChange={(e) => {
-                setSurveyorName(e.target.value);
-                setError('');
-              }}
-              className="w-full px-4 py-3 text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-transparent shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:border-purple-500"
-            />
-
-            {/* 다음 버튼 */}
-            <button
-              onClick={handleNext}
-              className="w-full py-3 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors"
-            >
-              다음
-            </button>
-
-            {/* 안내 문구 */}
-            <p className="text-white/70 text-xs text-center leading-relaxed mt-8">
-              * 한 번 입력한 이름은 바꿀 수 없어요.<br />
-             * 신중하게 입력하고 '다음'으로 넘어가주세요.
-            </p>
           </div>
         </div>
 
