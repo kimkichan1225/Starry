@@ -85,7 +85,7 @@ function UserPage() {
 
         {/* 메인 컨텐츠 영역 */}
         <div className="flex-1 px-6 pt-3 pb-8">
-          <div className="max-w-[340px] mx-auto space-y-6">
+          <div className="max-w-[340px] mx-auto">
             {/* 에러/성공 메시지 */}
             {error && (
               <div className="bg-red-500/20 border border-red-500 text-red-100 px-4 py-2 rounded-lg text-sm text-center">
@@ -99,22 +99,22 @@ function UserPage() {
             )}
 
             {/* 아이디 */}
-            <div className="flex items-center gap-4">
-              <label className="text-white text-sm whitespace-nowrap w-20">아이디</label>
-              <div className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm">
+            <div className="flex items-center mt-4">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12">아이디</label>
+              <div className="flex-1 px-4 py-3 text-white text-base">
                 {user?.email || 'User1'}
               </div>
             </div>
 
             {/* 닉네임 */}
-            <div className="flex items-center gap-4">
-              <label className="text-white text-sm whitespace-nowrap w-20">닉네임</label>
+            <div className="flex items-center">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12">닉네임</label>
               <div className="flex-1 flex items-center gap-2">
-                <div className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm">
+                <div className="flex-1 border-b border-white/30 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
                   {nickname || 'User1'}
                 </div>
-                <button className="p-3 bg-white/10 border border-white/30 rounded-lg hover:bg-white/20 transition">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="p-2 hover:opacity-70 transition">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
@@ -122,15 +122,10 @@ function UserPage() {
             </div>
 
             {/* 전화번호 */}
-            <div>
-              <label className="text-white text-sm mb-2 block">전화번호</label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm">
-                  {user?.user_metadata?.phone || '010-xxxx-xxxx'}
-                </div>
-                <button className="px-4 py-3 bg-[#6155F5] text-white text-sm rounded-lg hover:bg-[#5044d4] transition whitespace-nowrap">
-                  인증하기
-                </button>
+            <div className="flex items-center mt-2">
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12">전화번호</label>
+              <div className="flex-1 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
+                {user?.user_metadata?.phone || '010-xxxx-xxxx'}
               </div>
             </div>
 
