@@ -32,7 +32,7 @@ const LoadingPage = () => {
       if (error) throw error;
 
       if (data.user) {
-        navigate('/main');
+        navigate('/starry');
       }
     } catch (error) {
       setError(error.message || '로그인에 실패했습니다.');
@@ -47,7 +47,7 @@ const LoadingPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/main`,
+          redirectTo: `${window.location.origin}/starry`,
         },
       });
 
@@ -63,13 +63,32 @@ const LoadingPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/main`,
+          redirectTo: `${window.location.origin}/starry`,
         },
       });
 
       if (error) throw error;
     } catch (error) {
       setError(error.message || '카카오 로그인에 실패했습니다.');
+    }
+  };
+
+  // 개발자 테스트 로그인
+  const handleDevLogin = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'test@test.com',
+        password: 'test1234',
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        navigate('/starry');
+      }
+    } catch (error) {
+      console.error('개발자 로그인 실패:', error);
+      setError(error.message || '테스트 계정 로그인에 실패했습니다.');
     }
   };
 
@@ -86,7 +105,7 @@ const LoadingPage = () => {
         {/* 광고 배너 영역 */}
         <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
           <button
-            onClick={() => navigate('/main')}
+            onClick={handleDevLogin}
             className="px-4 py-2 text-sm rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-800 transition-colors"
           >
             개발자 로그인

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -22,6 +22,17 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // SMS 인증 상태
+  const [smsVerification, setSmsVerification] = useState({
+    sent: false,              // SMS 발송 여부
+    verified: false,          // 인증 완료 여부
+    loading: false,           // 로딩 상태
+    timer: 180,               // 3분 타이머 (초)
+    timerActive: false,       // 타이머 활성화 여부
+    error: '',                // SMS 관련 에러
+    verificationToken: null   // 인증 완료 토큰
+  });
+
   // 전화번호 포맷팅 함수
   const formatPhoneNumber = (value) => {
     // 숫자만 추출
@@ -36,6 +47,29 @@ const SignupPage = () => {
       return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
     }
   };
+
+  // 타이머 useEffect
+  useEffect(() => {
+    let interval;
+
+    if (smsVerification.timerActive && smsVerification.timer > 0) {
+      interval = setInterval(() => {
+        setSmsVerification(prev => ({
+          ...prev,
+          timer: prev.timer - 1
+        }));
+      }, 1000);
+    } else if (smsVerification.timer === 0) {
+      setSmsVerification(prev => ({
+        ...prev,
+        timerActive: false,
+        sent: false
+      }));
+      setError('인증번호가 만료되었습니다. 다시 요청해주세요.');
+    }
+
+    return () => clearInterval(interval);
+  }, [smsVerification.timerActive, smsVerification.timer]);
 
   // 입력 변경 핸들러
   const handleChange = (e) => {
@@ -55,11 +89,118 @@ const SignupPage = () => {
     }
   };
 
+  // SMS 발송 핸들러
+  const handleSendSMS = async () => {
+    // 전화번호 검증
+    if (!formData.phone || formData.phone.length !== 13) {
+      setError('올바른 전화번호를 입력해주세요.');
+      return;
+    }
+
+    setSmsVerification(prev => ({ ...prev, loading: true, error: '' }));
+    setError('');
+
+    try {
+      const response = await fetch(
+        `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ phone: formData.phone })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSmsVerification(prev => ({
+          ...prev,
+          sent: true,
+          loading: false,
+          timer: 180,
+          timerActive: true,
+          error: ''
+        }));
+        setSuccessMessage('인증번호가 발송되었습니다.');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        throw new Error(data.message || 'SMS 발송에 실패했습니다.');
+      }
+    } catch (error) {
+      setSmsVerification(prev => ({
+        ...prev,
+        loading: false,
+        error: error.message
+      }));
+      setError(error.message);
+    }
+  };
+
+  // SMS 검증 핸들러
+  const handleVerifySMS = async () => {
+    if (!formData.verificationCode || formData.verificationCode.length !== 6) {
+      setError('인증번호 6자리를 입력해주세요.');
+      return;
+    }
+
+    setSmsVerification(prev => ({ ...prev, loading: true, error: '' }));
+    setError('');
+
+    try {
+      const response = await fetch(
+        `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/verify-sms`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            phone: formData.phone,
+            code: formData.verificationCode
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success && data.verified) {
+        setSmsVerification(prev => ({
+          ...prev,
+          verified: true,
+          loading: false,
+          timerActive: false,
+          verificationToken: data.verificationToken
+        }));
+        setSuccessMessage('휴대전화 인증이 완료되었습니다.');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        throw new Error(data.message || '인증번호가 일치하지 않습니다.');
+      }
+    } catch (error) {
+      setSmsVerification(prev => ({
+        ...prev,
+        loading: false,
+        error: error.message
+      }));
+      setError(error.message);
+    }
+  };
+
   // 회원가입 핸들러
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+
+    // SMS 인증 확인 추가
+    if (!smsVerification.verified) {
+      setError('휴대전화 인증을 완료해주세요.');
+      return;
+    }
 
     // 유효성 검사
     if (!agreePrivacy) {
@@ -89,6 +230,8 @@ const SignupPage = () => {
             nickname: formData.nickname,
             birthdate: formData.birthdate,
             phone: formData.phone,
+            phone_verified: true, // 인증 완료 표시
+            verification_token: smsVerification.verificationToken
           }
         }
       });
@@ -96,7 +239,7 @@ const SignupPage = () => {
       if (error) throw error;
 
       if (data.user) {
-        setSuccessMessage('회원가입이 완료되었습니다! 이메일을 확인해주세요.');
+        setSuccessMessage('회원가입이 완료되었습니다!');
         setTimeout(() => {
           navigate('/');
         }, 2000);
@@ -235,20 +378,58 @@ const SignupPage = () => {
                     placeholder="010-1234-5678"
                     required
                     maxLength="13"
-                    className="flex-1 px-2 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
+                    disabled={smsVerification.verified}
+                    className="flex-1 px-2 py-[4px] text-center text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:bg-gray-200 disabled:cursor-not-allowed bg-white border-purple-500 focus:ring-purple-600"
                   />
-                  <button type="button" className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap">
-                    인증하기
+                  <button
+                    type="button"
+                    onClick={handleSendSMS}
+                    disabled={smsVerification.loading || smsVerification.timerActive || smsVerification.verified}
+                    className={`px-4 py-[4px] text-[13px] rounded-lg text-white font-medium transition-colors whitespace-nowrap ${
+                      smsVerification.verified
+                        ? 'bg-green-500 cursor-not-allowed'
+                        : smsVerification.timerActive
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-purple-600 hover:bg-purple-700'
+                    }`}
+                  >
+                    {smsVerification.verified
+                      ? '완료'
+                      : smsVerification.timerActive
+                        ? `${Math.floor(smsVerification.timer / 60)}:${String(smsVerification.timer % 60).padStart(2, '0')}`
+                        : smsVerification.loading
+                          ? '발송 중...'
+                          : '인증하기'
+                    }
                   </button>
                 </div>
-                <input
-                  type="text"
-                  name="verificationCode"
-                  value={formData.verificationCode}
-                  onChange={handleChange}
-                  placeholder="인증번호 입력"
-                  className="w-full px-4 py-[6px] text-center text-xs rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
-                />
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    name="verificationCode"
+                    value={formData.verificationCode}
+                    onChange={handleChange}
+                    placeholder="인증번호 6자리"
+                    maxLength="6"
+                    disabled={!smsVerification.sent || smsVerification.verified}
+                    className={`flex-1 px-4 py-[6px] text-center text-xs rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:cursor-not-allowed ${
+                      smsVerification.verified
+                        ? 'bg-green-100 border-green-500'
+                        : 'bg-white border-purple-500 focus:ring-purple-600'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifySMS}
+                    disabled={!smsVerification.sent || smsVerification.verified || smsVerification.loading || !formData.verificationCode}
+                    className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {smsVerification.verified ? '완료' : smsVerification.loading ? '확인 중...' : '확인'}
+                  </button>
+                </div>
+                {smsVerification.verified && (
+                  <p className="text-green-400 text-xs text-center">✓ 인증이 완료되었습니다.</p>
+                )}
               </div>
             </div>
 

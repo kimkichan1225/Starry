@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import LoadingPage from './pages/LoadingPage';
 import SignupPage from './pages/SignupPage';
-import MainPage from './pages/MainPage';
 import StarryPage from './pages/StarryPage';
 import StarsPage from './pages/StarsPage';
 import HomePage from './pages/HomePage';
@@ -12,26 +12,27 @@ import NoticeDetailPage from './pages/NoticeDetailPage';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoadingPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/main" element={<MainPage />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoadingPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
-        {/* 네비게이션 바 페이지들 */}
-        <Route path="/starry" element={<StarryPage />} />
-        <Route path="/stars" element={<StarsPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/stat" element={<StatPage />} />
-        <Route path="/user" element={<UserPage />} />
-        <Route path="/notice" element={<NoticePage />} />
-        <Route path="/notice/:id" element={<NoticeDetailPage />} />
+          {/* 네비게이션 바 페이지들 */}
+          <Route path="/starry" element={<StarryPage />} />
+          <Route path="/stars" element={<StarsPage />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/stat" element={<StatPage />} />
+          <Route path="/user" element={<UserPage />} />
+          <Route path="/notice" element={<NoticePage />} />
+          <Route path="/notice/:id" element={<NoticeDetailPage />} />
 
-        {/* 추후 페이지 라우트 추가 예정 */}
-        {/* <Route path="/login" element={<LoginPage />} /> */}
-        {/* <Route path="/u/:userId" element={<NightSkyPage />} /> */}
-      </Routes>
-    </Router>
+          {/* 추후 페이지 라우트 추가 예정 */}
+          {/* <Route path="/login" element={<LoginPage />} /> */}
+          {/* <Route path="/u/:userId" element={<NightSkyPage />} /> */}
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
