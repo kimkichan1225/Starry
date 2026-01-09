@@ -22,13 +22,37 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // 전화번호 포맷팅 함수
+  const formatPhoneNumber = (value) => {
+    // 숫자만 추출
+    const numbers = value.replace(/[^\d]/g, '');
+
+    // 길이에 따라 포맷팅
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 7) {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    } else {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    }
+  };
+
   // 입력 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+    // 전화번호 필드인 경우 자동 포맷팅
+    if (name === 'phone') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: formatPhoneNumber(value)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // 회원가입 핸들러
@@ -140,6 +164,7 @@ const SignupPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                placeholder="user@example.com"
                 required
                 className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
@@ -207,7 +232,9 @@ const SignupPage = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    placeholder="010-1234-5678"
                     required
+                    maxLength="13"
                     className="flex-1 px-2 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                   />
                   <button type="button" className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap">
