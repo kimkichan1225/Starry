@@ -108,14 +108,14 @@ function SurveyStartPage() {
             alt="STARRY"
             className={`drop-shadow-2xl transition-all duration-1000 ease-out mb-2 ${
               isLoaded
-                ? 'h-5 -translate-y-[calc(50vh-4rem)] opacity-0'
+                ? 'h-5 -translate-y-[22vh] opacity-0'
                 : 'w-64 md:w-96 translate-y-0 opacity-100'
             }`}
           />
 
           {/* 서브타이틀 (위로 올라가면서 사라짐) */}
           <p className={`text-white font-normal tracking-wide text-lg md:text-xl transition-all duration-1000 ease-out ${
-            isLoaded ? 'opacity-0 -translate-y-[calc(50vh-4rem)]' : 'opacity-100 translate-y-0'
+            isLoaded ? 'opacity-0 -translate-y-[22vh]' : 'opacity-100 translate-y-0'
           }`}>
             당신을 닮은, 단 하나의 별자리
           </p>
