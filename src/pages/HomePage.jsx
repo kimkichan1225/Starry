@@ -3,9 +3,24 @@ import { useAuth } from '../contexts/AuthContext';
 import NavBar from '../components/NavBar';
 
 function HomePage() {
-  const { nickname } = useAuth();
+  const { user, nickname } = useAuth();
   const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
+  const [shareMessage, setShareMessage] = useState('');
+
+  // 공유 링크 복사
+  const handleShare = () => {
+    if (!user?.id) {
+      setShareMessage('로그인이 필요합니다.');
+      setTimeout(() => setShareMessage(''), 2000);
+      return;
+    }
+
+    const surveyLink = `${window.location.origin}/survey/${user.id}`;
+    navigator.clipboard.writeText(surveyLink);
+    setShareMessage('링크가 복사되었습니다!');
+    setTimeout(() => setShareMessage(''), 2000);
+  };
 
   // 임시 카드 데이터 (11개 + 1개는 추가 버튼)
   const cards = Array.from({ length: 11 }, (_, i) => ({
@@ -42,10 +57,20 @@ function HomePage() {
           {/* 여기에 별자리 시각화가 들어갈 예정 */}
         </div>
 
+        {/* 공유 성공 메시지 */}
+        {shareMessage && (
+          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+            {shareMessage}
+          </div>
+        )}
+
         {/* 플로팅 버튼들 */}
         <div className={`fixed right-4 bottom-44 flex flex-col gap-3 z-40 transition-opacity duration-300 ${isConstellationExpanded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           {/* 공유 버튼 */}
-          <button className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition">
+          <button
+            onClick={handleShare}
+            className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
+          >
             <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
