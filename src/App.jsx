@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import LoadingPage from './pages/LoadingPage';
 import SignupPage from './pages/SignupPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
+import AdminPage from './pages/AdminPage';
 import StarryPage from './pages/StarryPage';
 import StarsPage from './pages/StarsPage';
 import HomePage from './pages/HomePage';
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<LoadingPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
+          <Route path="/admin" element={<AdminPage />} />
 
           {/* 네비게이션 바 페이지들 */}
           <Route path="/starry" element={<StarryPage />} />

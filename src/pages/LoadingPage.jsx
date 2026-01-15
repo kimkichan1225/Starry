@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { isAdminEmail } from '../config/admin';
 
 const LoadingPage = () => {
   const navigate = useNavigate();
@@ -32,7 +33,12 @@ const LoadingPage = () => {
       if (error) throw error;
 
       if (data.user) {
-        navigate('/starry');
+        // 관리자인 경우 관리자 페이지로 이동
+        if (isAdminEmail(data.user.email)) {
+          navigate('/admin');
+        } else {
+          navigate('/starry');
+        }
       }
     } catch (error) {
       // 로그인 실패 에러 메시지 한국어로 변경
@@ -89,7 +95,12 @@ const LoadingPage = () => {
       if (error) throw error;
 
       if (data.user) {
-        navigate('/starry');
+        // 관리자인 경우 관리자 페이지로 이동
+        if (isAdminEmail(data.user.email)) {
+          navigate('/admin');
+        } else {
+          navigate('/starry');
+        }
       }
     } catch (error) {
       console.error('개발자 로그인 실패:', error);

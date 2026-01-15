@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { isAdminEmail } from '../config/admin';
 
 const AuthContext = createContext({});
 
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // 초기 사용자 정보 가져오기
@@ -31,6 +33,7 @@ export const AuthProvider = ({ children }) => {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
         setIsProfileComplete(checkProfileComplete(user));
+        setIsAdmin(user ? isAdminEmail(user.email) : false);
         if (user?.user_metadata?.nickname) {
           setNickname(user.user_metadata.nickname);
         } else {
@@ -40,6 +43,7 @@ export const AuthProvider = ({ children }) => {
         console.error('Error fetching user:', error);
         setNickname('User1');
         setIsProfileComplete(false);
+        setIsAdmin(false);
       } finally {
         setLoading(false);
       }
@@ -52,6 +56,7 @@ export const AuthProvider = ({ children }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       setIsProfileComplete(checkProfileComplete(currentUser));
+      setIsAdmin(currentUser ? isAdminEmail(currentUser.email) : false);
 
       if (currentUser?.user_metadata?.nickname) {
         setNickname(currentUser.user_metadata.nickname);
@@ -70,6 +75,7 @@ export const AuthProvider = ({ children }) => {
     nickname,
     loading,
     isProfileComplete,
+    isAdmin,
     setUser,
     setNickname,
     setIsProfileComplete
