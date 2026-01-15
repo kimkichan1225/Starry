@@ -11,10 +11,18 @@ export const useAuth = () => {
   return context;
 };
 
+// 프로필 완성 여부 체크 함수
+const checkProfileComplete = (userData) => {
+  if (!userData) return false;
+  const metadata = userData.user_metadata || {};
+  return !!(metadata.nickname && metadata.birthdate && metadata.phone_verified);
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
 
   useEffect(() => {
     // 초기 사용자 정보 가져오기
@@ -22,6 +30,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
+        setIsProfileComplete(checkProfileComplete(user));
         if (user?.user_metadata?.nickname) {
           setNickname(user.user_metadata.nickname);
         } else {
@@ -30,6 +39,7 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Error fetching user:', error);
         setNickname('User1');
+        setIsProfileComplete(false);
       } finally {
         setLoading(false);
       }
@@ -41,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
+      setIsProfileComplete(checkProfileComplete(currentUser));
 
       if (currentUser?.user_metadata?.nickname) {
         setNickname(currentUser.user_metadata.nickname);
@@ -58,8 +69,10 @@ export const AuthProvider = ({ children }) => {
     user,
     nickname,
     loading,
+    isProfileComplete,
     setUser,
-    setNickname
+    setNickname,
+    setIsProfileComplete
   };
 
   return (

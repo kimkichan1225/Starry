@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import LoadingPage from './pages/LoadingPage';
 import SignupPage from './pages/SignupPage';
+import ProfileSetupPage from './pages/ProfileSetupPage';
 import StarryPage from './pages/StarryPage';
 import StarsPage from './pages/StarsPage';
 import HomePage from './pages/HomePage';
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LoadingPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/profile-setup" element={<ProfileSetupPage />} />
 
           {/* 네비게이션 바 페이지들 */}
           <Route path="/starry" element={<StarryPage />} />

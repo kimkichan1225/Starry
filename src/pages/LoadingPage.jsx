@@ -52,7 +52,7 @@ const LoadingPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/starry`,
+          redirectTo: `${window.location.origin}/profile-setup`,
         },
       });
 
@@ -68,7 +68,7 @@ const LoadingPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/starry`,
+          redirectTo: `${window.location.origin}/profile-setup`,
         },
       });
 
