@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase';
 const questions = [
   {
     id: 1,
-    question: (nickname) => `${nickname} 님이 가장 중요하게 생각하는 것은?`,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 중요하게 생각하는 것은?',
     options: [
       { id: 'a', emoji: '🔥', label: '도전!', description: '용감하게 밀고 나간다' },
       { id: 'b', emoji: '📐', label: '실력!', description: '확실하게 해낸다' },
@@ -13,7 +14,50 @@ const questions = [
       { id: 'd', emoji: '💖', label: '마음!', description: '사람들과 함께 해낸다' },
     ],
   },
-  // 추후 질문 2~5 추가 예정
+  {
+    id: 2,
+    questionLine1: (nickname) => `${nickname} 님의`,
+    questionLine2: '새로운 상황에서 행동 스타일은?',
+    options: [
+      { id: 'a', emoji: '🧑‍🏫', label: '리더형!', description: '내가 이끌어간다' },
+      { id: 'b', emoji: '🗺️', label: '유지형!', description: '방식을 끝까지 유지한다' },
+      { id: 'c', emoji: '🧩', label: '유연형!', description: '상황에 따라 바뀐다' },
+      { id: 'd', emoji: '💬', label: '중재형!', description: '모두의 의견을 들어본다' },
+    ],
+  },
+  {
+    id: 3,
+    questionLine1: (nickname) => `${nickname} 님의`,
+    questionLine2: '첫인상은?',
+    options: [
+      { id: 'a', emoji: '😀', label: '외향적!', description: '활발한 에너지' },
+      { id: 'b', emoji: '😳', label: '내향적!', description: '차분하고 신중함' },
+      { id: 'c', emoji: '😊', label: '균형적!', description: '친근하고 편함' },
+      { id: 'd', emoji: '😝', label: '개성!', description: '어디로 튈지 모름' },
+    ],
+  },
+  {
+    id: 4,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 행복한 상황은?',
+    options: [
+      { id: 'a', emoji: '🎮', label: '게임 레벨이', description: '올랐을 때' },
+      { id: 'b', emoji: '🔒', label: '재미있는 비밀을', description: '알았을 때' },
+      { id: 'c', emoji: '🏆️', label: '노력한 일에', description: '칭찬을 받을 때' },
+      { id: 'd', emoji: '☕', label: '친구들과', description: '카페에 갈 때' },
+    ],
+  },
+  {
+    id: 5,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '스트레스를 푸는 방법은?',
+    options: [
+      { id: 'a', emoji: '🍰', label: '맛있는걸 먹거나', description: '푹 잔다' },
+      { id: 'b', emoji: '🗣', label: '친한 사람에게', description: '이야기한다' },
+      { id: 'c', emoji: '🏃‍♂️', label: '운동이나', description: '노래를 한다' },
+      { id: 'd', emoji: '🧮', label: '스트레스 받은', description: '이유를 따져본다' },
+    ],
+  },
 ];
 
 function SurveyQuestionPage() {
@@ -64,6 +108,22 @@ function SurveyQuestionPage() {
     setSelectedOption(optionId);
   };
 
+  const handlePrev = () => {
+    if (currentQuestion > 0) {
+      // 현재 답변 저장
+      const newAnswers = {
+        ...answers,
+        [question.id]: selectedOption,
+      };
+      setAnswers(newAnswers);
+
+      // 이전 질문으로
+      const prevQuestion = currentQuestion - 1;
+      setCurrentQuestion(prevQuestion);
+      setSelectedOption(newAnswers[questions[prevQuestion]?.id] || null);
+    }
+  };
+
   const handleNext = () => {
     if (!selectedOption) return;
 
@@ -77,7 +137,7 @@ function SurveyQuestionPage() {
     if (currentQuestion < questions.length - 1) {
       // 다음 질문으로
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedOption(answers[questions[currentQuestion + 1]?.id] || null);
+      setSelectedOption(newAnswers[questions[currentQuestion + 1]?.id] || null);
     } else {
       // 설문 완료 (나중에 결과 페이지로 이동)
       console.log('설문 완료:', newAnswers);
@@ -137,10 +197,10 @@ function SurveyQuestionPage() {
             {/* 질문 텍스트 */}
             <div className="mb-6">
               <h1 className="text-white text-2xl font-bold leading-relaxed">
-                {targetUserNickname} 님이
+                {question.questionLine1(targetUserNickname)}
               </h1>
               <h2 className="text-white text-2xl font-bold">
-                가장 중요하게 생각하는 것은?
+                {question.questionLine2}
               </h2>
             </div>
 
@@ -153,31 +213,53 @@ function SurveyQuestionPage() {
                 <button
                   key={option.id}
                   onClick={() => handleOptionSelect(option.id)}
-                  className={`w-[300px] py-3 px-4 rounded-lg border-2 transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  className={`w-[300px] py-3 px-4 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
                     selectedOption === option.id
-                      ? 'border-[#9E4EFF] bg-[#9E4EFF]/20 text-black'
+                      ? 'border-[#9E4EFF] bg-[#9E4EFF] text-white shadow-lg scale-[1.02]'
                       : 'border-[#9E4EFF] bg-white text-black hover:bg-gray-100'
                   }`}
                 >
-                  <span className="text-lg">{option.emoji}</span>
+                  <span className="text-lg -translate-y-[3px]">{option.emoji}</span>
                   <span className="font-semibold">{option.label}</span>
-                  <span className="text-black/70">{option.description}</span>
+                  <span className={`ml-2 ${selectedOption === option.id ? 'text-white' : 'text-black'}`}>{option.description}</span>
                 </button>
               ))}
             </div>
 
-            {/* 다음 버튼 */}
-            <button
-              onClick={handleNext}
-              disabled={!selectedOption}
-              className={`w-full py-3 text-sm rounded-lg font-medium transition-colors ${
-                selectedOption
-                  ? 'bg-purple-600 text-white hover:bg-purple-700'
-                  : 'bg-purple-600/50 text-white/50 cursor-not-allowed'
-              }`}
-            >
-              다음
-            </button>
+            {/* 이전/다음 버튼 */}
+            {currentQuestion === 0 ? (
+              <button
+                onClick={handleNext}
+                disabled={!selectedOption}
+                className={`w-[300px] py-3 text-sm rounded-lg font-medium transition-colors ${
+                  selectedOption
+                    ? 'bg-[#9E4EFF] text-white hover:bg-[#8A3EE8]'
+                    : 'bg-[#9E4EFF]/50 text-white/50 cursor-not-allowed'
+                }`}
+              >
+                다음
+              </button>
+            ) : (
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={handlePrev}
+                  className="w-[144px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-black hover:bg-[#B5B5B5] transition-colors"
+                >
+                  이전
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={!selectedOption}
+                  className={`w-[144px] py-3 text-sm rounded-lg font-medium transition-colors ${
+                    selectedOption
+                      ? 'bg-[#9E4EFF] text-white hover:bg-[#8A3EE8]'
+                      : 'bg-[#9E4EFF]/50 text-white/50 cursor-not-allowed'
+                  }`}
+                >
+                  다음
+                </button>
+              </div>
+            )}
 
             {/* 페이지 인디케이터 */}
             <div className="mt-6 text-white/60 text-sm">
