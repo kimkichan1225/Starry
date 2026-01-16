@@ -55,9 +55,8 @@ function SurveyStartPage() {
       return;
     }
 
-    // 설문 페이지로 이동 (나중에 구현)
-    // navigate(`/survey/${userId}/questions`, { state: { surveyorName } });
-    alert(`${surveyorName}님, 설문을 시작합니다!`);
+    // 설문 페이지로 이동
+    navigate(`/survey/${userId}/questions`, { state: { surveyorName } });
   };
 
   return (

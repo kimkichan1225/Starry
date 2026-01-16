@@ -12,6 +12,7 @@ import UserPage from './pages/UserPage';
 import NoticePage from './pages/NoticePage';
 import NoticeDetailPage from './pages/NoticeDetailPage';
 import SurveyStartPage from './pages/SurveyStartPage';
+import SurveyQuestionPage from './pages/SurveyQuestionPage';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
 
           {/* 설문 페이지 */}
           <Route path="/survey/:userId" element={<SurveyStartPage />} />
+          <Route path="/survey/:userId/questions" element={<SurveyQuestionPage />} />
 
           {/* 추후 페이지 라우트 추가 예정 */}
           {/* <Route path="/login" element={<LoginPage />} /> */}
