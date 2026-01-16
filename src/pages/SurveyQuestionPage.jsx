@@ -1,6 +1,57 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+
+// 별 생성을 위한 설정
+const palette = [
+  { name: '빨강', h: 0 },    // 1: 빨강
+  { name: '초록', h: 120 },  // 2: 초록
+  { name: '파랑', h: 220 },  // 3: 파랑
+  { name: '노랑', h: 50 }    // 4: 노랑
+];
+const pointsMap = [8, 5, 4, 6]; // 꼭짓점 개수 매핑
+const sizeMap = [0.35, 0.25, 0.30, 0.40]; // 크기 매핑
+
+// 옵션 id를 숫자로 변환
+const optionToNumber = (id) => {
+  const map = { 'a': 1, 'b': 2, 'c': 3, 'd': 4 };
+  return map[id] || 1;
+};
+
+// 범위 매핑 함수
+const mapRange = (v, inMin, inMax, outMin, outMax) => {
+  return outMin + (outMax - outMin) * ((v - inMin) / (inMax - inMin));
+};
+
+// 별 그리기 함수
+const drawStar = (ctx, x, y, outerR, innerR, points, fillStyle) => {
+  const step = Math.PI / points;
+  ctx.beginPath();
+  for (let i = 0; i < 2 * points; i++) {
+    let r;
+    if (i % 2 === 0) {
+      if (points === 8) {
+        const pointIdx = i / 2;
+        r = (pointIdx % 2 === 1) ? outerR * 0.8 : outerR;
+      } else {
+        r = outerR;
+      }
+    } else {
+      r = innerR;
+    }
+    const a = i * step - Math.PI / 2;
+    const px = x + Math.cos(a) * r;
+    const py = y + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.lineJoin = 'round';
+  if (fillStyle) {
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+};
 
 const questions = [
   {
@@ -71,6 +122,9 @@ function SurveyQuestionPage() {
   const [answers, setAnswers] = useState({});
   const [selectedOption, setSelectedOption] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showResult, setShowResult] = useState(false);
+  const [finalAnswers, setFinalAnswers] = useState(null);
+  const canvasRef = useRef(null);
 
   // 대상 사용자 닉네임 가져오기
   useEffect(() => {
@@ -139,17 +193,175 @@ function SurveyQuestionPage() {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOption(newAnswers[questions[currentQuestion + 1]?.id] || null);
     } else {
-      // 설문 완료 (나중에 결과 페이지로 이동)
+      // 설문 완료 - 결과 화면으로 전환
       console.log('설문 완료:', newAnswers);
-      alert('설문이 완료되었습니다!');
-      // navigate(`/survey/${userId}/result`, { state: { answers: newAnswers, surveyorName } });
+      setFinalAnswers(newAnswers);
+      setShowResult(true);
     }
   };
+
+  // 별 그리기 useEffect
+  useEffect(() => {
+    if (showResult && canvasRef.current && finalAnswers) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const cx = W / 2;
+      const cy = H / 2;
+
+      // 답변에서 별 속성 추출
+      const colorIdx = optionToNumber(finalAnswers[1]) - 1;  // 1번 질문: 색상
+      const pointsIdx = optionToNumber(finalAnswers[2]) - 1; // 2번 질문: 꼭짓점
+      const sizeIdx = optionToNumber(finalAnswers[3]) - 1;   // 3번 질문: 크기
+      const satIdx = optionToNumber(finalAnswers[4]);        // 4번 질문: 채도
+      const sharpIdx = optionToNumber(finalAnswers[5]);      // 5번 질문: 뾰족함
+
+      // 별 속성 계산
+      const starPoints = pointsMap[pointsIdx];
+      const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
+      const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
+      const starInner = starOuter * innerRatio;
+      const colorData = palette[colorIdx];
+      const saturation = mapRange(satIdx, 1, 4, 80, 20);
+      const lightness = 50;
+      const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
+
+      // 배경 클리어
+      ctx.clearRect(0, 0, W, H);
+
+      // 중심 발광 효과
+      const glowIntensity = 0.28;
+      const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(W, H) * 0.6);
+      g.addColorStop(0, `rgba(255, 220, 150, ${0.9 * glowIntensity})`);
+      g.addColorStop(0.5, `rgba(20,30,40, ${0.12 * glowIntensity})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // 별 그리기
+      drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
+
+      // 별 글로우 효과
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const glowScale = 1.5;
+      const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
+      const g2 = ctx.createRadialGradient(cx, cy, starOuter * 0.2, cx, cy, starOuter * glowScale);
+      g2.addColorStop(0, glowColor + '0.5)');
+      g2.addColorStop(0.5, glowColor + '0.2)');
+      g2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, starOuter * glowScale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }, [showResult, finalAnswers]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">로딩 중...</div>
+      </div>
+    );
+  }
+
+  // 결과 화면
+  if (showResult) {
+    return (
+      <div className="relative min-h-screen overflow-hidden">
+        {/* 배경 이미지 */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/BackGround.jpg)' }}
+        ></div>
+
+        {/* 메인 콘텐츠 */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {/* 상단 네비게이션 */}
+          <nav className="px-6 py-5 flex justify-between items-center relative">
+            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+              </svg>
+              <span className="text-sm font-light">English</span>
+            </button>
+
+            <img
+              src="/Logo.png"
+              alt="STARRY"
+              className="h-5 absolute left-1/2 transform -translate-x-1/2"
+            />
+
+            <button className="text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </nav>
+
+          {/* 중앙 콘텐츠 */}
+          <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-16">
+            <div className="w-full max-w-[330px] text-center">
+              {/* 완료 텍스트 */}
+              <div className="mb-6">
+                <h1 className="text-white text-2xl font-bold leading-relaxed">
+                  {targetUserNickname} 님께 보낼
+                </h1>
+                <h2 className="text-white text-2xl font-bold">
+                  별이 완성되었어요!
+                </h2>
+              </div>
+
+              {/* 별 캔버스 */}
+              <div className="flex justify-center mb-8">
+                <canvas
+                  ref={canvasRef}
+                  width={250}
+                  height={250}
+                  className="rounded-lg"
+                />
+              </div>
+
+              {/* 전송 버튼 */}
+              <button
+                className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
+              >
+                전송
+              </button>
+            </div>
+          </div>
+
+          {/* 하단 정보 */}
+          <div className="pb-8 px-6 text-center">
+            <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-3 -translate-y-[11px]"
+              />
+              <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
+              <div className="text-left space-y-1">
+                <div className="text-[9px] leading-snug">
+                  광고 문의: 123456789@gmail.com <br />
+                  Copyright ©2025 123456789. All rights reserved.
+                </div>
+                <div className="text-white/70 text-[9px] flex items-center space-x-1">
+                  <span className="font-semibold text-white">개발자</span>
+                  <span>김기찬</span>
+                  <span className="text-white/40">·</span>
+                  <span className="font-semibold text-white">디자이너</span>
+                  <span>김태희</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
