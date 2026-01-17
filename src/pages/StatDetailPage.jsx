@@ -333,13 +333,13 @@ function StatDetailPage() {
             </div>
 
             {/* 응답 통계 박스 */}
-            <div className="border-2 border-white/50 rounded-xl p-4 mb-6">
+            <div className="border-2 border-dashed border-[#FAF5FF] rounded-xl p-4 mb-6 bg-[#6155F5]/30">
               {currentStats.map((opt, index) => (
                 <div key={opt.id} className="flex items-center py-2 border-b border-white/20 last:border-b-0">
-                  <span className="text-white font-bold w-6">{index + 1}</span>
-                  <span className="text-lg mr-1">{opt.emoji}</span>
-                  <span className="text-white flex-1">{opt.label} {opt.description}</span>
-                  <span className="text-white/70 text-sm">({opt.count}명 / {opt.percent}%)</span>
+                  <span className="text-white font-bold w-6 text-sm">{index + 1}</span>
+                  <span className="text-base mr-1">{opt.emoji}</span>
+                  <span className="text-white flex-1 text-sm">{opt.label} {opt.description}</span>
+                  <span className="text-white/70 text-xs">({opt.count}명 / {opt.percent}%)</span>
                 </div>
               ))}
             </div>
