@@ -1,13 +1,166 @@
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 
-function StarsPage() {
-  const { nickname } = useAuth();
+// 별 생성을 위한 설정
+const palette = [
+  { name: '빨강', h: 0 },
+  { name: '초록', h: 120 },
+  { name: '파랑', h: 220 },
+  { name: '노랑', h: 50 }
+];
+const pointsMap = [8, 5, 4, 6];
+const sizeMap = [0.35, 0.25, 0.30, 0.40];
 
-  // 임시 카드 데이터 (11개 + 1개는 추가 버튼)
-  const cards = Array.from({ length: 11 }, (_, i) => ({
-    id: i + 1,
-  }));
+const mapRange = (v, inMin, inMax, outMin, outMax) => {
+  return outMin + (outMax - outMin) * ((v - inMin) / (inMax - inMin));
+};
+
+// 별 그리기 함수
+const drawStar = (ctx, x, y, outerR, innerR, points, fillStyle) => {
+  const step = Math.PI / points;
+  ctx.beginPath();
+  for (let i = 0; i < 2 * points; i++) {
+    let r;
+    if (i % 2 === 0) {
+      if (points === 8) {
+        const pointIdx = i / 2;
+        r = (pointIdx % 2 === 1) ? outerR * 0.8 : outerR;
+      } else {
+        r = outerR;
+      }
+    } else {
+      r = innerR;
+    }
+    const a = i * step - Math.PI / 2;
+    const px = x + Math.cos(a) * r;
+    const py = y + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.lineJoin = 'round';
+  if (fillStyle) {
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+};
+
+// 별 카드 컴포넌트
+function StarCard({ star, index }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (canvasRef.current && star) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const cx = W / 2;
+      const cy = H / 2;
+
+      // 별 속성 계산
+      const colorIdx = star.star_color - 1;
+      const pointsIdx = star.star_points - 1;
+      const sizeIdx = star.star_size - 1;
+      const satIdx = star.star_saturation;
+      const sharpIdx = star.star_sharpness;
+
+      const starPoints = pointsMap[pointsIdx];
+      const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
+      const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
+      const starInner = starOuter * innerRatio;
+      const colorData = palette[colorIdx];
+      const saturation = mapRange(satIdx, 1, 4, 80, 20);
+      const lightness = 50;
+      const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
+
+      // 배경 클리어
+      ctx.clearRect(0, 0, W, H);
+
+      // 별 그리기
+      drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
+
+      // 별 글로우 효과
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const glowScale = 1.3;
+      const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
+      const g2 = ctx.createRadialGradient(cx, cy, starOuter * 0.2, cx, cy, starOuter * glowScale);
+      g2.addColorStop(0, glowColor + '0.4)');
+      g2.addColorStop(0.5, glowColor + '0.15)');
+      g2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, starOuter * glowScale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }, [star]);
+
+  return (
+    <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl p-2 hover:border-white/70 transition cursor-pointer flex flex-col">
+      <div className="text-white text-xs font-medium mb-1">
+        no.{index + 1}
+      </div>
+      {star ? (
+        <div className="flex-1 flex items-center justify-center">
+          <canvas
+            ref={canvasRef}
+            width={70}
+            height={70}
+          />
+        </div>
+      ) : (
+        <div className="flex-1" />
+      )}
+      {star && (
+        <div className="text-white/60 text-[10px] text-center truncate">
+          from. {star.surveyor_name}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StarsPage() {
+  const { user, nickname } = useAuth();
+  const [stars, setStars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const maxStars = 20;
+
+  // 별 데이터 가져오기
+  useEffect(() => {
+    const fetchStars = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('stars')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        setStars(data || []);
+      } catch (error) {
+        console.error('Error fetching stars:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStars();
+  }, [user]);
+
+  // 빈 카드 슬롯 생성 (받은 별 + 빈 슬롯 = 11개, 마지막은 추가 버튼)
+  const totalSlots = 11;
+  const emptySlots = Math.max(0, totalSlots - stars.length);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#030025]">
@@ -37,24 +190,30 @@ function StarsPage() {
         <div className="flex-1 px-6 pt-3 pb-8">
           {/* 별 개수 표시 */}
           <div className="text-center mb-6">
-            <span className="text-white text-lg">13 / 20 개의 별을 선물 받았어요!</span>
+            <span className="text-white text-lg">{stars.length} / {maxStars} 개의 별을 선물 받았어요!</span>
           </div>
 
           {/* 카드 그리드 */}
           <div className="grid grid-cols-3 gap-3 max-w-[340px] mx-auto mb-6">
-            {cards.map((card) => (
+            {/* 받은 별 카드들 */}
+            {stars.map((star, index) => (
+              <StarCard key={star.id} star={star} index={index} />
+            ))}
+
+            {/* 빈 슬롯들 */}
+            {Array.from({ length: emptySlots }, (_, i) => (
               <div
-                key={card.id}
-                className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl p-2 hover:border-white/70 transition cursor-pointer"
+                key={`empty-${i}`}
+                className="aspect-[4/5] bg-white/5 border-2 border-white/30 border-dashed rounded-2xl p-2"
               >
-                <div className="text-white text-xs font-medium">
-                  no.{card.id}
+                <div className="text-white/30 text-xs font-medium">
+                  no.{stars.length + i + 1}
                 </div>
               </div>
             ))}
 
             {/* 추가 버튼 카드 */}
-            <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer">
+            <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer hover:bg-white/10">
               <div className="text-white text-4xl mb-1">+</div>
               <div className="text-white text-xs text-center px-2">
                 링크 공유하고

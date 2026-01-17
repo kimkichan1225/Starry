@@ -123,8 +123,11 @@ function SurveyQuestionPage() {
   const [selectedOption, setSelectedOption] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showResult, setShowResult] = useState(false);
+  const [showSent, setShowSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [finalAnswers, setFinalAnswers] = useState(null);
   const canvasRef = useRef(null);
+  const sentCanvasRef = useRef(null);
 
   // 대상 사용자 닉네임 가져오기
   useEffect(() => {
@@ -200,64 +203,110 @@ function SurveyQuestionPage() {
     }
   };
 
-  // 별 그리기 useEffect
+  // 별 전송 함수
+  const handleSend = async () => {
+    if (!finalAnswers || sending) return;
+
+    setSending(true);
+    try {
+      const starData = {
+        user_id: userId,
+        surveyor_name: surveyorName,
+        star_color: optionToNumber(finalAnswers[1]),
+        star_points: optionToNumber(finalAnswers[2]),
+        star_size: optionToNumber(finalAnswers[3]),
+        star_saturation: optionToNumber(finalAnswers[4]),
+        star_sharpness: optionToNumber(finalAnswers[5]),
+        answers: finalAnswers,
+      };
+
+      const { error } = await supabase
+        .from('stars')
+        .insert([starData]);
+
+      if (error) throw error;
+
+      // 전송 완료 화면으로 전환
+      setShowSent(true);
+    } catch (error) {
+      console.error('Error sending star:', error);
+      alert('별 전송에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // 별 그리기 함수 (캔버스에 그리기)
+  const drawStarOnCanvas = (canvas) => {
+    if (!canvas || !finalAnswers) return;
+
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const cx = W / 2;
+    const cy = H / 2;
+
+    // 답변에서 별 속성 추출
+    const colorIdx = optionToNumber(finalAnswers[1]) - 1;
+    const pointsIdx = optionToNumber(finalAnswers[2]) - 1;
+    const sizeIdx = optionToNumber(finalAnswers[3]) - 1;
+    const satIdx = optionToNumber(finalAnswers[4]);
+    const sharpIdx = optionToNumber(finalAnswers[5]);
+
+    // 별 속성 계산
+    const starPoints = pointsMap[pointsIdx];
+    const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
+    const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
+    const starInner = starOuter * innerRatio;
+    const colorData = palette[colorIdx];
+    const saturation = mapRange(satIdx, 1, 4, 80, 20);
+    const lightness = 50;
+    const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
+
+    // 배경 클리어
+    ctx.clearRect(0, 0, W, H);
+
+    // 중심 발광 효과
+    const glowIntensity = 0.28;
+    const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(W, H) * 0.6);
+    g.addColorStop(0, `rgba(255, 220, 150, ${0.9 * glowIntensity})`);
+    g.addColorStop(0.5, `rgba(20,30,40, ${0.12 * glowIntensity})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // 별 그리기
+    drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
+
+    // 별 글로우 효과
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glowScale = 1.5;
+    const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
+    const g2 = ctx.createRadialGradient(cx, cy, starOuter * 0.2, cx, cy, starOuter * glowScale);
+    g2.addColorStop(0, glowColor + '0.5)');
+    g2.addColorStop(0.5, glowColor + '0.2)');
+    g2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, starOuter * glowScale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  // 별 그리기 useEffect (결과 화면)
   useEffect(() => {
     if (showResult && canvasRef.current && finalAnswers) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width;
-      const H = canvas.height;
-      const cx = W / 2;
-      const cy = H / 2;
-
-      // 답변에서 별 속성 추출
-      const colorIdx = optionToNumber(finalAnswers[1]) - 1;  // 1번 질문: 색상
-      const pointsIdx = optionToNumber(finalAnswers[2]) - 1; // 2번 질문: 꼭짓점
-      const sizeIdx = optionToNumber(finalAnswers[3]) - 1;   // 3번 질문: 크기
-      const satIdx = optionToNumber(finalAnswers[4]);        // 4번 질문: 채도
-      const sharpIdx = optionToNumber(finalAnswers[5]);      // 5번 질문: 뾰족함
-
-      // 별 속성 계산
-      const starPoints = pointsMap[pointsIdx];
-      const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
-      const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
-      const starInner = starOuter * innerRatio;
-      const colorData = palette[colorIdx];
-      const saturation = mapRange(satIdx, 1, 4, 80, 20);
-      const lightness = 50;
-      const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
-
-      // 배경 클리어
-      ctx.clearRect(0, 0, W, H);
-
-      // 중심 발광 효과
-      const glowIntensity = 0.28;
-      const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(W, H) * 0.6);
-      g.addColorStop(0, `rgba(255, 220, 150, ${0.9 * glowIntensity})`);
-      g.addColorStop(0.5, `rgba(20,30,40, ${0.12 * glowIntensity})`);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-
-      // 별 그리기
-      drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
-
-      // 별 글로우 효과
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      const glowScale = 1.5;
-      const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
-      const g2 = ctx.createRadialGradient(cx, cy, starOuter * 0.2, cx, cy, starOuter * glowScale);
-      g2.addColorStop(0, glowColor + '0.5)');
-      g2.addColorStop(0.5, glowColor + '0.2)');
-      g2.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, starOuter * glowScale, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      drawStarOnCanvas(canvasRef.current);
     }
   }, [showResult, finalAnswers]);
+
+  // 별 그리기 useEffect (전송 완료 화면)
+  useEffect(() => {
+    if (showSent && sentCanvasRef.current && finalAnswers) {
+      drawStarOnCanvas(sentCanvasRef.current);
+    }
+  }, [showSent, finalAnswers]);
 
   if (loading) {
     return (
@@ -267,7 +316,118 @@ function SurveyQuestionPage() {
     );
   }
 
-  // 결과 화면
+  // 전송 완료 화면
+  if (showSent) {
+    return (
+      <div className="relative min-h-screen overflow-hidden">
+        {/* 배경 이미지 */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/BackGround.jpg)' }}
+        ></div>
+
+        {/* 메인 콘텐츠 */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {/* 상단 네비게이션 */}
+          <nav className="px-6 py-5 flex justify-between items-center relative">
+            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+              </svg>
+              <span className="text-sm font-light">English</span>
+            </button>
+
+            <img
+              src="/Logo.png"
+              alt="STARRY"
+              className="h-5 absolute left-1/2 transform -translate-x-1/2"
+            />
+
+            <button className="text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </nav>
+
+          {/* 중앙 콘텐츠 */}
+          <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-8">
+            <div className="w-full max-w-[330px] text-center">
+              {/* 완료 텍스트 */}
+              <div className="mb-6">
+                <h1 className="text-white text-2xl font-bold leading-relaxed">
+                  {targetUserNickname} 님이 {surveyorName} 님이
+                </h1>
+                <h2 className="text-white text-2xl font-bold">
+                  선물한 별을 받았어요!
+                </h2>
+              </div>
+
+              {/* 별 이미지 + 원형 프레임 */}
+              <div className="flex justify-center mb-8 relative">
+                <img
+                  src="/surveyexample.png"
+                  alt="frame"
+                  className="w-[220px] h-[220px] z-10"
+                />
+                <canvas
+                  ref={sentCanvasRef}
+                  width={50}
+                  height={50}
+                  className="absolute z-20 top-1/2 left-1/2 translate-x-[5%] -translate-y-[50%]"
+                />
+              </div>
+
+              {/* 버튼들 */}
+              <div className="space-y-3 flex flex-col items-center">
+                <button
+                  className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-white hover:bg-[#B5B5B5] transition-colors"
+                >
+                  {targetUserNickname}님의 밤하늘 보기
+                </button>
+                <button
+                  className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
+                >
+                  내 밤하늘 만들기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 하단 정보 */}
+          <div className="pb-8 px-6 text-center">
+            <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-3 -translate-y-[11px]"
+              />
+              <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
+              <div className="text-left space-y-1">
+                <div className="text-[9px] leading-snug">
+                  광고 문의: 123456789@gmail.com <br />
+                  Copyright ©2025 123456789. All rights reserved.
+                </div>
+                <div className="text-white/70 text-[9px] flex items-center space-x-1">
+                  <span className="font-semibold text-white">개발자</span>
+                  <span>김기찬</span>
+                  <span className="text-white/40">·</span>
+                  <span className="font-semibold text-white">디자이너</span>
+                  <span>김태희</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 결과 화면 (전송 전)
   if (showResult) {
     return (
       <div className="relative min-h-screen overflow-hidden">
@@ -330,9 +490,15 @@ function SurveyQuestionPage() {
 
               {/* 전송 버튼 */}
               <button
-                className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
+                onClick={handleSend}
+                disabled={sending}
+                className={`w-[300px] py-3 text-sm rounded-lg font-medium transition-colors ${
+                  sending
+                    ? 'bg-[#9E4EFF]/50 text-white/50 cursor-not-allowed'
+                    : 'bg-[#9E4EFF] text-white hover:bg-[#8A3EE8]'
+                }`}
               >
-                전송
+                {sending ? '전송 중...' : '전송'}
               </button>
             </div>
           </div>
