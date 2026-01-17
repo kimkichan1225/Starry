@@ -198,14 +198,6 @@ function StatDetailPage() {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 꼭짓점에 점 그리기
-    points.forEach((point) => {
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff6666';
-      ctx.fill();
-    });
-
   }, [stats]);
 
   // 현재 질문의 통계 계산
