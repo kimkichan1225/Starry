@@ -143,8 +143,8 @@ function StatDetailPage() {
       return (maxCount / qStats.total) * 100;
     });
 
-    // 5개의 꼭짓점 각도 (위쪽부터 시계방향)
-    const angles = [
+    // 5개의 바깥 꼭짓점 각도 (위쪽부터 시계방향)
+    const outerAngles = [
       -Math.PI / 2,           // 위
       -Math.PI / 2 + (2 * Math.PI / 5),     // 오른쪽 위
       -Math.PI / 2 + (4 * Math.PI / 5),     // 오른쪽 아래
@@ -152,7 +152,18 @@ function StatDetailPage() {
       -Math.PI / 2 + (8 * Math.PI / 5),     // 왼쪽 위
     ];
 
-    // 배경 원 그리기 (가이드 라인)
+    // 5개의 안쪽 꼭짓점 각도 (바깥 꼭짓점 사이)
+    const innerAngles = [
+      -Math.PI / 2 + (Math.PI / 5),         // 위-오른쪽 사이
+      -Math.PI / 2 + (3 * Math.PI / 5),     // 오른쪽 위-아래 사이
+      -Math.PI / 2 + (5 * Math.PI / 5),     // 오른쪽 아래-왼쪽 아래 사이
+      -Math.PI / 2 + (7 * Math.PI / 5),     // 왼쪽 아래-위 사이
+      -Math.PI / 2 + (9 * Math.PI / 5),     // 왼쪽 위-위 사이
+    ];
+
+    const innerRatio = 0.4; // 안쪽 꼭짓점의 비율 (0.4 = 40%)
+
+    // 배경 원 가이드 라인 그리기
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
     for (let i = 1; i <= 4; i++) {
@@ -163,7 +174,7 @@ function StatDetailPage() {
 
     // 축 선 그리기
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    angles.forEach((angle) => {
+    outerAngles.forEach((angle) => {
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx + Math.cos(angle) * maxRadius, cy + Math.sin(angle) * maxRadius);
@@ -173,17 +184,26 @@ function StatDetailPage() {
     // 데이터 영역 그리기 (빨간색 별 모양)
     ctx.beginPath();
     const points = [];
-    percentages.forEach((percent, i) => {
-      const radius = (percent / 100) * maxRadius;
-      const x = cx + Math.cos(angles[i]) * radius;
-      const y = cy + Math.sin(angles[i]) * radius;
-      points.push({ x, y });
+    for (let i = 0; i < 5; i++) {
+      // 바깥 꼭짓점 (데이터 기반)
+      const outerRadius = (percentages[i] / 100) * maxRadius;
+      const outerX = cx + Math.cos(outerAngles[i]) * outerRadius;
+      const outerY = cy + Math.sin(outerAngles[i]) * outerRadius;
+
+      // 안쪽 꼭짓점 (바깥의 일정 비율)
+      const innerRadius = outerRadius * innerRatio;
+      const innerX = cx + Math.cos(innerAngles[i]) * innerRadius;
+      const innerY = cy + Math.sin(innerAngles[i]) * innerRadius;
+
       if (i === 0) {
-        ctx.moveTo(x, y);
+        ctx.moveTo(outerX, outerY);
       } else {
-        ctx.lineTo(x, y);
+        ctx.lineTo(outerX, outerY);
       }
-    });
+      ctx.lineTo(innerX, innerY);
+
+      points.push({ x: outerX, y: outerY });
+    }
     ctx.closePath();
 
     // 그라데이션 채우기
