@@ -8,7 +8,7 @@ function NavBar() {
     { id: 1, name: '스타리', path: '/starry', icon: 'Btn_1Starry' },
     { id: 2, name: '별 보관함', path: '/stars', icon: 'Btn_2Stars' },
     { id: 3, name: '내 밤하늘', path: '/home', icon: 'Btn_3Home' },
-    { id: 4, name: '통계 통계', path: '/stat', icon: 'Btn_4Stat' },
+    { id: 4, name: '응답 통계', path: '/stat', icon: 'Btn_4Stat' },
     { id: 5, name: '마이페이지', path: '/user', icon: 'Btn_5User' },
   ];
 
