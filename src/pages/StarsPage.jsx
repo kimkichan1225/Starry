@@ -216,17 +216,40 @@ function StarDetailModal({ star, index, onClose, onDelete }) {
 
         {/* 삭제 확인 오버레이 */}
         {showDeleteConfirm && (
-          <div className="absolute inset-0 bg-white rounded-2xl flex flex-col items-center justify-center p-5">
-            <p className="text-gray-700 text-center font-medium mb-2">
-              한 번 삭제한 별은<br />복구할 수 없습니다.
-            </p>
-            <p className="text-[#6155F5] text-center font-medium mb-6">
-              정말 삭제하시겠습니까?
-            </p>
+          <div className="absolute inset-0 bg-white rounded-2xl flex flex-col p-5">
+            {/* 상단 영역 */}
+            <div className="flex justify-between items-start mb-4">
+              {/* 왼쪽: 번호와 이름 */}
+              <div>
+                <div className="text-[#C5C5C5] text-sm font-bold mt-1">no.{index + 1}</div>
+                <div className="text-[#C5C5C5] text-base mt-1"><span className="font-bold">{star.surveyor_name}</span>님이 보낸 별</div>
+              </div>
+
+              {/* 오른쪽: 닫기 버튼 */}
+              <button
+                onClick={handleCancelDelete}
+                className="text-gray-500 hover:text-gray-700 transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 확인 메시지 */}
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <p className="text-[#6155F5] text-center font-bold mb-6">
+                한 번 삭제한 별은<br />복구할 수 없습니다.
+              </p>
+              <p className="text-[#6155F5] text-center font-medium mb-6">
+                정말 삭제하시겠습니까?
+              </p>
+            </div>
+
             <div className="flex gap-3 w-full">
               <button
                 onClick={handleCancelDelete}
-                className="flex-1 py-2 border-2 border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition"
+                className="flex-1 py-2 border-2 border-gray-300 bg-[#C5C5C5] text-[#727272] rounded-full hover:bg-gray-100 transition"
               >
                 취소
               </button>
