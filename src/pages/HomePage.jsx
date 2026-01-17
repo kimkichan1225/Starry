@@ -59,8 +59,13 @@ function HomePage() {
 
         {/* 공유 성공 메시지 */}
         {shareMessage && (
-          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-            {shareMessage}
+          <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/80 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 whitespace-nowrap">
+            {/* 링크 아이콘 */}
+            <svg className="w-6 h-6 text-[#6155F5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            {/* 메시지 텍스트 */}
+            <span className="text-[#6155F5] text-base font-bold">{shareMessage}</span>
           </div>
         )}
 
