@@ -47,60 +47,69 @@ const drawStar = (ctx, x, y, outerR, innerR, points, fillStyle) => {
   }
 };
 
+// 별 그리기 헬퍼 함수 (캔버스에 그리기)
+const drawStarOnCanvas = (canvas, star) => {
+  if (!canvas || !star) return;
+
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+
+  // 별 속성 계산
+  const colorIdx = star.star_color - 1;
+  const pointsIdx = star.star_points - 1;
+  const sizeIdx = star.star_size - 1;
+  const satIdx = star.star_saturation;
+  const sharpIdx = star.star_sharpness;
+
+  const starPoints = pointsMap[pointsIdx];
+  const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
+  const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
+  const starInner = starOuter * innerRatio;
+  const colorData = palette[colorIdx];
+  const saturation = mapRange(satIdx, 1, 4, 80, 20);
+  const lightness = 50;
+  const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
+
+  // 배경 클리어
+  ctx.clearRect(0, 0, W, H);
+
+  // 별 그리기
+  drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
+
+  // 별 글로우 효과
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const glowScale = 1.3;
+  const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
+  const g2 = ctx.createRadialGradient(cx, cy, starOuter * 0.2, cx, cy, starOuter * glowScale);
+  g2.addColorStop(0, glowColor + '0.4)');
+  g2.addColorStop(0.5, glowColor + '0.15)');
+  g2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, starOuter * glowScale, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+};
+
 // 별 카드 컴포넌트
-function StarCard({ star, index }) {
+function StarCard({ star, index, onClick }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     if (canvasRef.current && star) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width;
-      const H = canvas.height;
-      const cx = W / 2;
-      const cy = H / 2;
-
-      // 별 속성 계산
-      const colorIdx = star.star_color - 1;
-      const pointsIdx = star.star_points - 1;
-      const sizeIdx = star.star_size - 1;
-      const satIdx = star.star_saturation;
-      const sharpIdx = star.star_sharpness;
-
-      const starPoints = pointsMap[pointsIdx];
-      const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
-      const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
-      const starInner = starOuter * innerRatio;
-      const colorData = palette[colorIdx];
-      const saturation = mapRange(satIdx, 1, 4, 80, 20);
-      const lightness = 50;
-      const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
-
-      // 배경 클리어
-      ctx.clearRect(0, 0, W, H);
-
-      // 별 그리기
-      drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
-
-      // 별 글로우 효과
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      const glowScale = 1.3;
-      const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
-      const g2 = ctx.createRadialGradient(cx, cy, starOuter * 0.2, cx, cy, starOuter * glowScale);
-      g2.addColorStop(0, glowColor + '0.4)');
-      g2.addColorStop(0.5, glowColor + '0.15)');
-      g2.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, starOuter * glowScale, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      drawStarOnCanvas(canvasRef.current, star);
     }
   }, [star]);
 
   return (
-    <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl p-2 hover:border-white/70 transition cursor-pointer flex flex-col">
+    <div
+      onClick={() => star && onClick(star, index)}
+      className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl p-2 hover:border-white/70 transition cursor-pointer flex flex-col"
+    >
       <div className="text-white text-xs font-medium mb-1">
         no.{index + 1}
       </div>
@@ -124,11 +133,155 @@ function StarCard({ star, index }) {
   );
 }
 
+// 별 상세 모달 컴포넌트
+function StarDetailModal({ star, index, onClose, onDelete }) {
+  const canvasRef = useRef(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    if (canvasRef.current && star) {
+      drawStarOnCanvas(canvasRef.current, star);
+    }
+  }, [star]);
+
+  if (!star) return null;
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete(star.id);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+      {/* 배경 오버레이 */}
+      <div
+        className="absolute inset-0 bg-black/60"
+        onClick={onClose}
+      ></div>
+
+      {/* 모달 컨텐츠 */}
+      <div className="relative bg-white rounded-2xl p-5 w-full max-w-[240px]">
+        {/* 상단 영역 */}
+        <div className="flex justify-between items-start mb-2">
+          {/* 왼쪽: 번호와 이름 */}
+          <div>
+            <div className="text-[#6155F5] text-sm font-bold mt-1">no.{index + 1}</div>
+            <div className="text-[#6155F5] text-base mt-1"><span className="font-bold">{star.surveyor_name}</span>님이 보낸 별</div>
+          </div>
+
+          {/* 오른쪽: 닫기, 삭제 버튼 */}
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              className="text-gray-500 hover:text-red-500 transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* 별 이미지 영역 */}
+        <div className="flex justify-center my-4">
+          <div className="w-32 h-32 bg-[#0F223A] rounded-full flex items-center justify-center">
+            <canvas
+              ref={canvasRef}
+              width={100}
+              height={100}
+            />
+          </div>
+        </div>
+
+        {/* 전체 답변 보기 버튼 */}
+        <button className="w-full py-2 bg-[#6155F5] text-white text-lg rounded-full hover:bg-[#5044d4] transition">
+          전체 답변 보기
+        </button>
+
+        {/* 삭제 확인 오버레이 */}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 bg-white rounded-2xl flex flex-col items-center justify-center p-5">
+            <p className="text-gray-700 text-center font-medium mb-2">
+              한 번 삭제한 별은<br />복구할 수 없습니다.
+            </p>
+            <p className="text-[#6155F5] text-center font-medium mb-6">
+              정말 삭제하시겠습니까?
+            </p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={handleCancelDelete}
+                className="flex-1 py-2 border-2 border-gray-300 text-gray-600 rounded-full hover:bg-gray-100 transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 py-2 bg-[#6155F5] text-white rounded-full hover:bg-[#5044d4] transition"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function StarsPage() {
   const { user, nickname } = useAuth();
   const [stars, setStars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStar, setSelectedStar] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const maxStars = 20;
+
+  // 별 카드 클릭 핸들러
+  const handleStarClick = (star, index) => {
+    setSelectedStar(star);
+    setSelectedIndex(index);
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setSelectedStar(null);
+    setSelectedIndex(null);
+  };
+
+  // 별 삭제
+  const handleDeleteStar = async (starId) => {
+    try {
+      const { error } = await supabase
+        .from('stars')
+        .delete()
+        .eq('id', starId);
+
+      if (error) throw error;
+
+      // 로컬 상태에서 삭제
+      setStars(stars.filter((s) => s.id !== starId));
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error deleting star:', error);
+      alert('별 삭제에 실패했습니다.');
+    }
+  };
 
   // 별 데이터 가져오기
   useEffect(() => {
@@ -197,7 +350,7 @@ function StarsPage() {
           <div className="grid grid-cols-3 gap-3 max-w-[340px] mx-auto mb-6">
             {/* 받은 별 카드들 */}
             {stars.map((star, index) => (
-              <StarCard key={star.id} star={star} index={index} />
+              <StarCard key={star.id} star={star} index={index} onClick={handleStarClick} />
             ))}
 
             {/* 빈 슬롯들 */}
@@ -268,6 +421,16 @@ function StarsPage() {
 
       {/* 네비게이션 바 */}
       <NavBar />
+
+      {/* 별 상세 모달 */}
+      {selectedStar && (
+        <StarDetailModal
+          star={selectedStar}
+          index={selectedIndex}
+          onClose={handleCloseModal}
+          onDelete={handleDeleteStar}
+        />
+      )}
     </div>
   );
 }

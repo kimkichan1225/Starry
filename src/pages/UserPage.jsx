@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
@@ -51,10 +52,12 @@ function UserPage() {
     }
   };
 
+  // 설문 페이지 링크
+  const surveyLink = `${window.location.origin}/survey/${user?.id}`;
+
   // QR코드 링크 복사
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/u/${user?.id}`;
-    navigator.clipboard.writeText(link);
+    navigator.clipboard.writeText(surveyLink);
     setSuccessMessage('링크가 복사되었습니다.');
     setTimeout(() => setSuccessMessage(''), 2000);
   };
@@ -216,8 +219,17 @@ function UserPage() {
               <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">내 밤하늘 QR코드</label>
               <div className="ml-12 max-w-[240px]">
                 <div className="bg-white rounded-2xl p-6 flex flex-col items-center">
-                  <div className="w-40 h-40 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
-                    <span className="text-gray-500 text-sm">QR 코드</span>
+                  <div className="w-40 h-40 flex items-center justify-center mb-4">
+                    {user?.id ? (
+                      <QRCodeSVG
+                        value={surveyLink}
+                        size={160}
+                        level="M"
+                        includeMargin={false}
+                      />
+                    ) : (
+                      <span className="text-gray-500 text-sm">로그인 필요</span>
+                    )}
                   </div>
                   <button
                     onClick={handleCopyLink}
