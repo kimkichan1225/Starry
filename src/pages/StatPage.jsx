@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 
 function StatPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [nickname, setNickname] = useState('User1');
   const [starCount, setStarCount] = useState(0);
@@ -162,6 +164,7 @@ function StatPage() {
 
             {/* 질문별 통계보기 버튼 */}
             <button
+              onClick={() => navigate('/stat/detail')}
               className="w-[300px] py-3 text-base rounded-full font-semibold bg-[#6155F5] text-white hover:bg-[#5044d4] transition-colors"
             >
               질문별 통계보기

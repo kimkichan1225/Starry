@@ -8,6 +8,7 @@ import StarryPage from './pages/StarryPage';
 import StarsPage from './pages/StarsPage';
 import HomePage from './pages/HomePage';
 import StatPage from './pages/StatPage';
+import StatDetailPage from './pages/StatDetailPage';
 import UserPage from './pages/UserPage';
 import NoticePage from './pages/NoticePage';
 import NoticeDetailPage from './pages/NoticeDetailPage';
@@ -29,6 +30,7 @@ function App() {
           <Route path="/stars" element={<StarsPage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/stat" element={<StatPage />} />
+          <Route path="/stat/detail" element={<StatDetailPage />} />
           <Route path="/user" element={<UserPage />} />
           <Route path="/notice" element={<NoticePage />} />
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
