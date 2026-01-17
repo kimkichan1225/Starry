@@ -227,7 +227,7 @@ function StarDetailModal({ star, index, onClose, onDelete }) {
 
               {/* 오른쪽: 닫기 버튼 */}
               <button
-                onClick={handleCancelDelete}
+                onClick={onClose}
                 className="text-gray-500 hover:text-gray-700 transition"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,12 +290,19 @@ function StarsPage() {
   // 별 삭제
   const handleDeleteStar = async (starId) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('stars')
         .delete()
-        .eq('id', starId);
+        .eq('id', starId)
+        .eq('user_id', user.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+
+      console.log('Deleted:', data);
 
       // 로컬 상태에서 삭제
       setStars(stars.filter((s) => s.id !== starId));
