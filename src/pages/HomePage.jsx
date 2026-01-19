@@ -368,6 +368,71 @@ function HomePage() {
     setTimeout(() => setShareMessage(''), 2000);
   };
 
+  // 이미지 캡쳐 및 저장
+  const handleCaptureImage = async () => {
+    if (!canvasRef.current) return;
+
+    try {
+      // 새 캔버스 생성 (배경 포함)
+      const exportCanvas = document.createElement('canvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      const width = 350;
+      const height = 500;
+      exportCanvas.width = width;
+      exportCanvas.height = height;
+
+      // 배경 이미지 로드 및 그리기
+      const bgImage = new Image();
+      bgImage.crossOrigin = 'anonymous';
+
+      await new Promise((resolve, reject) => {
+        bgImage.onload = resolve;
+        bgImage.onerror = reject;
+        bgImage.src = '/BackGround.jpg';
+      });
+
+      // 배경 그리기
+      exportCtx.drawImage(bgImage, 0, 0, width, height);
+
+      // 연결선 그리기
+      exportCtx.strokeStyle = 'rgba(255, 255, 227, 0.5)';
+      exportCtx.lineWidth = 2;
+      exportCtx.lineCap = 'round';
+      connections.forEach(conn => {
+        const fromPos = starPositions[conn.fromIndex];
+        const toPos = starPositions[conn.toIndex];
+        if (fromPos && toPos) {
+          exportCtx.beginPath();
+          exportCtx.moveTo(fromPos.x, fromPos.y);
+          exportCtx.lineTo(toPos.x, toPos.y);
+          exportCtx.stroke();
+        }
+      });
+
+      // 별 그리기
+      stars.forEach((star, index) => {
+        if (starPositions[index]) {
+          const { x, y } = starPositions[index];
+          drawStarOnCanvas(exportCtx, star, x, y, 0.5);
+        }
+      });
+
+      // 이미지로 변환 및 다운로드
+      const dataUrl = exportCanvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `my-night-sky-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      setShareMessage('이미지가 저장되었습니다!');
+      setTimeout(() => setShareMessage(''), 2000);
+    } catch (error) {
+      console.error('이미지 캡쳐 실패:', error);
+      setShareMessage('이미지 저장에 실패했습니다.');
+      setTimeout(() => setShareMessage(''), 2000);
+    }
+  };
+
   // 임시 카드 데이터 (11개 + 1개는 추가 버튼)
   const cards = Array.from({ length: 11 }, (_, i) => ({
     id: i + 1,
@@ -606,7 +671,10 @@ function HomePage() {
             </svg>
           </button>
           {/* 이미지 캡쳐 버튼 */}
-          <button className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition">
+          <button
+            onClick={handleCaptureImage}
+            className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
+          >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               {/* 왼쪽 상단 모서리 */}
               <path strokeLinecap="round" d="M2 9V4a1 1 0 011-1h4" />
@@ -995,22 +1063,22 @@ function HomePage() {
                   <svg
                     className="absolute"
                     style={{
-                      left: '35%',
-                      top: '35%',
-                      width: '60px',
-                      height: '60px',
+                      left: '38%',
+                      top: '32%',
+                      width: '70px',
+                      height: '50px',
                       animation: 'showArrow3 3s ease-in-out infinite',
                       zIndex: 1
                     }}
-                    viewBox="0 0 24 24"
+                    viewBox="0 0 70 50"
                     fill="none"
                     stroke="#727272"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <line x1="5" y1="5" x2="19" y2="19" />
-                    <polyline points="10 19 19 19 19 10" />
+                    <line x1="4" y1="4" x2="60" y2="32" />
+                    <polyline points="48 36 60 32 57 19" />
                   </svg>
                   {/* 포인터 (애니메이션) */}
                   <img
@@ -1026,19 +1094,19 @@ function HomePage() {
                   <style>{`
                     @keyframes movePointer3 {
                       0% {
-                        left: 25%;
+                        left: 15%;
                         top: 25%;
                       }
                       25% {
-                        left: 25%;
+                        left: 15%;
                         top: 25%;
                       }
                       70% {
-                        left: 55%;
+                        left: 65%;
                         top: 60%;
                       }
                       100% {
-                        left: 55%;
+                        left: 65%;
                         top: 60%;
                       }
                     }
@@ -1054,12 +1122,12 @@ function HomePage() {
                         transform: translate(-50%, -50%);
                       }
                       70% {
-                        left: 55%;
+                        left: 75%;
                         top: 60%;
                         transform: translate(-50%, -50%);
                       }
                       100% {
-                        left: 55%;
+                        left: 75%;
                         top: 60%;
                         transform: translate(-50%, -50%);
                       }
@@ -1090,7 +1158,7 @@ function HomePage() {
                         transform: translate(-50%, -50%);
                       }
                       70% {
-                        left: 55%;
+                        left: 75%;
                         top: 60%;
                         width: 50px;
                         height: 50px;
@@ -1098,7 +1166,7 @@ function HomePage() {
                         transform: translate(-50%, -50%);
                       }
                       85% {
-                        left: 55%;
+                        left: 75%;
                         top: 60%;
                         width: 50px;
                         height: 50px;
@@ -1106,7 +1174,7 @@ function HomePage() {
                         transform: translate(-50%, -50%);
                       }
                       100% {
-                        left: 55%;
+                        left: 75%;
                         top: 60%;
                         width: 0px;
                         height: 0px;
@@ -1139,6 +1207,52 @@ function HomePage() {
               </>
             )}
 
+            {/* Step 4: 저장하기 */}
+            {tutorialStep === 4 && (
+              <>
+                {/* 튜토리얼 내용 - 중앙 정렬 */}
+                <div className="text-center">
+                  <p className="text-[#727272] font-bold text-sm">Step 4</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">저장하기</h3>
+                </div>
+
+                {/* 저장 옵션들 */}
+                <div className="mt-6 space-y-4 px-4">
+                  {/* 저장 버튼 */}
+                  <div className="flex flex-col items-center">
+                    <div className="px-6 py-2 bg-[#6155F5] text-white text-sm font-bold rounded-full">
+                      저장
+                    </div>
+                    <p className="text-black text-sm mt-2">내 <span className="font-bold">밤하늘 꾸미기</span> 저장</p>
+                  </div>
+
+                  {/* 이미지 캡쳐 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-[#6155F5]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" d="M2 9V4a1 1 0 011-1h4" />
+                        <path strokeLinecap="round" d="M17 3h4a1 1 0 011 1v5" />
+                        <path strokeLinecap="round" d="M2 16v5a1 1 0 001 1h4" />
+                        <path strokeLinecap="round" d="M17 22h4a1 1 0 001-1v-5" />
+                        <circle cx="12" cy="12" r="3" strokeWidth="2" />
+                      </svg>
+                    </div>
+                    <p className="text-black text-sm mt-2">사진을 <span className="font-bold">갤러리에 저장</span></p>
+                  </div>
+
+                  {/* 링크 복사 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-[#6155F5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </div>
+                    <p className="text-black text-sm mt-2">내 <span className="font-bold">밤하늘 링크</span> 복사</p>
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* Pagination 인디케이터 */}
             <div className="flex justify-center items-center gap-3 py-3">
               <button
@@ -1161,6 +1275,14 @@ function HomePage() {
                 onClick={() => setTutorialStep(3)}
                 className={`rounded-full transition-all ${
                   tutorialStep === 3
+                    ? 'w-3 h-3 bg-[#6155F5]'
+                    : 'w-2 h-2 bg-white border border-gray-300'
+                }`}
+              />
+              <button
+                onClick={() => setTutorialStep(4)}
+                className={`rounded-full transition-all ${
+                  tutorialStep === 4
                     ? 'w-3 h-3 bg-[#6155F5]'
                     : 'w-2 h-2 bg-white border border-gray-300'
                 }`}
