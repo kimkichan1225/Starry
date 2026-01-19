@@ -109,6 +109,10 @@ function HomePage() {
   const longPressTimerRef = useRef(null);
   const LONG_PRESS_DURATION = 500; // 0.5초
 
+  // 선 삭제 상태
+  const [isDeletingLine, setIsDeletingLine] = useState(false);
+  const [deleteStartPos, setDeleteStartPos] = useState(null);
+
   // 밤하늘 제작 모드 진입
   const handleEnterEditMode = () => {
     setIsEditMode(true);
@@ -219,6 +223,34 @@ function HomePage() {
     return null;
   };
 
+  // 두 선분이 교차하는지 확인
+  const doLinesIntersect = (p1, p2, p3, p4) => {
+    const ccw = (A, B, C) => {
+      return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+    };
+    return ccw(p1, p3, p4) !== ccw(p2, p3, p4) && ccw(p1, p2, p3) !== ccw(p1, p2, p4);
+  };
+
+  // 드래그 경로와 교차하는 연결선 찾기 및 삭제
+  const checkAndDeleteIntersectingLines = (startPos, endPos) => {
+    const linesToDelete = [];
+
+    connections.forEach((conn, index) => {
+      const fromPos = starPositions[conn.fromIndex];
+      const toPos = starPositions[conn.toIndex];
+
+      if (fromPos && toPos) {
+        if (doLinesIntersect(startPos, endPos, fromPos, toPos)) {
+          linesToDelete.push(index);
+        }
+      }
+    });
+
+    if (linesToDelete.length > 0) {
+      setConnections(prev => prev.filter((_, index) => !linesToDelete.includes(index)));
+    }
+  };
+
   // 터치/마우스 시작
   const handlePointerDown = (e) => {
     if (!isEditMode) return;
@@ -238,13 +270,17 @@ function HomePage() {
       // 일단 라인 드래그 시작 준비
       setDragStartStarIndex(starIndex);
       setDragCurrentPos(coords);
+    } else {
+      // 별이 아닌 곳에서 시작하면 선 삭제 모드
+      setIsDeletingLine(true);
+      setDeleteStartPos(coords);
     }
   };
 
   // 터치/마우스 이동
   const handlePointerMove = (e) => {
     if (!isEditMode) return;
-    if (dragStartStarIndex === null && movingStarIndex === null) return;
+    if (dragStartStarIndex === null && movingStarIndex === null && !isDeletingLine) return;
 
     const coords = getCanvasCoords(e);
     if (!coords) return;
@@ -267,6 +303,10 @@ function HomePage() {
         newPositions[movingStarIndex] = { x: clampedX, y: clampedY };
         return newPositions;
       });
+    } else if (isDeletingLine && deleteStartPos) {
+      // 선 삭제 모드 - 드래그 경로와 교차하는 선 삭제
+      checkAndDeleteIntersectingLines(deleteStartPos, coords);
+      setDeleteStartPos(coords); // 시작점을 현재 위치로 업데이트 (연속 감지)
     } else if (isDraggingLine || dragStartStarIndex !== null) {
       // 라인 드래그 중
       setIsDraggingLine(true);
@@ -309,6 +349,8 @@ function HomePage() {
     setDragCurrentPos(null);
     setIsMovingStar(false);
     setMovingStarIndex(null);
+    setIsDeletingLine(false);
+    setDeleteStartPos(null);
   };
 
   // 공유 링크 복사
