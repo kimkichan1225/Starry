@@ -958,6 +958,187 @@ function HomePage() {
               </>
             )}
 
+            {/* Step 3: 별 이동하기 */}
+            {tutorialStep === 3 && (
+              <>
+                {/* 튜토리얼 내용 - 중앙 정렬 */}
+                <div className="text-center max-w-[170px] mx-auto">
+                  <p className="text-[#727272] font-bold text-sm">Step 3</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">별 이동하기</h3>
+                  <p className="text-black text-base mt-3">별을 길게 눌러 위치를 이동하세요.</p>
+                </div>
+
+                {/* 시뮬레이션 영역 */}
+                <div className="mt-4 h-40 rounded-xl flex items-center justify-center relative overflow-hidden">
+                  {/* 별 (이동 애니메이션) */}
+                  <img
+                    src="/StepStar.png"
+                    alt="star"
+                    className="absolute w-16 h-16"
+                    style={{
+                      animation: 'moveStar3 3s ease-in-out infinite',
+                      zIndex: 2
+                    }}
+                  />
+                  {/* 길게 누르기 효과 - 그라데이션 링 (가운데 빈 원) */}
+                  <div
+                    className="absolute rounded-full"
+                    style={{
+                      background: 'conic-gradient(from 0deg, white, #6155F5, #F3F3F3, #6155F5, #F3F3F3)',
+                      WebkitMask: 'radial-gradient(transparent 60%, black 60%)',
+                      mask: 'radial-gradient(transparent 60%, black 60%)',
+                      animation: 'pressEffect3 3s ease-in-out infinite',
+                      zIndex: 1
+                    }}
+                  />
+                  {/* 이동 화살표 */}
+                  <svg
+                    className="absolute"
+                    style={{
+                      left: '35%',
+                      top: '35%',
+                      width: '60px',
+                      height: '60px',
+                      animation: 'showArrow3 3s ease-in-out infinite',
+                      zIndex: 1
+                    }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#727272"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="5" y1="5" x2="19" y2="19" />
+                    <polyline points="10 19 19 19 19 10" />
+                  </svg>
+                  {/* 포인터 (애니메이션) */}
+                  <img
+                    src="/StepPointer.png"
+                    alt="pointer"
+                    className="absolute w-16 h-16"
+                    style={{
+                      animation: 'movePointer3 3s ease-in-out infinite',
+                      zIndex: 3
+                    }}
+                  />
+                  {/* CSS 애니메이션 정의 */}
+                  <style>{`
+                    @keyframes movePointer3 {
+                      0% {
+                        left: 25%;
+                        top: 25%;
+                      }
+                      25% {
+                        left: 25%;
+                        top: 25%;
+                      }
+                      70% {
+                        left: 55%;
+                        top: 60%;
+                      }
+                      100% {
+                        left: 55%;
+                        top: 60%;
+                      }
+                    }
+                    @keyframes moveStar3 {
+                      0% {
+                        left: 25%;
+                        top: 25%;
+                        transform: translate(-50%, -50%);
+                      }
+                      25% {
+                        left: 25%;
+                        top: 25%;
+                        transform: translate(-50%, -50%);
+                      }
+                      70% {
+                        left: 55%;
+                        top: 60%;
+                        transform: translate(-50%, -50%);
+                      }
+                      100% {
+                        left: 55%;
+                        top: 60%;
+                        transform: translate(-50%, -50%);
+                      }
+                    }
+                    @keyframes pressEffect3 {
+                      0% {
+                        left: 25%;
+                        top: 25%;
+                        width: 0px;
+                        height: 0px;
+                        opacity: 0;
+                        transform: translate(-50%, -50%);
+                      }
+                      15% {
+                        left: 25%;
+                        top: 25%;
+                        width: 50px;
+                        height: 50px;
+                        opacity: 1;
+                        transform: translate(-50%, -50%);
+                      }
+                      25% {
+                        left: 25%;
+                        top: 25%;
+                        width: 50px;
+                        height: 50px;
+                        opacity: 1;
+                        transform: translate(-50%, -50%);
+                      }
+                      70% {
+                        left: 55%;
+                        top: 60%;
+                        width: 50px;
+                        height: 50px;
+                        opacity: 1;
+                        transform: translate(-50%, -50%);
+                      }
+                      85% {
+                        left: 55%;
+                        top: 60%;
+                        width: 50px;
+                        height: 50px;
+                        opacity: 0;
+                        transform: translate(-50%, -50%);
+                      }
+                      100% {
+                        left: 55%;
+                        top: 60%;
+                        width: 0px;
+                        height: 0px;
+                        opacity: 0;
+                        transform: translate(-50%, -50%);
+                      }
+                    }
+                    @keyframes showArrow3 {
+                      0% {
+                        opacity: 0;
+                      }
+                      25% {
+                        opacity: 0;
+                      }
+                      30% {
+                        opacity: 1;
+                      }
+                      70% {
+                        opacity: 1;
+                      }
+                      75% {
+                        opacity: 0;
+                      }
+                      100% {
+                        opacity: 0;
+                      }
+                    }
+                  `}</style>
+                </div>
+              </>
+            )}
+
             {/* Pagination 인디케이터 */}
             <div className="flex justify-center items-center gap-3 py-3">
               <button
@@ -972,6 +1153,14 @@ function HomePage() {
                 onClick={() => setTutorialStep(2)}
                 className={`rounded-full transition-all ${
                   tutorialStep === 2
+                    ? 'w-3 h-3 bg-[#6155F5]'
+                    : 'w-2 h-2 bg-white border border-gray-300'
+                }`}
+              />
+              <button
+                onClick={() => setTutorialStep(3)}
+                className={`rounded-full transition-all ${
+                  tutorialStep === 3
                     ? 'w-3 h-3 bg-[#6155F5]'
                     : 'w-2 h-2 bg-white border border-gray-300'
                 }`}
