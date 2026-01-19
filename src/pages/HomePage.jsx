@@ -96,6 +96,7 @@ function HomePage() {
   // 밤하늘 제작 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(1);
 
   // 별 연결 상태
   const [connections, setConnections] = useState([]); // [{fromIndex, toIndex}, ...]
@@ -737,7 +738,10 @@ function HomePage() {
             {/* 닫기 버튼 */}
             <div className="flex justify-end">
               <button
-                onClick={() => setShowTutorial(false)}
+                onClick={() => {
+                  setShowTutorial(false);
+                  setTutorialStep(1);
+                }}
                 className="w-8 h-8 flex items-center justify-center"
               >
                 <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -746,96 +750,226 @@ function HomePage() {
               </button>
             </div>
 
-            {/* 튜토리얼 내용 - 중앙 정렬 */}
-            <div className="text-center max-w-[150px] mx-auto">
-              <p className="text-[#727272] font-bold text-sm">Step 1</p>
-              <h3 className="text-[#6155F5] font-bold text-lg mt-3">별 잇기</h3>
-              <p className="text-black text-base mt-3">별과 별을 드래그해 선을 이으세요.</p>
-            </div>
+            {/* Step 1: 별 잇기 */}
+            {tutorialStep === 1 && (
+              <>
+                {/* 튜토리얼 내용 - 중앙 정렬 */}
+                <div className="text-center max-w-[150px] mx-auto">
+                  <p className="text-[#727272] font-bold text-sm">Step 1</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">별 잇기</h3>
+                  <p className="text-black text-base mt-3">별과 별을 드래그해 선을 이으세요.</p>
+                </div>
 
-            {/* 시뮬레이션 영역 */}
-            <div className="mt-4 h-40 rounded-xl flex items-center justify-center relative overflow-hidden">
-              {/* 그라데이션 연결선 (애니메이션) - 대각선 */}
-              <div
-                className="absolute"
-                style={{
-                  left: '62px',
-                  top: '58%',
-                  height: '8px',
-                  marginTop: '6px',
-                  background: 'linear-gradient(to right, #D9D9D9, #6155F5, #FAFAFA)',
-                  transformOrigin: 'left center',
-                  transform: 'rotate(-12deg)',
-                  animation: 'drawLine 2s ease-in-out infinite',
-                  borderRadius: '3px',
-                  zIndex: 1
-                }}
-              />
-              {/* 왼쪽 별 */}
-              <img
-                src="/StepStar.png"
-                alt="star"
-                className="absolute w-16 h-16"
-                style={{ left: '30px', top: '58%', transform: 'translateY(-50%)', zIndex: 2 }}
-              />
-              {/* 오른쪽 별 */}
-              <img
-                src="/StepStar.png"
-                alt="star"
-                className="absolute w-16 h-16"
-                style={{ right: '30px', top: '42%', transform: 'translateY(-50%)', zIndex: 2 }}
-              />
-              {/* 흰색 연결선 (애니메이션) - 대각선 */}
-              <div
-                className="absolute bg-[#FFFFE3]/50"
-                style={{
-                  left: '62px',
-                  top: '58%',
-                  height: '3px',
-                  transformOrigin: 'left center',
-                  transform: 'rotate(-12deg)',
-                  animation: 'drawLine 2s ease-in-out infinite'
-                }}
-              />
-              {/* 포인터 (애니메이션) */}
-              <img
-                src="/StepPointer.png"
-                alt="pointer"
-                className="absolute w-16 h-16"
-                style={{
-                  animation: 'movePointer 2s ease-in-out infinite',
-                  zIndex: 3
-                }}
-              />
-              {/* CSS 애니메이션 정의 */}
-              <style>{`
-                @keyframes movePointer {
-                  0% {
-                    left: 45px;
-                    top: 58%;
-                  }
-                  80% {
-                    left: calc(100% - 95px);
-                    top: 42%;
-                  }
-                  100% {
-                    left: calc(100% - 95px);
-                    top: 42%;
-                  }
-                }
-                @keyframes drawLine {
-                  0% {
-                    width: 0px;
-                  }
-                  80% {
-                    width: calc(100% - 120px);
-                  }
-                  100% {
-                    width: calc(100% - 120px);
-                  }
-                }
-              `}</style>
-            </div>
+                {/* 시뮬레이션 영역 */}
+                <div className="mt-4 h-40 rounded-xl flex items-center justify-center relative overflow-hidden">
+                  {/* 그라데이션 연결선 (애니메이션) - 대각선 */}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: '62px',
+                      top: '58%',
+                      height: '8px',
+                      marginTop: '6px',
+                      background: 'linear-gradient(to right, #D9D9D9, #6155F5, #FAFAFA)',
+                      transformOrigin: 'left center',
+                      transform: 'rotate(-12deg)',
+                      animation: 'drawLine1 2s ease-in-out infinite',
+                      borderRadius: '3px',
+                      zIndex: 1
+                    }}
+                  />
+                  {/* 왼쪽 별 */}
+                  <img
+                    src="/StepStar.png"
+                    alt="star"
+                    className="absolute w-16 h-16"
+                    style={{ left: '30px', top: '58%', transform: 'translateY(-50%)', zIndex: 2 }}
+                  />
+                  {/* 오른쪽 별 */}
+                  <img
+                    src="/StepStar.png"
+                    alt="star"
+                    className="absolute w-16 h-16"
+                    style={{ right: '30px', top: '42%', transform: 'translateY(-50%)', zIndex: 2 }}
+                  />
+                  {/* 흰색 연결선 (애니메이션) - 대각선 */}
+                  <div
+                    className="absolute bg-[#FFFFE3]/50"
+                    style={{
+                      left: '62px',
+                      top: '58%',
+                      height: '3px',
+                      transformOrigin: 'left center',
+                      transform: 'rotate(-12deg)',
+                      animation: 'drawLine1 2s ease-in-out infinite'
+                    }}
+                  />
+                  {/* 포인터 (애니메이션) */}
+                  <img
+                    src="/StepPointer.png"
+                    alt="pointer"
+                    className="absolute w-16 h-16"
+                    style={{
+                      animation: 'movePointer1 2s ease-in-out infinite',
+                      zIndex: 3
+                    }}
+                  />
+                  {/* CSS 애니메이션 정의 */}
+                  <style>{`
+                    @keyframes movePointer1 {
+                      0% {
+                        left: 45px;
+                        top: 58%;
+                      }
+                      80% {
+                        left: calc(100% - 95px);
+                        top: 42%;
+                      }
+                      100% {
+                        left: calc(100% - 95px);
+                        top: 42%;
+                      }
+                    }
+                    @keyframes drawLine1 {
+                      0% {
+                        width: 0px;
+                      }
+                      80% {
+                        width: calc(100% - 120px);
+                      }
+                      100% {
+                        width: calc(100% - 120px);
+                      }
+                    }
+                  `}</style>
+                </div>
+
+                {/* 다음 버튼 */}
+                <button
+                  onClick={() => setTutorialStep(2)}
+                  className="w-full py-2 mt-3 text-[#6155F5] font-bold text-sm"
+                >
+                  다음 →
+                </button>
+              </>
+            )}
+
+            {/* Step 2: 선 삭제하기 */}
+            {tutorialStep === 2 && (
+              <>
+                {/* 튜토리얼 내용 - 중앙 정렬 */}
+                <div className="text-center max-w-[170px] mx-auto">
+                  <p className="text-[#727272] font-bold text-sm">Step 2</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">선 삭제하기</h3>
+                  <p className="text-black text-base mt-3">선을 가로질러 드래그해 선을 삭제하세요.</p>
+                </div>
+
+                {/* 시뮬레이션 영역 */}
+                <div className="mt-4 h-40 rounded-xl flex items-center justify-center relative overflow-hidden">
+                  {/* 왼쪽 별 */}
+                  <img
+                    src="/StepStar.png"
+                    alt="star"
+                    className="absolute w-16 h-16"
+                    style={{ left: '30px', top: '58%', transform: 'translateY(-50%)', zIndex: 2 }}
+                  />
+                  {/* 오른쪽 별 */}
+                  <img
+                    src="/StepStar.png"
+                    alt="star"
+                    className="absolute w-16 h-16"
+                    style={{ right: '30px', top: '42%', transform: 'translateY(-50%)', zIndex: 2 }}
+                  />
+                  {/* 흰색 연결선 (삭제 애니메이션) */}
+                  <div
+                    className="absolute bg-[#FFFFE3]/50"
+                    style={{
+                      left: '62px',
+                      top: '58%',
+                      height: '3px',
+                      width: 'calc(100% - 120px)',
+                      transformOrigin: 'left center',
+                      transform: 'rotate(-12deg)',
+                      animation: 'deleteLine 2.5s ease-in-out infinite'
+                    }}
+                  />
+                  {/* 그라데이션 선 (포인터 이동 경로) */}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: '50%',
+                      top: '20%',
+                      width: '8px',
+                      height: '0px',
+                      marginLeft: '-4px',
+                      background: 'linear-gradient(to bottom, #D9D9D9, #6155F5, #FAFAFA)',
+                      borderRadius: '3px',
+                      zIndex: 1,
+                      animation: 'drawDeleteLine 2.5s ease-in-out infinite'
+                    }}
+                  />
+                  {/* 포인터 (위에서 아래로 애니메이션) */}
+                  <img
+                    src="/StepPointer.png"
+                    alt="pointer"
+                    className="absolute w-16 h-16"
+                    style={{
+                      left: '50%',
+                      marginLeft: '-32px',
+                      animation: 'movePointer2 2.5s ease-in-out infinite',
+                      zIndex: 3
+                    }}
+                  />
+                  {/* CSS 애니메이션 정의 */}
+                  <style>{`
+                    @keyframes movePointer2 {
+                      0% {
+                        top: 10%;
+                      }
+                      40% {
+                        top: 70%;
+                      }
+                      100% {
+                        top: 70%;
+                      }
+                    }
+                    @keyframes deleteLine {
+                      0% {
+                        opacity: 1;
+                      }
+                      39% {
+                        opacity: 1;
+                      }
+                      40% {
+                        opacity: 0;
+                      }
+                      100% {
+                        opacity: 0;
+                      }
+                    }
+                    @keyframes drawDeleteLine {
+                      0% {
+                        height: 0px;
+                      }
+                      40% {
+                        height: 80px;
+                      }
+                      100% {
+                        height: 80px;
+                      }
+                    }
+                  `}</style>
+                </div>
+
+                {/* 이전 버튼 */}
+                <button
+                  onClick={() => setTutorialStep(1)}
+                  className="w-full py-2 mt-3 text-[#6155F5] font-bold text-sm"
+                >
+                  ← 이전
+                </button>
+              </>
+            )}
 
           </div>
         </div>
