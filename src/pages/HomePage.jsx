@@ -662,7 +662,8 @@ function HomePage() {
         )}
 
         {/* 플로팅 버튼들 */}
-        <div className={`fixed right-4 bottom-44 flex flex-col gap-3 z-40 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`fixed left-1/2 bottom-44 z-40 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ marginLeft: 'calc(185px - 60px)' }}>
+          <div className="flex flex-col gap-3">
           {/* 공유 버튼 */}
           <button
             onClick={handleShare}
@@ -699,6 +700,7 @@ function HomePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </button>
+          </div>
         </div>
 
       </div>
