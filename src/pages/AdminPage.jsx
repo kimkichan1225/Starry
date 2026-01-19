@@ -59,22 +59,19 @@ const AdminPage = () => {
   const fetchStats = async () => {
     try {
       // 총 회원 수
-      const { count: userCount, error: userError } = await supabase
+      const { count: userCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
-      if (userError) console.error('profiles 조회 에러:', userError);
 
       // 총 별 수
-      const { count: starCount, error: starError } = await supabase
+      const { count: starCount } = await supabase
         .from('stars')
         .select('*', { count: 'exact', head: true });
-      if (starError) console.error('stars 조회 에러:', starError);
 
       // 총 연결 수
-      const { count: connectionCount, error: connError } = await supabase
+      const { count: connectionCount } = await supabase
         .from('star_connections')
         .select('*', { count: 'exact', head: true });
-      if (connError) console.error('star_connections 조회 에러:', connError);
 
       // 오늘 가입한 회원 수
       const today = new Date();
@@ -85,18 +82,15 @@ const AdminPage = () => {
         .gte('created_at', today.toISOString());
 
       // 설문 참여자 수 (별을 준 고유 설문자 수)
-      const { data: surveyData, error: surveyError } = await supabase
+      const { data: surveyData } = await supabase
         .from('stars')
         .select('surveyor_name');
-      if (surveyError) console.error('surveyor 조회 에러:', surveyError);
 
       let uniqueSurveyors = 0;
-      if (!surveyError && surveyData && surveyData.length > 0) {
+      if (surveyData && surveyData.length > 0) {
         const names = surveyData.map(s => s.surveyor_name).filter(name => name);
         uniqueSurveyors = new Set(names).size;
       }
-
-      console.log('통계 조회 결과:', { userCount, starCount, connectionCount, todayCount, uniqueSurveyors });
 
       setStats({
         totalUsers: userCount || 0,
