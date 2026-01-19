@@ -126,8 +126,13 @@ function SurveyQuestionPage() {
   const [showSent, setShowSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [finalAnswers, setFinalAnswers] = useState(null);
+  const [showNightSky, setShowNightSky] = useState(false);
+  const [nightSkyStars, setNightSkyStars] = useState([]);
+  const [nightSkyPositions, setNightSkyPositions] = useState([]);
+  const [nightSkyConnections, setNightSkyConnections] = useState([]);
   const canvasRef = useRef(null);
   const sentCanvasRef = useRef(null);
+  const nightSkyCanvasRef = useRef(null);
 
   // 대상 사용자 닉네임 가져오기
   useEffect(() => {
@@ -308,10 +313,243 @@ function SurveyQuestionPage() {
     }
   }, [showSent, finalAnswers]);
 
+  // 별 ID 기반으로 고정된 위치 생성 (해시 함수)
+  const getPositionFromId = (id, index, canvasWidth, canvasHeight, padding) => {
+    let hash = 0;
+    const str = id + index.toString();
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    const pseudoRandomX = Math.abs(Math.sin(hash));
+    const pseudoRandomY = Math.abs(Math.cos(hash * 2));
+    return {
+      x: padding + pseudoRandomX * (canvasWidth - padding * 2),
+      y: padding + pseudoRandomY * (canvasHeight - padding * 2),
+    };
+  };
+
+  // 개별 별 그리기 함수 (밤하늘용)
+  const drawStarOnNightSky = (ctx, star, x, y, scale = 1) => {
+    const colorIdx = star.star_color - 1;
+    const pointsIdx = star.star_points - 1;
+    const sizeIdx = star.star_size - 1;
+    const satIdx = star.star_saturation;
+    const sharpIdx = star.star_sharpness;
+
+    const starPoints = pointsMap[pointsIdx];
+    const baseSize = 30 * scale;
+    const starOuter = baseSize * sizeMap[sizeIdx] * 2;
+    const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
+    const starInner = starOuter * innerRatio;
+    const colorData = palette[colorIdx];
+    const saturation = mapRange(satIdx, 1, 4, 80, 20);
+    const lightness = 50;
+    const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
+
+    // 별 그리기
+    drawStar(ctx, x, y, starOuter, starInner, starPoints, starFill);
+
+    // 별 글로우 효과
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glowScale = 1.5;
+    const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
+    const g2 = ctx.createRadialGradient(x, y, starOuter * 0.2, x, y, starOuter * glowScale);
+    g2.addColorStop(0, glowColor + '0.4)');
+    g2.addColorStop(0.5, glowColor + '0.15)');
+    g2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.arc(x, y, starOuter * glowScale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  // 밤하늘 데이터 가져오기
+  const fetchNightSkyData = async () => {
+    try {
+      // 별 데이터 가져오기
+      const { data: starsData, error: starsError } = await supabase
+        .from('stars')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+
+      if (starsError) throw starsError;
+
+      setNightSkyStars(starsData || []);
+
+      // 별 위치 계산
+      const canvasWidth = 350;
+      const canvasHeight = 500;
+      const padding = 40;
+
+      const positions = (starsData || []).map((star, index) => {
+        if (star.position_x != null && star.position_y != null) {
+          return { x: star.position_x, y: star.position_y };
+        }
+        return getPositionFromId(star.id, index, canvasWidth, canvasHeight, padding);
+      });
+      setNightSkyPositions(positions);
+
+      // 연결 데이터 가져오기
+      const { data: connectionsData, error: connError } = await supabase
+        .from('star_connections')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (connError) throw connError;
+
+      // 연결 데이터를 인덱스 기반으로 변환
+      if (connectionsData && connectionsData.length > 0 && starsData) {
+        const loadedConnections = connectionsData.map(conn => {
+          const fromIndex = starsData.findIndex(s => s.id === conn.from_star_id);
+          const toIndex = starsData.findIndex(s => s.id === conn.to_star_id);
+          return { fromIndex, toIndex };
+        }).filter(conn => conn.fromIndex !== -1 && conn.toIndex !== -1);
+
+        setNightSkyConnections(loadedConnections);
+      }
+
+      setShowNightSky(true);
+    } catch (error) {
+      console.error('밤하늘 데이터 가져오기 실패:', error);
+    }
+  };
+
+  // 밤하늘 캔버스 그리기
+  useEffect(() => {
+    if (!showNightSky || !nightSkyCanvasRef.current || nightSkyStars.length === 0) return;
+
+    const canvas = nightSkyCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // 캔버스 클리어
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 연결선 그리기
+    ctx.strokeStyle = 'rgba(255, 255, 227, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    nightSkyConnections.forEach(conn => {
+      const fromPos = nightSkyPositions[conn.fromIndex];
+      const toPos = nightSkyPositions[conn.toIndex];
+      if (fromPos && toPos) {
+        ctx.beginPath();
+        ctx.moveTo(fromPos.x, fromPos.y);
+        ctx.lineTo(toPos.x, toPos.y);
+        ctx.stroke();
+      }
+    });
+
+    // 각 별 그리기
+    nightSkyStars.forEach((star, index) => {
+      if (nightSkyPositions[index]) {
+        const { x, y } = nightSkyPositions[index];
+        drawStarOnNightSky(ctx, star, x, y, 0.5);
+      }
+    });
+  }, [showNightSky, nightSkyStars, nightSkyPositions, nightSkyConnections]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">로딩 중...</div>
+      </div>
+    );
+  }
+
+  // 밤하늘 보기 화면
+  if (showNightSky) {
+    return (
+      <div className="relative min-h-screen overflow-hidden">
+        {/* 배경 이미지 */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/BackGround.jpg)' }}
+        ></div>
+
+        {/* 메인 콘텐츠 */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {/* 상단 네비게이션 */}
+          <nav className="px-6 py-5 flex justify-between items-center relative">
+            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+              </svg>
+              <span className="text-sm font-light">English</span>
+            </button>
+
+            <img
+              src="/Logo.png"
+              alt="STARRY"
+              className="h-5 absolute left-1/2 transform -translate-x-1/2"
+            />
+
+            <button className="text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </nav>
+
+          {/* 중앙 콘텐츠 */}
+          <div className="flex-1 flex flex-col items-center px-6 pb-8">
+            {/* 타이틀 */}
+            <h1 className="text-white text-2xl font-bold mt-4 mb-6">
+              {targetUserNickname} 님의 밤하늘
+            </h1>
+
+            {/* 별자리 캔버스 */}
+            <div className="relative flex-1 w-full flex items-center justify-center">
+              <canvas
+                ref={nightSkyCanvasRef}
+                width={350}
+                height={500}
+                className="max-w-full"
+              />
+            </div>
+
+            {/* 내 밤하늘 만들기 버튼 */}
+            <button
+              onClick={() => window.location.href = '/'}
+              className="w-full max-w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors mt-6"
+            >
+              내 밤하늘 만들기
+            </button>
+          </div>
+
+          {/* 하단 정보 */}
+          <div className="pb-8 px-6 text-center">
+            <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-3 -translate-y-[11px]"
+              />
+              <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
+              <div className="text-left space-y-1">
+                <div className="text-[9px] leading-snug">
+                  광고 문의: 123456789@gmail.com <br />
+                  Copyright ©2025 123456789. All rights reserved.
+                </div>
+                <div className="text-white/70 text-[9px] flex items-center space-x-1">
+                  <span className="font-semibold text-white">개발자</span>
+                  <span>김기찬</span>
+                  <span className="text-white/40">·</span>
+                  <span className="font-semibold text-white">디자이너</span>
+                  <span>김태희</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -385,11 +623,13 @@ function SurveyQuestionPage() {
               {/* 버튼들 */}
               <div className="space-y-3 flex flex-col items-center">
                 <button
+                  onClick={fetchNightSkyData}
                   className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-white hover:bg-[#B5B5B5] transition-colors"
                 >
                   {targetUserNickname}님의 밤하늘 보기
                 </button>
                 <button
+                  onClick={() => window.location.href = '/'}
                   className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
                 >
                   내 밤하늘 만들기
