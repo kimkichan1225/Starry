@@ -36,117 +36,119 @@ function StarryPage() {
 
         {/* 메인 컨텐츠 영역 */}
         <div className="flex-1 px-6 pt-3 pb-8">
-          {/* 소개 텍스트 섹션 */}
-          <div className="mb-8 text-white px-6">
-            <h2 className="text-sm font-bold mb-3">모두는 하나의 별</h2>
-            <p className="text-sm leading-relaxed mb-6">
-              모든 사람은 저마다의 개성을 가진 별이라고 생각했어요. 각자의 빛은 다르지만 모두 소중하니까요.
-            </p>
+          <div className="max-w-[340px] mx-auto">
+            {/* 소개 텍스트 섹션 */}
+            <div className="mb-8 text-white">
+              <h2 className="text-sm font-bold mb-3">모두는 하나의 별</h2>
+              <p className="text-sm leading-relaxed mb-6">
+                모든 사람은 저마다의 개성을 가진 별이라고 생각했어요. 각자의 빛은 다르지만 모두 소중하니까요.
+              </p>
 
-            <h2 className="text-sm font-bold mb-3">관계가 그려지는 별자리</h2>
-            <p className="text-sm leading-relaxed">
-              사람 사이의 마음과 관계를 어둠속에 두고 싶지 않았어요. 그래서 별을 주고 받고, 그 별과 별을 이어, 감정을 별자리로 시각화하는 서비스를 개발했어요.
-            </p>
-          </div>
-
-          {/* 명함 섹션 */}
-          <div className="my-12 -mx-4">
-            <div className="bg-white rounded-3xl p-8 mb-4 shadow-lg transform rotate-12 -translate-x-4 w-80 h-44">
-              <div className="text-center text-red-500 font-bold">
-                제작자 명함 (레이아웃)
-              </div>
-            </div>
-            <div className="bg-white rounded-3xl p-8 shadow-lg transform -rotate-12 translate-x-4 w-80 h-44 ml-auto">
-              <div className="text-center text-red-500 font-bold">
-                디자이너 명함 (레이아웃)
-              </div>
-            </div>
-          </div>
-
-          {/* 서비스 개발 히스토리 버튼 */}
-          <button className="w-full py-4 bg-[#6155F5] text-white font-bold rounded-full mb-8 hover:bg-[#5044d4] transition">
-            서비스 개발 히스토리
-          </button>
-
-          {/* 공지사항 섹션 */}
-          <div className="mb-8 -mx-6 px-6">
-            <div className="flex items-center justify-between mb-4 -mx-6 px-10">
-              <div className="flex items-center gap-1">
-                <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <h2 className="text-white font-bold text-lg">공지사항</h2>
-              </div>
-              <button
-                onClick={() => navigate('/notice')}
-                className="text-gray-400 text-xs hover:text-white transition"
-              >
-                전체보기
-              </button>
+              <h2 className="text-sm font-bold mb-3">관계가 그려지는 별자리</h2>
+              <p className="text-sm leading-relaxed">
+                사람 사이의 마음과 관계를 어둠속에 두고 싶지 않았어요. 그래서 별을 주고 받고, 그 별과 별을 이어, 감정을 별자리로 시각화하는 서비스를 개발했어요.
+              </p>
             </div>
 
-            {/* 공지사항 테이블 */}
-            <div className="rounded-lg overflow-hidden">
-              {/* 테이블 헤더 */}
-              <div className="grid grid-cols-[50px_1fr_70px] gap-2 px-4 py-2 text-gray-400 text-xs">
-                <div className="text-center">번호</div>
-                <div className="text-center">제목</div>
-                <div className="text-center">작성일</div>
+            {/* 명함 섹션 */}
+            <div className="my-12">
+              <div className="bg-white rounded-3xl p-8 mb-4 shadow-lg transform rotate-6 w-72 h-40 -translate-x-10">
+                <div className="text-center text-red-500 font-bold">
+                  제작자 명함 (레이아웃)
+                </div>
               </div>
-              {/* 구분선 */}
-              <div className="flex justify-center mb-2">
-                <div className="w-[85%] h-0.5 bg-[#FBFBFB]/50"></div>
+              <div className="bg-white rounded-3xl p-8 shadow-lg transform -rotate-6 w-72 h-40 ml-auto translate-x-10">
+                <div className="text-center text-red-500 font-bold">
+                  디자이너 명함 (레이아웃)
+                </div>
+              </div>
+            </div>
+
+            {/* 서비스 개발 히스토리 버튼 */}
+            <button className="w-full py-4 bg-[#6155F5] text-white font-bold rounded-full mb-8 hover:bg-[#5044d4] transition">
+              서비스 개발 히스토리
+            </button>
+
+            {/* 공지사항 섹션 */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-1">
+                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <h2 className="text-white font-bold text-lg">공지사항</h2>
+                </div>
+                <button
+                  onClick={() => navigate('/notice')}
+                  className="text-gray-400 text-xs hover:text-white transition"
+                >
+                  전체보기
+                </button>
               </div>
 
-              {/* 테이블 바디 */}
-              <div>
-                {notices.map((notice, index) => (
-                  <div key={notice.id}>
-                    <div
-                      onClick={() => navigate(`/notice/${notice.id}`)}
-                      className="grid grid-cols-[50px_1fr_70px] gap-2 px-4 py-2 text-white hover:bg-[#252547] transition cursor-pointer"
-                    >
-                      <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category}</div>
-                      <div className="truncate text-center text-xs">{notice.title}</div>
-                      <div className="text-gray-400 text-xs text-center">{notice.date}</div>
-                    </div>
-                    {index === 0 && (
-                      <div className="flex justify-center">
-                        <div className="w-[85%] h-px bg-[#FBFBFB]/50"></div>
+              {/* 공지사항 테이블 */}
+              <div className="rounded-lg overflow-hidden">
+                {/* 테이블 헤더 */}
+                <div className="grid grid-cols-[50px_1fr_70px] gap-2 px-4 py-2 text-gray-400 text-xs">
+                  <div className="text-center">번호</div>
+                  <div className="text-center">제목</div>
+                  <div className="text-center">작성일</div>
+                </div>
+                {/* 구분선 */}
+                <div className="flex justify-center mb-2">
+                  <div className="w-[85%] h-0.5 bg-[#FBFBFB]/50"></div>
+                </div>
+
+                {/* 테이블 바디 */}
+                <div>
+                  {notices.map((notice, index) => (
+                    <div key={notice.id}>
+                      <div
+                        onClick={() => navigate(`/notice/${notice.id}`)}
+                        className="grid grid-cols-[50px_1fr_70px] gap-2 px-4 py-2 text-white hover:bg-[#252547] transition cursor-pointer"
+                      >
+                        <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category}</div>
+                        <div className="truncate text-center text-xs">{notice.title}</div>
+                        <div className="text-gray-400 text-xs text-center">{notice.date}</div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {index === 0 && (
+                        <div className="flex justify-center">
+                          <div className="w-[85%] h-px bg-[#FBFBFB]/50"></div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* 푸터 */}
-          <footer className="pt-6 text-center">
-            <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
-              <img
-                src="/Logo.png"
-                alt="STARRY"
-                className="h-3 -translate-y-[18px]"
-              />
-              <div className="h-6 w-px bg-white/40 -translate-y-[18px]"></div>
-              <div className="text-left space-y-1">
-                <div className="text-[9px] leading-snug">
-                  광고 문의: 123456789@gmail.com <br />
-                  기타 문의: 987654321@gmail.com <br />
-                  Copyright ©2025 123456789. All rights reserved.
-                </div>
-                {/* 개발자/디자이너 정보 */}
-                <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-white">개발자</span>
-                  <span>김기찬</span>
-                  <span className="text-white/40">·</span>
-                  <span className="font-semibold text-white">디자이너</span>
-                  <span>김태희</span>
+            {/* 푸터 */}
+            <footer className="pt-6 text-center">
+              <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
+                <img
+                  src="/Logo.png"
+                  alt="STARRY"
+                  className="h-3 -translate-y-[18px]"
+                />
+                <div className="h-6 w-px bg-white/40 -translate-y-[18px]"></div>
+                <div className="text-left space-y-1">
+                  <div className="text-[9px] leading-snug">
+                    광고 문의: 123456789@gmail.com <br />
+                    기타 문의: 987654321@gmail.com <br />
+                    Copyright ©2025 123456789. All rights reserved.
+                  </div>
+                  {/* 개발자/디자이너 정보 */}
+                  <div className="text-white/70 text-[9px] flex items-center space-x-1">
+                    <span className="font-semibold text-white">개발자</span>
+                    <span>김기찬</span>
+                    <span className="text-white/40">·</span>
+                    <span className="font-semibold text-white">디자이너</span>
+                    <span>김태희</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </footer>
+            </footer>
+          </div>
         </div>
       </div>
 

@@ -703,7 +703,7 @@ function HomePage() {
 
       {/* 바텀시트 - 별자리 정보 */}
       <div
-        className={`fixed left-5 right-5 top-44 bottom-32 bg-white shadow-lg transition-all duration-500 ease-out z-30 ${
+        className={`fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-[340px] top-44 bottom-32 bg-white shadow-lg transition-all duration-500 ease-out z-30 ${
           isConstellationExpanded ? 'translate-y-0 rounded-3xl' : 'translate-y-[calc(100%-2rem)] rounded-t-3xl'
         } ${isEditMode ? 'opacity-0 pointer-events-none' : ''}`}
       >

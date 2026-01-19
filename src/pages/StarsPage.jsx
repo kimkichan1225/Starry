@@ -17,6 +17,65 @@ const mapRange = (v, inMin, inMax, outMin, outMax) => {
   return outMin + (outMax - outMin) * ((v - inMin) / (inMax - inMin));
 };
 
+// 설문 질문 목록
+const questions = [
+  {
+    id: 1,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 중요하게 생각하는 것은?',
+    options: [
+      { id: 'a', emoji: '🔥', label: '도전!', description: '용감하게 밀고 나간다' },
+      { id: 'b', emoji: '📐', label: '실력!', description: '확실하게 해낸다' },
+      { id: 'c', emoji: '📚', label: '지식!', description: '새로운 것을 알아낸다' },
+      { id: 'd', emoji: '💖', label: '마음!', description: '사람들과 함께 해낸다' },
+    ],
+  },
+  {
+    id: 2,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 중요하게 생각하는 것은?',
+    options: [
+      { id: 'a', emoji: '🧑‍🏫', label: '리더형!', description: '내가 이끌어간다' },
+      { id: 'b', emoji: '🗺️', label: '유지형!', description: '방식을 끝까지 유지한다' },
+      { id: 'c', emoji: '🧩', label: '유연형!', description: '상황에 따라 바뀐다' },
+      { id: 'd', emoji: '💬', label: '중재형!', description: '모두의 의견을 들어본다' },
+    ],
+  },
+  {
+    id: 3,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 중요하게 생각하는 것은?',
+    options: [
+      { id: 'a', emoji: '😀', label: '외향적!', description: '활발한 에너지' },
+      { id: 'b', emoji: '😳', label: '내향적!', description: '차분하고 신중함' },
+      { id: 'c', emoji: '😊', label: '균형적!', description: '친근하고 편함' },
+      { id: 'd', emoji: '😝', label: '개성!', description: '어디로 튈지 모름' },
+    ],
+  },
+  {
+    id: 4,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 중요하게 생각하는 것은?',
+    options: [
+      { id: 'a', emoji: '🎮', label: '게임 레벨이', description: '올랐을 때' },
+      { id: 'b', emoji: '🔒', label: '재미있는 비밀을', description: '알았을 때' },
+      { id: 'c', emoji: '🏆️', label: '노력한 일에', description: '칭찬을 받을 때' },
+      { id: 'd', emoji: '☕', label: '친구들과', description: '카페에 갈 때' },
+    ],
+  },
+  {
+    id: 5,
+    questionLine1: (nickname) => `${nickname} 님이`,
+    questionLine2: '가장 중요하게 생각하는 것은?',
+    options: [
+      { id: 'a', emoji: '🍰', label: '맛있는걸 먹거나', description: '푹 잔다' },
+      { id: 'b', emoji: '🗣', label: '친한 사람에게', description: '이야기한다' },
+      { id: 'c', emoji: '🏃‍♂️', label: '운동이나', description: '노래를 한다' },
+      { id: 'd', emoji: '🧮', label: '스트레스 받은', description: '이유를 따져본다' },
+    ],
+  },
+];
+
 // 별 그리기 함수
 const drawStar = (ctx, x, y, outerR, innerR, points, fillStyle) => {
   const step = Math.PI / points;
@@ -134,15 +193,23 @@ function StarCard({ star, index, onClick }) {
 }
 
 // 별 상세 모달 컴포넌트
-function StarDetailModal({ star, index, onClose, onDelete }) {
+function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, nickname }) {
   const canvasRef = useRef(null);
+  const answersCanvasRef = useRef(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAnswers, setShowAnswers] = useState(false);
 
   useEffect(() => {
     if (canvasRef.current && star) {
       drawStarOnCanvas(canvasRef.current, star);
     }
   }, [star]);
+
+  useEffect(() => {
+    if (answersCanvasRef.current && star && showAnswers) {
+      drawStarOnCanvas(answersCanvasRef.current, star);
+    }
+  }, [star, showAnswers]);
 
   if (!star) return null;
 
@@ -158,6 +225,130 @@ function StarDetailModal({ star, index, onClose, onDelete }) {
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
   };
+
+  const handlePrevStar = () => {
+    if (index > 0) {
+      onNavigate(index - 1);
+    }
+  };
+
+  const handleNextStar = () => {
+    if (index < stars.length - 1) {
+      onNavigate(index + 1);
+    }
+  };
+
+  // 답변에서 선택된 옵션 찾기
+  const getSelectedOption = (questionId) => {
+    if (!star.answers) return null;
+    const answerId = star.answers[questionId];
+    const question = questions.find(q => q.id === questionId);
+    if (!question) return null;
+    return question.options.find(opt => opt.id === answerId);
+  };
+
+  // 전체 답변 보기 화면
+  if (showAnswers) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col">
+        {/* 배경 이미지 */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/BackGround.jpg)' }}
+        ></div>
+
+        {/* 메인 콘텐츠 */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {/* 광고 배너 영역 */}
+          <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
+          </div>
+
+          {/* 상단 네비게이션 */}
+          <nav className="pl-6 pr-6 py-5 flex justify-between items-center">
+            <div className="flex items-center gap-1">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-white font-bold text-xl">{nickname} 님의 밤하늘</span>
+            </div>
+          </nav>
+
+          {/* 보낸 사람 네비게이션 */}
+          <div className="flex items-center justify-center py-3">
+            <div className="bg-white rounded-full px-8 py-2 flex items-center gap-20">
+              <button
+                onClick={handlePrevStar}
+                disabled={index === 0}
+                className={`text-black text-xl font-bold ${index === 0 ? 'opacity-30' : 'hover:opacity-50'}`}
+              >
+                &lt;
+              </button>
+              <span className="text-black font-bold text-lg">{star.surveyor_name} 님</span>
+              <button
+                onClick={handleNextStar}
+                disabled={index === stars.length - 1}
+                className={`text-black text-xl font-bold ${index === stars.length - 1 ? 'opacity-30' : 'hover:opacity-50'}`}
+              >
+                &gt;
+              </button>
+            </div>
+          </div>
+
+          {/* 별 이미지 영역 */}
+          <div className="flex items-center justify-center gap-14 py-4">
+            <button
+              onClick={handlePrevStar}
+              disabled={index === 0}
+              className={`text-white text-2xl ${index === 0 ? 'opacity-30' : 'hover:opacity-70'}`}
+            >
+              &lt;
+            </button>
+            <div className="w-36 h-36 bg-[#0F223A] rounded-full flex items-center justify-center">
+              <canvas
+                ref={answersCanvasRef}
+                width={120}
+                height={120}
+              />
+            </div>
+            <button
+              onClick={handleNextStar}
+              disabled={index === stars.length - 1}
+              className={`text-white text-2xl ${index === stars.length - 1 ? 'opacity-30' : 'hover:opacity-70'}`}
+            >
+              &gt;
+            </button>
+          </div>
+
+          {/* 질문과 답변 목록 */}
+          <div className="flex-1 overflow-y-auto px-6 pb-32">
+            <div className="max-w-[340px] mx-auto space-y-4">
+              {questions.map((question) => {
+                const selectedOption = getSelectedOption(question.id);
+                return (
+                  <div key={question.id} className="text-center">
+                    <p className="text-white text-sm mb-2">
+                      {question.questionLine1(nickname)}<br />
+                      {question.questionLine2}
+                    </p>
+                    {selectedOption && (
+                      <div className="bg-white rounded-full px-4 py-2 inline-block">
+                        <span className="text-base mr-1">{selectedOption.emoji}</span>
+                        <span className="text-[#6155F5] font-bold">{selectedOption.label}</span>
+                        <span className="text-black ml-1">{selectedOption.description}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* 네비게이션 바 */}
+        <NavBar />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
@@ -210,7 +401,10 @@ function StarDetailModal({ star, index, onClose, onDelete }) {
         </div>
 
         {/* 전체 답변 보기 버튼 */}
-        <button className="w-full py-2 bg-[#6155F5] text-white text-lg rounded-full hover:bg-[#5044d4] transition">
+        <button
+          onClick={() => setShowAnswers(true)}
+          className="w-full py-2 bg-[#6155F5] text-white text-lg rounded-full hover:bg-[#5044d4] transition"
+        >
           전체 답변 보기
         </button>
 
@@ -285,6 +479,14 @@ function StarsPage() {
   const handleCloseModal = () => {
     setSelectedStar(null);
     setSelectedIndex(null);
+  };
+
+  // 별 네비게이션 (이전/다음 별로 이동)
+  const handleNavigate = (newIndex) => {
+    if (newIndex >= 0 && newIndex < stars.length) {
+      setSelectedStar(stars[newIndex]);
+      setSelectedIndex(newIndex);
+    }
   };
 
   // 별 삭제
@@ -459,6 +661,9 @@ function StarsPage() {
           index={selectedIndex}
           onClose={handleCloseModal}
           onDelete={handleDeleteStar}
+          stars={stars}
+          onNavigate={handleNavigate}
+          nickname={nickname}
         />
       )}
     </div>
