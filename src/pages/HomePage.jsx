@@ -1,12 +1,311 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
+
+// 별 생성을 위한 설정 (StarsPage와 동일)
+const palette = [
+  { name: '빨강', h: 0 },
+  { name: '초록', h: 120 },
+  { name: '파랑', h: 220 },
+  { name: '노랑', h: 50 }
+];
+const pointsMap = [8, 5, 4, 6];
+const sizeMap = [0.35, 0.25, 0.30, 0.40];
+
+const mapRange = (v, inMin, inMax, outMin, outMax) => {
+  return outMin + (outMax - outMin) * ((v - inMin) / (inMax - inMin));
+};
+
+// 별 그리기 함수
+const drawStar = (ctx, x, y, outerR, innerR, points, fillStyle) => {
+  const step = Math.PI / points;
+  ctx.beginPath();
+  for (let i = 0; i < 2 * points; i++) {
+    let r;
+    if (i % 2 === 0) {
+      if (points === 8) {
+        const pointIdx = i / 2;
+        r = (pointIdx % 2 === 1) ? outerR * 0.8 : outerR;
+      } else {
+        r = outerR;
+      }
+    } else {
+      r = innerR;
+    }
+    const a = i * step - Math.PI / 2;
+    const px = x + Math.cos(a) * r;
+    const py = y + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.lineJoin = 'round';
+  if (fillStyle) {
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+};
+
+// 개별 별 그리기 함수
+const drawStarOnCanvas = (ctx, star, x, y, scale = 1) => {
+  const colorIdx = star.star_color - 1;
+  const pointsIdx = star.star_points - 1;
+  const sizeIdx = star.star_size - 1;
+  const satIdx = star.star_saturation;
+  const sharpIdx = star.star_sharpness;
+
+  const starPoints = pointsMap[pointsIdx];
+  const baseSize = 30 * scale;
+  const starOuter = baseSize * sizeMap[sizeIdx] * 2;
+  const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
+  const starInner = starOuter * innerRatio;
+  const colorData = palette[colorIdx];
+  const saturation = mapRange(satIdx, 1, 4, 80, 20);
+  const lightness = 50;
+  const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
+
+  // 별 그리기
+  drawStar(ctx, x, y, starOuter, starInner, starPoints, starFill);
+
+  // 별 글로우 효과
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const glowScale = 1.5;
+  const glowColor = `hsla(${colorData.h}, ${saturation}%, ${lightness}%,`;
+  const g2 = ctx.createRadialGradient(x, y, starOuter * 0.2, x, y, starOuter * glowScale);
+  g2.addColorStop(0, glowColor + '0.4)');
+  g2.addColorStop(0.5, glowColor + '0.15)');
+  g2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g2;
+  ctx.beginPath();
+  ctx.arc(x, y, starOuter * glowScale, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+};
 
 function HomePage() {
   const { user, nickname } = useAuth();
   const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
+  const [stars, setStars] = useState([]);
+  const [starPositions, setStarPositions] = useState([]);
+  const canvasRef = useRef(null);
+
+  // 밤하늘 제작 모드 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // 별 연결 상태
+  const [connections, setConnections] = useState([]); // [{fromIndex, toIndex}, ...]
+  const [isDraggingLine, setIsDraggingLine] = useState(false);
+  const [dragStartStarIndex, setDragStartStarIndex] = useState(null);
+  const [dragCurrentPos, setDragCurrentPos] = useState(null);
+
+  // 별 이동 상태
+  const [isMovingStar, setIsMovingStar] = useState(false);
+  const [movingStarIndex, setMovingStarIndex] = useState(null);
+  const longPressTimerRef = useRef(null);
+  const LONG_PRESS_DURATION = 500; // 0.5초
+
+  // 밤하늘 제작 모드 진입
+  const handleEnterEditMode = () => {
+    setIsEditMode(true);
+    setShowTutorial(true);
+  };
+
+  // 밤하늘 제작 모드 종료
+  const handleExitEditMode = () => {
+    setIsEditMode(false);
+    setShowTutorial(false);
+  };
+
+  // 새로고침 (별 연결 초기화)
+  const handleRefresh = () => {
+    setConnections([]);
+  };
+
+  // 저장
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      // 1. 각 별의 위치 업데이트
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
+        const position = starPositions[i];
+        if (position) {
+          const { error: updateError } = await supabase
+            .from('stars')
+            .update({
+              position_x: position.x,
+              position_y: position.y
+            })
+            .eq('id', star.id);
+
+          if (updateError) {
+            console.error('별 위치 업데이트 실패:', star.id, updateError);
+          }
+        }
+      }
+
+      // 2. 기존 연결 삭제 후 새 연결 저장
+      const { error: deleteError } = await supabase
+        .from('star_connections')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('연결 삭제 실패:', deleteError);
+      }
+
+      if (connections.length > 0) {
+        const connectionData = connections.map(conn => ({
+          user_id: user.id,
+          from_star_id: stars[conn.fromIndex].id,
+          to_star_id: stars[conn.toIndex].id
+        }));
+
+        const { error: insertError } = await supabase
+          .from('star_connections')
+          .insert(connectionData);
+
+        if (insertError) {
+          console.error('연결 저장 실패:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('저장 실패:', error);
+    }
+
+    setIsEditMode(false);
+  };
+
+  // 캔버스 좌표 계산
+  const getCanvasCoords = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    let clientX, clientY;
+    if (e.touches) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
+  // 좌표에서 별 찾기
+  const findStarAtPosition = (x, y) => {
+    const hitRadius = 25; // 터치/클릭 감지 반경
+    for (let i = 0; i < starPositions.length; i++) {
+      const pos = starPositions[i];
+      const distance = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+      if (distance <= hitRadius) {
+        return i;
+      }
+    }
+    return null;
+  };
+
+  // 터치/마우스 시작
+  const handlePointerDown = (e) => {
+    if (!isEditMode) return;
+
+    const coords = getCanvasCoords(e);
+    if (!coords) return;
+
+    const starIndex = findStarAtPosition(coords.x, coords.y);
+
+    if (starIndex !== null) {
+      // 롱프레스 타이머 시작 (별 이동 모드)
+      longPressTimerRef.current = setTimeout(() => {
+        setIsMovingStar(true);
+        setMovingStarIndex(starIndex);
+      }, LONG_PRESS_DURATION);
+
+      // 일단 라인 드래그 시작 준비
+      setDragStartStarIndex(starIndex);
+      setDragCurrentPos(coords);
+    }
+  };
+
+  // 터치/마우스 이동
+  const handlePointerMove = (e) => {
+    if (!isEditMode) return;
+    if (dragStartStarIndex === null && movingStarIndex === null) return;
+
+    const coords = getCanvasCoords(e);
+    if (!coords) return;
+
+    // 움직이면 롱프레스 취소 (이동 모드가 아닌 경우에만)
+    if (!isMovingStar && longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+      setIsDraggingLine(true);
+    }
+
+    if (isMovingStar && movingStarIndex !== null) {
+      // 별 이동
+      setStarPositions(prev => {
+        const newPositions = [...prev];
+        newPositions[movingStarIndex] = { x: coords.x, y: coords.y };
+        return newPositions;
+      });
+    } else if (isDraggingLine || dragStartStarIndex !== null) {
+      // 라인 드래그 중
+      setIsDraggingLine(true);
+      setDragCurrentPos(coords);
+    }
+  };
+
+  // 터치/마우스 종료
+  const handlePointerUp = (e) => {
+    if (!isEditMode) return;
+
+    // 롱프레스 타이머 취소
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    if (isDraggingLine && dragStartStarIndex !== null && dragCurrentPos) {
+      // 드래그 종료 위치에서 별 찾기
+      const endStarIndex = findStarAtPosition(dragCurrentPos.x, dragCurrentPos.y);
+
+      if (endStarIndex !== null && endStarIndex !== dragStartStarIndex) {
+        // 이미 연결이 있는지 확인
+        const connectionExists = connections.some(
+          conn =>
+            (conn.fromIndex === dragStartStarIndex && conn.toIndex === endStarIndex) ||
+            (conn.fromIndex === endStarIndex && conn.toIndex === dragStartStarIndex)
+        );
+
+        if (!connectionExists) {
+          // 새 연결 추가
+          setConnections(prev => [...prev, { fromIndex: dragStartStarIndex, toIndex: endStarIndex }]);
+        }
+      }
+    }
+
+    // 상태 초기화
+    setIsDraggingLine(false);
+    setDragStartStarIndex(null);
+    setDragCurrentPos(null);
+    setIsMovingStar(false);
+    setMovingStarIndex(null);
+  };
 
   // 공유 링크 복사
   const handleShare = () => {
@@ -27,6 +326,165 @@ function HomePage() {
     id: i + 1,
     day: i + 1
   }));
+
+  // 별 ID 기반으로 고정된 위치 생성 (해시 함수)
+  const getPositionFromId = (id, index, canvasWidth, canvasHeight, padding) => {
+    // ID 문자열을 숫자로 변환하여 시드로 사용
+    let hash = 0;
+    const str = id + index.toString();
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+
+    // 해시값을 0-1 범위로 변환
+    const pseudoRandomX = Math.abs(Math.sin(hash)) ;
+    const pseudoRandomY = Math.abs(Math.cos(hash * 2));
+
+    return {
+      x: padding + pseudoRandomX * (canvasWidth - padding * 2),
+      y: padding + pseudoRandomY * (canvasHeight - padding * 2),
+    };
+  };
+
+  // 별 데이터 가져오기
+  useEffect(() => {
+    const fetchStars = async () => {
+      if (!user) return;
+
+      try {
+        // 별 데이터 가져오기
+        const { data, error } = await supabase
+          .from('stars')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        setStars(data || []);
+
+        // 각 별에 ID 기반 고정 위치 생성 (저장된 위치가 있으면 사용)
+        const canvasWidth = 350;
+        const canvasHeight = 500;
+        const padding = 40;
+
+        const positions = (data || []).map((star, index) => {
+          // 저장된 위치가 있으면 사용, 없으면 해시 기반 위치 생성
+          if (star.position_x != null && star.position_y != null) {
+            return { x: star.position_x, y: star.position_y };
+          }
+          return getPositionFromId(star.id, index, canvasWidth, canvasHeight, padding);
+        });
+        setStarPositions(positions);
+
+        // 연결 데이터 가져오기
+        const { data: connectionsData, error: connError } = await supabase
+          .from('star_connections')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (connError) throw connError;
+
+        // 연결 데이터를 인덱스 기반으로 변환
+        if (connectionsData && connectionsData.length > 0 && data) {
+          const loadedConnections = connectionsData.map(conn => {
+            const fromIndex = data.findIndex(s => s.id === conn.from_star_id);
+            const toIndex = data.findIndex(s => s.id === conn.to_star_id);
+            return { fromIndex, toIndex };
+          }).filter(conn => conn.fromIndex !== -1 && conn.toIndex !== -1);
+
+          setConnections(loadedConnections);
+        }
+      } catch (error) {
+        console.error('Error fetching stars:', error);
+      }
+    };
+
+    fetchStars();
+  }, [user]);
+
+  // 별자리 캔버스에 별 그리기
+  useEffect(() => {
+    if (!canvasRef.current || stars.length === 0 || starPositions.length === 0) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // 캔버스 클리어
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 연결선 그리기
+    ctx.strokeStyle = 'rgba(255, 255, 227, 0.5)'; // #FFFFE3/50
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    connections.forEach(conn => {
+      const fromPos = starPositions[conn.fromIndex];
+      const toPos = starPositions[conn.toIndex];
+      if (fromPos && toPos) {
+        ctx.beginPath();
+        ctx.moveTo(fromPos.x, fromPos.y);
+        ctx.lineTo(toPos.x, toPos.y);
+        ctx.stroke();
+      }
+    });
+
+    // 드래그 중인 선 그리기 (프리뷰)
+    if (isDraggingLine && dragStartStarIndex !== null && dragCurrentPos) {
+      const startPos = starPositions[dragStartStarIndex];
+      if (startPos) {
+        ctx.strokeStyle = 'rgba(255, 255, 227, 0.5)'; // #FFFFE3/50
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]); // 점선으로 프리뷰
+        ctx.beginPath();
+        ctx.moveTo(startPos.x, startPos.y);
+        ctx.lineTo(dragCurrentPos.x, dragCurrentPos.y);
+        ctx.stroke();
+        ctx.setLineDash([]); // 점선 해제
+      }
+    }
+
+    // 각 별 그리기
+    stars.forEach((star, index) => {
+      if (starPositions[index]) {
+        const { x, y } = starPositions[index];
+        drawStarOnCanvas(ctx, star, x, y, 0.5);
+      }
+    });
+
+    // 이동 중인 별 하이라이트
+    if (isMovingStar && movingStarIndex !== null) {
+      const pos = starPositions[movingStarIndex];
+      if (pos) {
+        ctx.strokeStyle = '#FFFFE3';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }, [stars, starPositions, connections, isDraggingLine, dragStartStarIndex, dragCurrentPos, isMovingStar, movingStarIndex]);
+
+  // 터치 이벤트 passive: false로 등록 (preventDefault 사용을 위해)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const preventDefaultHandler = (e) => {
+      if (isEditMode) {
+        e.preventDefault();
+      }
+    };
+
+    canvas.addEventListener('touchstart', preventDefaultHandler, { passive: false });
+    canvas.addEventListener('touchmove', preventDefaultHandler, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('touchstart', preventDefaultHandler);
+      canvas.removeEventListener('touchmove', preventDefaultHandler);
+    };
+  }, [isEditMode]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#FAF5FF]">
@@ -53,8 +511,22 @@ function HomePage() {
         </nav>
 
         {/* 별자리 표시 영역 */}
-        <div className="relative min-h-[430px] flex items-center justify-center py-8">
-          {/* 여기에 별자리 시각화가 들어갈 예정 */}
+        <div className="relative min-h-[540px] flex items-center justify-center py-8 mx-4">
+          {/* border-2 border-dashed border-white/50 rounded-2xl */}
+          <canvas
+            ref={canvasRef}
+            width={350}
+            height={500}
+            className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${isEditMode ? 'cursor-pointer' : ''}`}
+            onMouseDown={handlePointerDown}
+            onMouseMove={handlePointerMove}
+            onMouseUp={handlePointerUp}
+            onMouseLeave={handlePointerUp}
+            onTouchStart={handlePointerDown}
+            onTouchMove={handlePointerMove}
+            onTouchEnd={handlePointerUp}
+            style={{ touchAction: isEditMode ? 'none' : 'auto' }}
+          />
         </div>
 
         {/* 공유 성공 메시지 */}
@@ -70,7 +542,7 @@ function HomePage() {
         )}
 
         {/* 플로팅 버튼들 */}
-        <div className={`fixed right-4 bottom-44 flex flex-col gap-3 z-40 transition-opacity duration-300 ${isConstellationExpanded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`fixed right-4 bottom-44 flex flex-col gap-3 z-40 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           {/* 공유 버튼 */}
           <button
             onClick={handleShare}
@@ -96,7 +568,10 @@ function HomePage() {
             </svg>
           </button>
           {/* 밤하늘 제작 버튼 */}
-          <button className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition">
+          <button
+            onClick={handleEnterEditMode}
+            className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
+          >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
@@ -109,7 +584,7 @@ function HomePage() {
       <div
         className={`fixed left-5 right-5 top-44 bottom-32 bg-white shadow-lg transition-all duration-500 ease-out z-30 ${
           isConstellationExpanded ? 'translate-y-0 rounded-3xl' : 'translate-y-[calc(100%-2rem)] rounded-t-3xl'
-        }`}
+        } ${isEditMode ? 'opacity-0 pointer-events-none' : ''}`}
       >
         {/* 드래그 핸들 */}
         <div className="flex justify-center pt-3 pb-2">
@@ -166,8 +641,81 @@ function HomePage() {
         )}
       </div>
 
-      {/* 네비게이션 바 */}
-      <NavBar />
+      {/* 밤하늘 제작 모드 UI */}
+      {isEditMode && (
+        <>
+          {/* 상단 좌측 버튼들 (도움말, 새로고침) - 세로 배치 */}
+          <div className="fixed top-40 left-7 flex flex-col z-50">
+            {/* 도움말 버튼 */}
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="w-10 h-10 flex items-center justify-center hover:opacity-70 transition"
+            >
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            {/* 새로고침 버튼 */}
+            <button
+              onClick={handleRefresh}
+              className="w-10 h-10 flex items-center justify-center hover:opacity-70 transition"
+            >
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 하단 저장 버튼 */}
+          <div className="fixed bottom-12 left-0 right-0 flex justify-center z-50 px-6">
+            <button
+              onClick={handleSave}
+              className="w-full max-w-[320px] py-2 bg-[#6155F5] text-white font-bold text-lg rounded-full shadow-lg hover:bg-[#5044d4] transition"
+            >
+              저장
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* 튜토리얼 팝업 */}
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl w-full max-w-[320px] p-6">
+            {/* 팝업 헤더 */}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-[#6155F5] font-bold text-xl">Step 1: 별 잇기</h3>
+              <button
+                onClick={() => setShowTutorial(false)}
+                className="w-8 h-8 flex items-center justify-center"
+              >
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 튜토리얼 내용 */}
+            <div className="text-center py-8">
+              <p className="text-gray-600 text-base">
+                별과 별 사이를 드래그하여<br />
+                별자리를 만들어보세요
+              </p>
+            </div>
+
+            {/* 확인 버튼 */}
+            <button
+              onClick={() => setShowTutorial(false)}
+              className="w-full py-3 bg-[#6155F5] text-white font-bold rounded-full hover:bg-[#5044d4] transition"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 네비게이션 바 (편집 모드에서는 숨김) */}
+      {!isEditMode && <NavBar />}
     </div>
   );
 }
