@@ -886,29 +886,28 @@ function HomePage() {
                       animation: 'deleteLine 2.5s ease-in-out infinite'
                     }}
                   />
-                  {/* 그라데이션 선 (포인터 이동 경로) */}
+                  {/* 그라데이션 선 (포인터 이동 경로 - 대각선) */}
                   <div
                     className="absolute"
                     style={{
-                      left: '50%',
-                      top: '20%',
+                      left: 'calc(27% + 32px)',
+                      top: 'calc(10% + 14px)',
                       width: '8px',
                       height: '0px',
-                      marginLeft: '-12px',
                       background: 'linear-gradient(to bottom, #D9D9D9, #6155F5, #FAFAFA)',
                       borderRadius: '3px',
                       zIndex: 1,
+                      transformOrigin: 'top center',
+                      transform: 'rotate(-30deg)',
                       animation: 'drawDeleteLine 2.5s ease-in-out infinite'
                     }}
                   />
-                  {/* 포인터 (위에서 아래로 애니메이션) */}
+                  {/* 포인터 (왼쪽 위에서 오른쪽 아래로 대각선 애니메이션) */}
                   <img
                     src="/StepPointer.png"
                     alt="pointer"
                     className="absolute w-16 h-16"
                     style={{
-                      left: '50%',
-                      marginLeft: '-32px',
                       animation: 'movePointer2 2.5s ease-in-out infinite',
                       zIndex: 3
                     }}
@@ -917,12 +916,15 @@ function HomePage() {
                   <style>{`
                     @keyframes movePointer2 {
                       0% {
+                        left: 30%;
                         top: 10%;
                       }
                       40% {
+                        left: 55%;
                         top: 70%;
                       }
                       100% {
+                        left: 55%;
                         top: 70%;
                       }
                     }
@@ -945,10 +947,10 @@ function HomePage() {
                         height: 0px;
                       }
                       40% {
-                        height: 80px;
+                        height: 100px;
                       }
                       100% {
-                        height: 80px;
+                        height: 100px;
                       }
                     }
                   `}</style>
