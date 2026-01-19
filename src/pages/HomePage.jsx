@@ -257,10 +257,14 @@ function HomePage() {
     }
 
     if (isMovingStar && movingStarIndex !== null) {
-      // 별 이동
+      // 별 이동 (경계 내로 제한)
+      const padding = 15; // 별이 테두리에서 약간 떨어지도록
+      const clampedX = Math.max(padding, Math.min(350 - padding, coords.x));
+      const clampedY = Math.max(padding, Math.min(500 - padding, coords.y));
+
       setStarPositions(prev => {
         const newPositions = [...prev];
-        newPositions[movingStarIndex] = { x: coords.x, y: coords.y };
+        newPositions[movingStarIndex] = { x: clampedX, y: clampedY };
         return newPositions;
       });
     } else if (isDraggingLine || dragStartStarIndex !== null) {
@@ -512,7 +516,13 @@ function HomePage() {
 
         {/* 별자리 표시 영역 */}
         <div className="relative min-h-[540px] flex items-center justify-center py-8 mx-4">
-          {/* border-2 border-dashed border-white/50 rounded-2xl */}
+          {/* 편집 모드에서 점선 테두리 표시 */}
+          {/* {isEditMode && (
+            <div
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-dashed border-white/50 rounded-2xl pointer-events-none"
+              style={{ width: 350, height: 500 }}
+            />
+          )} */}
           <canvas
             ref={canvasRef}
             width={350}
