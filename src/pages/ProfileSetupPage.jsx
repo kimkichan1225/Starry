@@ -20,6 +20,10 @@ const ProfileSetupPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [checkingProfile, setCheckingProfile] = useState(true);
 
+  // 기존 회원 여부 상태
+  const [isExistingUser, setIsExistingUser] = useState(false);
+  const [existingProfileId, setExistingProfileId] = useState(null);
+
   // SMS 인증 상태
   const [smsVerification, setSmsVerification] = useState({
     sent: false,
@@ -43,19 +47,44 @@ const ProfileSetupPage = () => {
 
       const metadata = user.user_metadata || {};
 
-      // 프로필이 이미 완성된 경우 바로 /starry로 이동
+      // 간편 로그인 연동이 이미 완료된 경우 바로 /starry로 이동
+      if (metadata.social_linked) {
+        navigate('/starry');
+        return;
+      }
+
+      // 프로필이 이미 완성된 경우 (일반 가입 사용자) 바로 /starry로 이동
       if (metadata.nickname && metadata.birthdate && metadata.phone_verified) {
         navigate('/starry');
         return;
       }
 
-      // 기존 데이터가 있으면 불러오기
-      setFormData(prev => ({
-        ...prev,
-        nickname: metadata.nickname || '',
-        birthdate: metadata.birthdate || '',
-        phone: metadata.phone || ''
-      }));
+      // 이메일로 기존 회원 조회 (profiles 테이블)
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, nickname, phone, email, birthdate')
+        .eq('email', user.email)
+        .maybeSingle();
+
+      if (existingProfile && !profileError) {
+        // 기존 회원 발견 - 정보 자동 채우기 (수정 불가)
+        setIsExistingUser(true);
+        setExistingProfileId(existingProfile.id);
+        setFormData(prev => ({
+          ...prev,
+          nickname: existingProfile.nickname || '',
+          birthdate: existingProfile.birthdate || '',
+          phone: existingProfile.phone || ''
+        }));
+      } else {
+        // 신규 사용자 - 기존 메타데이터에서 불러오기
+        setFormData(prev => ({
+          ...prev,
+          nickname: metadata.nickname || '',
+          birthdate: metadata.birthdate || '',
+          phone: metadata.phone || ''
+        }));
+      }
 
       // 이미 전화번호 인증이 완료된 경우
       if (metadata.phone_verified && metadata.phone) {
@@ -135,6 +164,23 @@ const ProfileSetupPage = () => {
     setError('');
 
     try {
+      // 신규 소셜 로그인 사용자일 경우 전화번호 중복 체크
+      if (!isExistingUser) {
+        const { data: existingPhone, error: phoneError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('phone', formData.phone)
+          .maybeSingle();
+
+        if (phoneError) {
+          throw new Error('전화번호 확인 중 오류가 발생했습니다.');
+        }
+
+        if (existingPhone) {
+          throw new Error('이미 가입된 전화번호입니다.');
+        }
+      }
+
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
         {
@@ -257,11 +303,20 @@ const ProfileSetupPage = () => {
           phone: formData.phone,
           phone_verified: true,
           verification_token: smsVerification.verificationToken,
-          profile_completed: true
+          profile_completed: true,
+          social_linked: true  // 간편 로그인 연동 완료 표시
         }
       });
 
       if (error) throw error;
+
+      // 기존 회원인 경우 profiles 테이블에 social_linked 업데이트
+      if (isExistingUser && existingProfileId) {
+        await supabase
+          .from('profiles')
+          .update({ social_linked: true })
+          .eq('id', existingProfileId);
+      }
 
       setSuccessMessage('프로필 설정이 완료되었습니다!');
       setTimeout(() => {
@@ -330,6 +385,14 @@ const ProfileSetupPage = () => {
               </div>
             )}
 
+            {/* 기존 회원 안내 메시지 */}
+            {isExistingUser && (
+              <div className="bg-blue-500/20 border border-blue-400 text-blue-100 px-4 py-2 rounded-lg text-xs text-center">
+                기존 회원 정보가 확인되었습니다.<br />
+                전화번호 인증을 완료해주세요.
+              </div>
+            )}
+
             {/* 이름 또는 닉네임 */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">이름 또는 닉네임</label>
@@ -339,7 +402,12 @@ const ProfileSetupPage = () => {
                 value={formData.nickname}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
+                disabled={isExistingUser}
+                className={`w-full px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
+                  isExistingUser
+                    ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
+                    : 'bg-white border-purple-500 focus:ring-purple-600'
+                }`}
               />
             </div>
 
@@ -352,7 +420,12 @@ const ProfileSetupPage = () => {
                 value={formData.birthdate}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
+                disabled={isExistingUser && formData.birthdate}
+                className={`w-full px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
+                  isExistingUser && formData.birthdate
+                    ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
+                    : 'bg-white border-purple-500 focus:ring-purple-600'
+                }`}
               />
             </div>
 
@@ -369,8 +442,12 @@ const ProfileSetupPage = () => {
                     placeholder="010-1234-5678"
                     required
                     maxLength="13"
-                    disabled={smsVerification.verified}
-                    className="flex-1 px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:bg-gray-200 disabled:cursor-not-allowed bg-white border-purple-500 focus:ring-purple-600"
+                    disabled={smsVerification.verified || isExistingUser}
+                    className={`flex-1 px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
+                      smsVerification.verified || isExistingUser
+                        ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
+                        : 'bg-white border-purple-500 focus:ring-purple-600'
+                    }`}
                   />
                   <button
                     type="button"
