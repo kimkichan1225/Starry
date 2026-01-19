@@ -73,7 +73,7 @@ function SurveyStartPage() {
         <nav className={`px-6 py-5 transition-all duration-1000 ${
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}>
-          <div className="max-w-[500px] mx-auto flex justify-between items-center relative">
+          <div className="max-w-[370px] mx-auto flex justify-between items-center relative">
             <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
