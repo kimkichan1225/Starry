@@ -225,9 +225,14 @@ function SurveyQuestionPage() {
         answers: finalAnswers,
       };
 
-      const { error } = await supabase
+      console.log('별 전송 시도:', starData);
+
+      const { data, error } = await supabase
         .from('stars')
-        .insert([starData]);
+        .insert([starData])
+        .select();
+
+      console.log('별 전송 결과:', { data, error });
 
       if (error) throw error;
 
