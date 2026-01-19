@@ -732,11 +732,10 @@ function HomePage() {
 
       {/* 튜토리얼 팝업 */}
       {showTutorial && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl w-full max-w-[320px] p-6">
-            {/* 팝업 헤더 */}
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-[#6155F5] font-bold text-xl">Step 1: 별 잇기</h3>
+        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-6">
+          <div className="bg-white/90 rounded-3xl w-full max-w-[290px] p-2">
+            {/* 닫기 버튼 */}
+            <div className="flex justify-end">
               <button
                 onClick={() => setShowTutorial(false)}
                 className="w-8 h-8 flex items-center justify-center"
@@ -747,18 +746,22 @@ function HomePage() {
               </button>
             </div>
 
-            {/* 튜토리얼 내용 */}
-            <div className="text-center py-8">
-              <p className="text-gray-600 text-base">
-                별과 별 사이를 드래그하여<br />
-                별자리를 만들어보세요
-              </p>
+            {/* 튜토리얼 내용 - 중앙 정렬 */}
+            <div className="text-center max-w-[150px] mx-auto">
+              <p className="text-[#727272] font-bold text-sm">Step 1</p>
+              <h3 className="text-[#6155F5] font-bold text-lg mt-3">별 잇기</h3>
+              <p className="text-black text-base mt-3">별과 별을 드래그해 선을 이으세요.</p>
+            </div>
+
+            {/* 시뮬레이션 영역 (추후 추가) */}
+            <div className="mt-4 h-40 bg-gray-100 rounded-xl flex items-center justify-center">
+              <span className="text-gray-400 text-sm">시뮬레이션 영역</span>
             </div>
 
             {/* 확인 버튼 */}
             <button
               onClick={() => setShowTutorial(false)}
-              className="w-full py-3 bg-[#6155F5] text-white font-bold rounded-full hover:bg-[#5044d4] transition"
+              className="w-full py-3 mt-4 bg-[#6155F5] text-white font-bold rounded-full hover:bg-[#5044d4] transition"
             >
               확인
             </button>
