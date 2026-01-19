@@ -474,29 +474,31 @@ function SurveyQuestionPage() {
         {/* 메인 콘텐츠 */}
         <div className="relative z-10 flex flex-col min-h-screen">
           {/* 상단 네비게이션 */}
-          <nav className="px-6 py-5 flex justify-between items-center relative">
-            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
-              </svg>
-              <span className="text-sm font-light">English</span>
-            </button>
+          <nav className="px-6 py-5">
+            <div className="max-w-[500px] mx-auto flex justify-between items-center relative">
+              <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+                </svg>
+                <span className="text-sm font-light">English</span>
+              </button>
 
-            <img
-              src="/Logo.png"
-              alt="STARRY"
-              className="h-5 absolute left-1/2 transform -translate-x-1/2"
-            />
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-5 absolute left-1/2 transform -translate-x-1/2"
+              />
 
-            <button className="text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+              <button className="text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </nav>
 
           {/* 중앙 콘텐츠 */}
@@ -567,29 +569,31 @@ function SurveyQuestionPage() {
         {/* 메인 콘텐츠 */}
         <div className="relative z-10 flex flex-col min-h-screen">
           {/* 상단 네비게이션 */}
-          <nav className="px-6 py-5 flex justify-between items-center relative">
-            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
-              </svg>
-              <span className="text-sm font-light">English</span>
-            </button>
+          <nav className="px-6 py-5">
+            <div className="max-w-[500px] mx-auto flex justify-between items-center relative">
+              <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+                </svg>
+                <span className="text-sm font-light">English</span>
+              </button>
 
-            <img
-              src="/Logo.png"
-              alt="STARRY"
-              className="h-5 absolute left-1/2 transform -translate-x-1/2"
-            />
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-5 absolute left-1/2 transform -translate-x-1/2"
+              />
 
-            <button className="text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+              <button className="text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </nav>
 
           {/* 중앙 콘텐츠 */}
@@ -680,29 +684,31 @@ function SurveyQuestionPage() {
         {/* 메인 콘텐츠 */}
         <div className="relative z-10 flex flex-col min-h-screen">
           {/* 상단 네비게이션 */}
-          <nav className="px-6 py-5 flex justify-between items-center relative">
-            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
-                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
-              </svg>
-              <span className="text-sm font-light">English</span>
-            </button>
+          <nav className="px-6 py-5">
+            <div className="max-w-[500px] mx-auto flex justify-between items-center relative">
+              <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                  <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+                </svg>
+                <span className="text-sm font-light">English</span>
+              </button>
 
-            <img
-              src="/Logo.png"
-              alt="STARRY"
-              className="h-5 absolute left-1/2 transform -translate-x-1/2"
-            />
+              <img
+                src="/Logo.png"
+                alt="STARRY"
+                className="h-5 absolute left-1/2 transform -translate-x-1/2"
+              />
 
-            <button className="text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+              <button className="text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </nav>
 
           {/* 중앙 콘텐츠 */}
@@ -783,29 +789,31 @@ function SurveyQuestionPage() {
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 상단 네비게이션 */}
-        <nav className="px-6 py-5 flex justify-between items-center relative">
-          <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
-              <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
-              <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
-              <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
-              <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
-            </svg>
-            <span className="text-sm font-light">English</span>
-          </button>
+        <nav className="px-6 py-5">
+          <div className="max-w-[500px] mx-auto flex justify-between items-center relative">
+            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M2 12h20" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
+                <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
+              </svg>
+              <span className="text-sm font-light">English</span>
+            </button>
 
-          <img
-            src="/Logo.png"
-            alt="STARRY"
-            className="h-5 absolute left-1/2 transform -translate-x-1/2"
-          />
+            <img
+              src="/Logo.png"
+              alt="STARRY"
+              className="h-5 absolute left-1/2 transform -translate-x-1/2"
+            />
 
-          <button className="text-white">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+            <button className="text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
         </nav>
 
         {/* 중앙 콘텐츠 */}
