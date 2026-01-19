@@ -101,6 +101,21 @@ const SignupPage = () => {
     setError('');
 
     try {
+      // 전화번호 중복 체크
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', formData.phone)
+        .maybeSingle();
+
+      if (checkError) {
+        throw new Error('전화번호 확인 중 오류가 발생했습니다.');
+      }
+
+      if (existingUser) {
+        throw new Error('이미 가입된 전화번호입니다.');
+      }
+
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
         {
