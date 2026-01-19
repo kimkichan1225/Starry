@@ -844,13 +844,6 @@ function HomePage() {
                   `}</style>
                 </div>
 
-                {/* 다음 버튼 */}
-                <button
-                  onClick={() => setTutorialStep(2)}
-                  className="w-full py-2 mt-3 text-[#6155F5] font-bold text-sm"
-                >
-                  다음 →
-                </button>
               </>
             )}
 
@@ -901,7 +894,7 @@ function HomePage() {
                       top: '20%',
                       width: '8px',
                       height: '0px',
-                      marginLeft: '-4px',
+                      marginLeft: '-12px',
                       background: 'linear-gradient(to bottom, #D9D9D9, #6155F5, #FAFAFA)',
                       borderRadius: '3px',
                       zIndex: 1,
@@ -960,16 +953,28 @@ function HomePage() {
                     }
                   `}</style>
                 </div>
-
-                {/* 이전 버튼 */}
-                <button
-                  onClick={() => setTutorialStep(1)}
-                  className="w-full py-2 mt-3 text-[#6155F5] font-bold text-sm"
-                >
-                  ← 이전
-                </button>
               </>
             )}
+
+            {/* Pagination 인디케이터 */}
+            <div className="flex justify-center items-center gap-3 py-3">
+              <button
+                onClick={() => setTutorialStep(1)}
+                className={`rounded-full transition-all ${
+                  tutorialStep === 1
+                    ? 'w-3 h-3 bg-[#6155F5]'
+                    : 'w-2 h-2 bg-white border border-gray-300'
+                }`}
+              />
+              <button
+                onClick={() => setTutorialStep(2)}
+                className={`rounded-full transition-all ${
+                  tutorialStep === 2
+                    ? 'w-3 h-3 bg-[#6155F5]'
+                    : 'w-2 h-2 bg-white border border-gray-300'
+                }`}
+              />
+            </div>
 
           </div>
         </div>
