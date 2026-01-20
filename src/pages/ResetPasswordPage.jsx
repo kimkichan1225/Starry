@@ -10,19 +10,72 @@ const ResetPasswordPage = () => {
   const [loading, setLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [isValidSession, setIsValidSession] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    // URL에서 토큰 확인 (Supabase가 자동으로 세션 처리)
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+    // Supabase auth 상태 변경 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event, session);
+
+      if (event === 'PASSWORD_RECOVERY') {
+        // 비밀번호 재설정 링크로 접근한 경우
         setIsValidSession(true);
+        setCheckingSession(false);
+      } else if (event === 'SIGNED_IN' && session) {
+        // 세션이 있는 경우 (토큰이 유효한 경우)
+        setIsValidSession(true);
+        setCheckingSession(false);
+      } else if (event === 'INITIAL_SESSION') {
+        // 초기 세션 확인
+        if (session) {
+          setIsValidSession(true);
+        }
+        setCheckingSession(false);
+      }
+    });
+
+    // 현재 세션 확인 (URL에서 토큰 파싱 후)
+    const checkSession = async () => {
+      // URL hash에서 토큰 확인
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+
+      if (accessToken && type === 'recovery') {
+        // 토큰이 있으면 세션 설정 시도
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+
+          if (data?.session) {
+            setIsValidSession(true);
+          } else if (error) {
+            console.error('Session error:', error);
+            setError('유효하지 않은 링크입니다. 다시 시도해주세요.');
+          }
+        } catch (err) {
+          console.error('Set session error:', err);
+        }
+        setCheckingSession(false);
       } else {
-        // 세션이 없으면 비밀번호 찾기 페이지로 리다이렉트
-        setError('유효하지 않은 링크입니다. 다시 시도해주세요.');
+        // hash가 없으면 기존 세션 확인
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setIsValidSession(true);
+        }
+        setCheckingSession(false);
       }
     };
-    checkSession();
+
+    // 약간의 딜레이 후 세션 확인 (Supabase가 URL을 파싱할 시간)
+    const timer = setTimeout(checkSession, 500);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   // 비밀번호 변경
@@ -54,6 +107,9 @@ const ResetPasswordPage = () => {
         throw new Error(updateError.message);
       }
 
+      // 로그아웃 (새 비밀번호로 다시 로그인하도록)
+      await supabase.auth.signOut();
+
       setIsComplete(true);
     } catch (err) {
       setError(err.message || '비밀번호 변경에 실패했습니다.');
@@ -61,6 +117,21 @@ const ResetPasswordPage = () => {
       setLoading(false);
     }
   };
+
+  // 세션 확인 중일 때 로딩 표시
+  if (checkingSession) {
+    return (
+      <div className="relative min-h-screen overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/BackGround.jpg)' }}
+        ></div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <p className="text-white">확인 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -116,6 +187,29 @@ const ResetPasswordPage = () => {
                 로그인하기
               </button>
             </div>
+          ) : !isValidSession ? (
+            // 유효하지 않은 세션
+            <div className="w-full max-w-[300px] text-center">
+              <div className="mb-6">
+                <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+                <p className="text-white text-lg font-medium mb-2">
+                  유효하지 않은 링크입니다.
+                </p>
+                <p className="text-white/70 text-sm">
+                  링크가 만료되었거나 이미 사용되었습니다.<br />
+                  다시 비밀번호 찾기를 진행해주세요.
+                </p>
+              </div>
+
+              <button
+                onClick={() => navigate('/find-password')}
+                className="w-full py-3 text-base rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-all"
+              >
+                비밀번호 찾기로 돌아가기
+              </button>
+            </div>
           ) : (
             // 비밀번호 입력 화면
             <div className="w-full max-w-[300px]">
@@ -127,8 +221,7 @@ const ResetPasswordPage = () => {
                 placeholder="새 비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={!isValidSession}
-                className="w-full px-4 py-3 text-sm text-center rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600 disabled:bg-gray-200 disabled:cursor-not-allowed mb-3"
+                className="w-full px-4 py-3 text-sm text-center rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600 mb-3"
               />
 
               {/* 비밀번호 확인 입력 */}
@@ -137,13 +230,12 @@ const ResetPasswordPage = () => {
                 placeholder="비밀번호 확인"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={!isValidSession}
-                className="w-full px-4 py-3 text-sm text-center rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600 disabled:bg-gray-200 disabled:cursor-not-allowed mb-8"
+                className="w-full px-4 py-3 text-sm text-center rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600 mb-8"
               />
 
               <button
                 onClick={handleResetPassword}
-                disabled={loading || !isValidSession || !password || !confirmPassword}
+                disabled={loading || !password || !confirmPassword}
                 className="w-full py-3 text-sm rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? '변경 중...' : '비밀번호 변경하기'}
@@ -153,17 +245,6 @@ const ResetPasswordPage = () => {
                 <p className="text-red-500 text-xs text-center mt-4 whitespace-pre-line">
                   {error}
                 </p>
-              )}
-
-              {!isValidSession && !error && (
-                <div className="mt-4 text-center">
-                  <button
-                    onClick={() => navigate('/find-password')}
-                    className="text-purple-400 text-sm underline"
-                  >
-                    비밀번호 찾기로 돌아가기
-                  </button>
-                </div>
               )}
             </div>
           )}

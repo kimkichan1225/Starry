@@ -773,7 +773,10 @@ function HomePage() {
           <div className="fixed top-40 left-7 flex flex-col z-50">
             {/* 도움말 버튼 */}
             <button
-              onClick={() => setShowTutorial(true)}
+              onClick={() => {
+                setTutorialStep(1);
+                setShowTutorial(true);
+              }}
               className="w-10 h-10 flex items-center justify-center hover:opacity-70 transition"
             >
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -11,6 +11,7 @@ const FindEmailPage = () => {
   const [foundEmail, setFoundEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // 이메일 마스킹 (앞 2자리 + *** + @도메인)
   const maskEmail = (email) => {
@@ -79,7 +80,8 @@ const FindEmailPage = () => {
 
       if (data.success) {
         setIsCodeSent(true);
-        alert('인증번호가 발송되었습니다.');
+        setSuccessMessage('인증번호가 발송되었습니다.');
+        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         throw new Error(data.message || 'SMS 발송에 실패했습니다.');
       }
@@ -214,6 +216,13 @@ const FindEmailPage = () => {
               {error && (
                 <div className="bg-red-500/20 border border-red-500 text-red-100 px-4 py-2 rounded-lg text-xs text-center mb-4">
                   {error}
+                </div>
+              )}
+
+              {/* 성공 메시지 */}
+              {successMessage && (
+                <div className="bg-green-500/20 border border-green-500 text-green-100 px-4 py-2 rounded-lg text-xs text-center mb-4">
+                  {successMessage}
                 </div>
               )}
 

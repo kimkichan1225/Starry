@@ -13,7 +13,17 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Starry 프로젝트 초기 설정\n\n- React + Vite 프로젝트 구성\n- Tailwind CSS 설정\n- Supabase 연동 설정\n- LoadingPage 구현\n- 프로젝트 기본 구조 완성\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(dir \"C:\\\\Users\\\\vxbc5\\\\Desktop\\\\Starry\\\\Starry\\\\src\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(taskkill /PID 16264 /F)",
+      "Bash(cmd /c \"taskkill /PID 27240 /F\")",
+      "Bash(cmd /c \"taskkill /PID 16264 /F & taskkill /PID 25448 /F & taskkill /PID 25180 /F & taskkill /PID 12112 /F & taskkill /PID 28852 /F\")",
+      "Bash(cmd /c \"taskkill /F /PID 27240 & taskkill /F /PID 16264\")",
+      "Bash(cmd /c \"tasklist | findstr 27240\")",
+      "Bash(cmd /c \"taskkill /F /IM node.exe\")",
+      "Bash(cmd /c \"wmic process where ProcessId=27240 get Name,ProcessId,CommandLine\")"
     ]
   }
 }
