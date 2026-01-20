@@ -4,39 +4,13 @@ import { supabase } from '../lib/supabase';
 
 const FindPasswordPage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState('email'); // 'email' | 'result' | 'verify' | 'fullPassword'
+  const [step, setStep] = useState('email'); // 'email' | 'sent'
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [foundPassword, setFoundPassword] = useState('');
-  const [userPhone, setUserPhone] = useState(''); // 사용자의 등록된 전화번호
 
-  // 전화번호 인증 관련 상태
-  const [phone, setPhone] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isCodeSent, setIsCodeSent] = useState(false);
-
-  // 비밀번호 마스킹 (앞 4자리만 보여주고 나머지는 *)
-  const getMaskedPassword = (password) => {
-    if (password.length <= 4) return password;
-    return password.slice(0, 4) + '*'.repeat(password.length - 4);
-  };
-
-  // 전화번호 포맷팅 (010-1234-5678)
-  const formatPhone = (value) => {
-    const numbers = value.replace(/[^\d]/g, '');
-    if (numbers.length <= 3) return numbers;
-    if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
-    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
-  };
-
-  const handlePhoneChange = (e) => {
-    const formatted = formatPhone(e.target.value);
-    setPhone(formatted);
-  };
-
-  // 다음 버튼 클릭 (이메일 입력 후)
-  const handleNext = async () => {
+  // 비밀번호 재설정 이메일 발송
+  const handleSendResetEmail = async () => {
     if (!email) {
       setError('이메일을 입력해주세요.');
       return;
@@ -52,10 +26,10 @@ const FindPasswordPage = () => {
     setError('');
 
     try {
-      // 이메일로 사용자 조회
+      // 이메일로 사용자 존재 여부 확인
       const { data: userData, error: userError } = await supabase
         .from('profiles')
-        .select('id, phone, password')
+        .select('id')
         .eq('email', email)
         .maybeSingle();
 
@@ -69,106 +43,18 @@ const FindPasswordPage = () => {
         return;
       }
 
-      // 비밀번호와 전화번호 저장
-      setFoundPassword(userData.password || '');
-      setUserPhone(userData.phone || '');
-      setStep('result');
-    } catch (err) {
-      setError(err.message || '가입정보가 없는 이메일입니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // 비밀번호 재설정 이메일 발송
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-  // 인증번호 발송
-  const handleSendCode = async () => {
-    if (phone.replace(/-/g, '').length < 10) {
-      setError('올바른 전화번호를 입력해주세요.');
-      return;
-    }
-
-    // 입력한 전화번호가 등록된 전화번호와 일치하는지 확인
-    if (phone !== userPhone) {
-      setError('등록된 전화번호와 일치하지 않습니다.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      // SMS 인증번호 발송
-      const response = await fetch(
-        `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({ phone })
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        setIsCodeSent(true);
-        alert('인증번호가 발송되었습니다.');
-      } else {
-        throw new Error(data.message || 'SMS 발송에 실패했습니다.');
-      }
-    } catch (err) {
-      setError(err.message || '인증번호 발송에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 비밀번호 확인하기 (전화번호 인증 후)
-  const handleVerifyPassword = async () => {
-    if (!verificationCode) {
-      setError('인증번호를 입력해주세요.');
-      return;
-    }
-
-    if (verificationCode.length !== 6) {
-      setError('인증번호 6자리를 입력해주세요.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      // SMS 인증번호 확인
-      const response = await fetch(
-        `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/verify-sms`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({
-            phone,
-            code: verificationCode
-          })
-        }
-      );
-
-      const verifyData = await response.json();
-
-      if (!verifyData.success || !verifyData.verified) {
-        setError('인증번호가 일치하지 않습니다.');
-        setLoading(false);
-        return;
+      if (resetError) {
+        throw new Error(resetError.message);
       }
 
-      // 인증 성공 시 전체 비밀번호 표시
-      setStep('fullPassword');
+      setStep('sent');
     } catch (err) {
-      setError('알수 없는 오류가 있습니다.\n1:1 문의사항에 문의 바랍니다.');
+      setError(err.message || '이메일 발송에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -219,11 +105,11 @@ const FindPasswordPage = () => {
               />
 
               <button
-                onClick={handleNext}
+                onClick={handleSendResetEmail}
                 disabled={loading || !email}
                 className="w-full py-3 text-sm rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {loading ? '확인 중...' : '다음'}
+                {loading ? '발송 중...' : '비밀번호 재설정 링크 받기'}
               </button>
 
               {error && (
@@ -234,103 +120,24 @@ const FindPasswordPage = () => {
             </div>
           )}
 
-          {step === 'result' && (
-            // 마스킹된 비밀번호 결과 화면
-            <div className="w-full max-w-[300px]">
-              <p className="text-white text-left mb-4 pl-1">회원님의 비밀번호는,</p>
+          {step === 'sent' && (
+            // 이메일 발송 완료 화면
+            <div className="w-full max-w-[300px] text-center">
+              <div className="mb-6">
+                {/* 이메일 아이콘 */}
+                <svg className="w-16 h-16 text-purple-400 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                <p className="text-white text-lg font-medium mb-2">
+                  비밀번호 재설정 링크가<br />이메일로 발송되었습니다.
+                </p>
+                <p className="text-white/70 text-sm">
+                  이메일을 확인해주세요.
+                </p>
+              </div>
+
               <div className="bg-white/10 border border-purple-500 rounded-lg px-4 py-3 mb-6">
-                <p className="text-white text-2xl font-medium text-left">
-                  {getMaskedPassword(foundPassword)}
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setError('');
-                  setStep('verify');
-                }}
-                className="w-full py-2 text-base rounded-lg bg-[#686868] text-white font-medium hover:bg-[#555555] transition-all mb-3"
-              >
-                비밀번호 전체보기
-              </button>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => navigate('/find-email')}
-                  className="flex-1 py-2 text-base rounded-lg bg-[#686868] text-white font-medium hover:bg-[#555555] transition-all"
-                >
-                  아이디 찾기
-                </button>
-                <button
-                  onClick={() => navigate('/')}
-                  className="flex-1 py-2 text-base rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-all"
-                >
-                  로그인하기
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 'verify' && (
-            // 전화번호 인증 화면
-            <div className="w-full max-w-[300px]">
-              <p className="text-white text-left mb-2">전화번호를 입력해 주세요</p>
-
-              {/* 전화번호 입력 + 인증 버튼 */}
-              <div className="flex space-x-2 mb-3">
-                <input
-                  type="tel"
-                  placeholder="010-1234-5678"
-                  value={phone}
-                  onChange={handlePhoneChange}
-                  maxLength={13}
-                  className="flex-1 px-4 py-3 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600"
-                />
-                <button
-                  onClick={handleSendCode}
-                  disabled={loading || phone.replace(/-/g, '').length < 10}
-                  className="px-4 py-3 text-sm rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  인증
-                </button>
-              </div>
-
-              {/* 인증번호 입력 */}
-              <input
-                type="text"
-                placeholder="인증번호 입력"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/[^\d]/g, ''))}
-                maxLength={6}
-                disabled={!isCodeSent}
-                className="w-full px-4 py-3 text-sm text-center rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600 disabled:bg-gray-200 disabled:cursor-not-allowed mb-6"
-              />
-
-              {/* 비밀번호 확인하기 버튼 */}
-              <button
-                onClick={handleVerifyPassword}
-                disabled={loading || !isCodeSent || !verificationCode}
-                className="w-full py-3 text-sm rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {loading ? '확인 중...' : '비밀번호 확인하기'}
-              </button>
-
-              {error && (
-                <p className="text-red-500 text-xs text-center mt-4 whitespace-pre-line">
-                  {error}
-                </p>
-              )}
-            </div>
-          )}
-
-          {step === 'fullPassword' && (
-            // 전체 비밀번호 표시 화면
-            <div className="w-full max-w-[300px]">
-              <p className="text-white text-left mb-4 pl-1">회원님의 비밀번호는,</p>
-              <div className="bg-white/10 border border-purple-500 rounded-lg px-4 py-3 mb-6">
-                <p className="text-white text-2xl font-medium text-left">
-                  {foundPassword}
-                </p>
+                <p className="text-white text-sm">{email}</p>
               </div>
 
               <div className="flex space-x-2">
