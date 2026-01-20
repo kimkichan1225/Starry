@@ -242,8 +242,12 @@ const LoadingPage = () => {
                   </button>
                 </div>
 
-                {/* 회원가입 / 이메일/비밀번호 찾기 */}
+                {/* 이메일 찾기 | 비밀번호 찾기 | 회원가입 */}
                 <div className="flex items-center justify-center space-x-2 mt-4 text-white/80 text-[10px]">
+                  <button type="button" onClick={() => navigate('/find-email')} className="hover:text-white transition-colors">이메일 찾기</button>
+                  <span className="text-white/40">|</span>
+                  <button type="button" onClick={() => navigate('/find-password')} className="hover:text-white transition-colors">비밀번호 찾기</button>
+                  <span className="text-white/40">|</span>
                   <button
                     type="button"
                     onClick={() => navigate('/signup')}
@@ -251,8 +255,6 @@ const LoadingPage = () => {
                   >
                     회원가입
                   </button>
-                  <span className="text-white/40"></span>
-                  <button type="button" className="hover:text-white transition-colors">이메일/비밀번호 찾기</button>
                 </div>
               </div>
           </form>

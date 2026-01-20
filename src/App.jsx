@@ -14,6 +14,8 @@ import NoticePage from './pages/NoticePage';
 import NoticeDetailPage from './pages/NoticeDetailPage';
 import SurveyStartPage from './pages/SurveyStartPage';
 import SurveyQuestionPage from './pages/SurveyQuestionPage';
+import FindEmailPage from './pages/FindEmailPage';
+import FindPasswordPage from './pages/FindPasswordPage';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LoadingPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/find-email" element={<FindEmailPage />} />
+          <Route path="/find-password" element={<FindPasswordPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
           <Route path="/admin" element={<AdminPage />} />
 
