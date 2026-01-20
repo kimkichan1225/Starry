@@ -21,6 +21,7 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   // SMS 인증 상태
   const [smsVerification, setSmsVerification] = useState({
@@ -86,6 +87,43 @@ const SignupPage = () => {
         ...prev,
         [name]: value
       }));
+    }
+
+    // 이메일 필드 변경 시 에러 초기화
+    if (name === 'email') {
+      setEmailError('');
+    }
+  };
+
+  // 이메일 중복 체크
+  const checkEmailDuplicate = async () => {
+    if (!formData.email) return;
+
+    // 이메일 형식 체크
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return;
+    }
+
+    try {
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', formData.email)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('이메일 확인 오류:', checkError);
+        return;
+      }
+
+      if (existingUser) {
+        setEmailError('이미 가입된 이메일입니다.');
+      } else {
+        setEmailError('');
+      }
+    } catch (err) {
+      console.error('이메일 중복 체크 오류:', err);
     }
   };
 
@@ -211,6 +249,12 @@ const SignupPage = () => {
     setError('');
     setSuccessMessage('');
 
+    // 이메일 중복 에러 확인
+    if (emailError) {
+      setError('이미 가입된 이메일입니다.');
+      return;
+    }
+
     // SMS 인증 확인 추가
     if (!smsVerification.verified) {
       setError('휴대전화 인증을 완료해주세요.');
@@ -322,10 +366,16 @@ const SignupPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={checkEmailDuplicate}
                 placeholder="user@example.com"
                 required
-                className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
+                className={`w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
+                  emailError ? 'border-red-500 focus:ring-red-500' : 'border-purple-500 focus:ring-purple-600'
+                }`}
               />
+              {emailError && (
+                <p className="text-red-500 text-xs mt-1">{emailError}</p>
+              )}
             </div>
 
             {/* 비밀번호 */}
