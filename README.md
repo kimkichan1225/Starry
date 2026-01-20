@@ -5,9 +5,10 @@
 ## 기술 스택
 
 - **Frontend**: React 18, React Router
-- **Backend**: Supabase (Auth, Database)
+- **Backend**: Supabase (Auth, Database, Edge Functions)
 - **Styling**: Tailwind CSS
 - **Database**: PostgreSQL (Supabase)
+- **SMS 인증**: Solapi API
 
 ## 주요 기능
 
@@ -15,22 +16,37 @@
 - 이메일/비밀번호 로그인
 - 소셜 로그인 (Google, Kakao)
 - 회원가입 시 닉네임, 전화번호 등록
+- SMS 인증 기능 (Solapi API 연동)
 - 개발자 테스트 계정 (test@test.com)
 
-### 2. 사용자 설정 (UserPage)
+### 2. 관리자 시스템 (AdminPage)
+- 대시보드: 총 회원 수, 총 별 수, 총 연결 수, 오늘 가입자 통계
+- 회원 관리: 검색, 조회, 삭제 기능
+- 공지사항 관리: CRUD 기능 (일반/중요/이벤트 카테고리)
+- 설정: 최대 별 개수, 점검 모드, 회원가입 허용 설정
+- 관리자 권한: `src/config/admin.js`에서 이메일 기반 관리
+
+### 3. 사용자 설정 (UserPage)
 - 계정 정보 조회 (아이디, 닉네임, 전화번호)
 - 비밀번호 변경
 - 소셜 계정 연동 관리
 - 언어 설정
 - QR 코드 링크 공유
 
-### 3. 설문 공유 기능
-- 개인 설문 링크 생성 및 공유
-- 설문 시작 페이지 (SurveyStartPage)
-- 로딩 애니메이션 효과
-- 대상 사용자 닉네임 자동 표시
+### 4. 설문 시스템
+- 개인 설문 링크 생성 및 공유 (`/survey/:userId`)
+- 설문 시작 페이지 (SurveyStartPage) - 로딩 애니메이션 효과
+- 설문 질문 페이지 (SurveyQuestionPage) - 5개 질문
+- 설문 결과 기반 별 생성 (색상, 꼭짓점, 크기, 채도, 날카로움)
+- 별 전송 및 밤하늘 보기 기능
 
-### 4. 전역 상태 관리 (AuthContext)
+### 5. 별 시스템
+- 설문 응답 기반 별 속성 자동 생성
+- Canvas 기반 별 렌더링 (글로우 효과 포함)
+- 별자리 연결선 표시
+- 사용자별 밤하늘 (최대 30개 별)
+
+### 6. 전역 상태 관리 (AuthContext)
 - 로그인 사용자 정보 중앙 관리
 - 닉네임 자동 로딩
 - 모든 페이지에서 사용자 정보 접근 가능
@@ -40,27 +56,46 @@
 ```
 src/
 ├── components/
-│   └── NavBar.jsx              # 하단 네비게이션 바
+│   └── NavBar.jsx               # 하단 네비게이션 바
+├── config/
+│   └── admin.js                 # 관리자 이메일 설정
 ├── contexts/
-│   └── AuthContext.jsx         # 전역 인증 상태 관리
+│   └── AuthContext.jsx          # 전역 인증 상태 관리
 ├── lib/
-│   └── supabase.js            # Supabase 클라이언트 설정
+│   └── supabase.js              # Supabase 클라이언트 설정
+├── services/
+│   └── supabase.js              # Supabase 서비스 함수
 ├── pages/
-│   ├── LoadingPage.jsx        # 로그인 페이지
-│   ├── SignupPage.jsx         # 회원가입 페이지
-│   ├── HomePage.jsx           # 메인 홈 (별자리 표시)
-│   ├── StarryPage.jsx         # Starry 페이지
-│   ├── StarsPage.jsx          # Stars 페이지
-│   ├── StatPage.jsx           # 통계 페이지
-│   ├── UserPage.jsx           # 사용자 설정 페이지
-│   ├── NoticePage.jsx         # 공지사항 목록
-│   ├── NoticeDetailPage.jsx   # 공지사항 상세
-│   └── SurveyStartPage.jsx    # 설문 시작 페이지
-└── App.jsx                    # 라우팅 설정
+│   ├── LoadingPage.jsx          # 로그인 페이지
+│   ├── SignupPage.jsx           # 회원가입 페이지
+│   ├── ProfileSetupPage.jsx     # 프로필 설정 페이지
+│   ├── AdminPage.jsx            # 관리자 페이지
+│   ├── HomePage.jsx             # 메인 홈 (별자리 표시)
+│   ├── StarryPage.jsx           # Starry 페이지
+│   ├── StarsPage.jsx            # Stars 페이지
+│   ├── StatPage.jsx             # 통계 페이지
+│   ├── StatDetailPage.jsx       # 통계 상세 페이지
+│   ├── UserPage.jsx             # 사용자 설정 페이지
+│   ├── NoticePage.jsx           # 공지사항 목록
+│   ├── NoticeDetailPage.jsx     # 공지사항 상세
+│   ├── SurveyStartPage.jsx      # 설문 시작 페이지
+│   └── SurveyQuestionPage.jsx   # 설문 질문 페이지
+└── App.jsx                      # 라우팅 설정
 
 supabase/
-└── migrations/
-    └── 20260109_create_profiles_table.sql  # 프로필 테이블 생성
+├── migrations/
+│   ├── 20260109_create_profiles_table.sql       # 프로필 테이블
+│   └── 20260109_create_phone_verifications.sql  # SMS 인증 테이블
+└── functions/
+    ├── _shared/
+    │   ├── cors.ts              # CORS 설정
+    │   ├── solapi.ts            # Solapi API 클라이언트
+    │   ├── rate-limit.ts        # Rate limiting
+    │   └── verification-code.ts # 인증 코드 생성
+    ├── send-sms/
+    │   └── index.ts             # SMS 발송 함수
+    └── verify-sms/
+        └── index.ts             # SMS 인증 확인 함수
 ```
 
 ## 데이터베이스 구조
@@ -70,13 +105,62 @@ supabase/
 - id: UUID (Primary Key, References auth.users)
 - nickname: TEXT
 - phone: TEXT
+- email: TEXT
+- created_at: TIMESTAMPTZ
+- updated_at: TIMESTAMPTZ
+```
+
+### stars 테이블
+```sql
+- id: UUID (Primary Key)
+- user_id: UUID (References auth.users)
+- surveyor_name: TEXT
+- star_color: INTEGER (1-4)
+- star_points: INTEGER (1-4)
+- star_size: INTEGER (1-4)
+- star_saturation: INTEGER (1-4)
+- star_sharpness: INTEGER (1-4)
+- answers: JSONB
+- position_x: FLOAT
+- position_y: FLOAT
+- created_at: TIMESTAMPTZ
+```
+
+### star_connections 테이블
+```sql
+- id: UUID (Primary Key)
+- user_id: UUID (References auth.users)
+- from_star_id: UUID (References stars)
+- to_star_id: UUID (References stars)
+- created_at: TIMESTAMPTZ
+```
+
+### phone_verifications 테이블
+```sql
+- id: UUID (Primary Key)
+- phone: TEXT
+- code: TEXT
+- expires_at: TIMESTAMPTZ
+- verified: BOOLEAN
+- created_at: TIMESTAMPTZ
+```
+
+### notices 테이블
+```sql
+- id: UUID (Primary Key)
+- title: TEXT
+- content: TEXT
+- category: TEXT (일반/중요/이벤트)
+- author_id: UUID (References auth.users)
 - created_at: TIMESTAMPTZ
 - updated_at: TIMESTAMPTZ
 ```
 
 **RLS 정책:**
-- 모든 사용자가 프로필 읽기 가능 (설문 공유 기능을 위해)
-- 사용자는 자신의 프로필만 수정/삽입 가능
+- profiles: 모든 사용자가 읽기 가능, 본인만 수정 가능
+- stars: 모든 사용자가 읽기 가능, 삽입은 누구나 가능
+- star_connections: 모든 사용자가 읽기 가능, 본인 별만 연결 가능
+- notices: 모든 사용자가 읽기 가능, 관리자만 수정 가능
 
 ## 작업 내역
 
@@ -352,69 +436,77 @@ catch (error) {
 
 ---
 
-## 개발 예정
+### 7. SMS 인증 기능 구현
+**날짜**: 2026-01-10
 
-### 1. SMS 인증 기능 구현 (우선순위: 높음)
-**계획:**
-- Solapi API 연동
-- 회원가입 시 실제 SMS 발송
-- 인증번호 검증 (유효시간 3분)
+**구현 내용:**
+- Solapi API 연동으로 실제 SMS 발송
+- 6자리 인증 코드 생성 (유효시간 3분)
 - Supabase Edge Functions로 백엔드 검증
-- Rate limiting 적용
-
-**필요 작업:**
-- Solapi 계정 생성 및 API 키 발급
+- Rate limiting 적용 (분당 3회 제한)
 - phone_verifications 테이블 생성
-- send-sms, verify-sms Edge Functions 구현
-- SignupPage.jsx SMS 인증 UI 추가
 
-**관련 파일:**
+**파일:**
 - `supabase/functions/send-sms/index.ts` (신규)
 - `supabase/functions/verify-sms/index.ts` (신규)
-- `src/pages/SignupPage.jsx` (수정)
-
-**참고:**
-- 상세 계획: `C:\Users\vxbc5\.claude\plans\eager-foraging-lecun.md`
-
----
-
-### 2. 설문 질문 페이지 구현 (우선순위: 높음)
-**계획:**
-- SurveyStartPage "다음" 버튼 클릭 시 이동
-- 다양한 질문 유형 (객관식, 주관식, 별점 등)
-- 진행률 표시
-- 이전/다음 버튼
-- 임시 저장 기능
-
-**필요 작업:**
-- SurveyQuestionsPage.jsx 생성
-- questions 테이블 생성
-- survey_responses 테이블 생성
-- 질문별 컴포넌트 구현
-
-**라우트:**
-```
-/survey/:userId/questions
-```
+- `supabase/functions/_shared/solapi.ts` (신규)
+- `supabase/functions/_shared/cors.ts` (신규)
+- `supabase/functions/_shared/rate-limit.ts` (신규)
+- `supabase/functions/_shared/verification-code.ts` (신규)
+- `supabase/migrations/20260109_create_phone_verifications.sql` (신규)
 
 ---
 
-### 3. 별 생성 및 수신 기능 (우선순위: 중간)
-**계획:**
-- 설문 완료 시 "별" 생성
-- 대상 사용자의 밤하늘에 별 추가
-- 별 클릭 시 설문 결과 확인
-- 별자리 시각화
+### 8. 설문 질문 페이지 구현
+**날짜**: 2026-01-10
 
-**필요 작업:**
-- stars 테이블 생성
-- 별 시각화 컴포넌트 구현
-- HomePage에 별 표시 로직 추가
-- Canvas 또는 SVG 기반 렌더링
+**구현 내용:**
+- 5개 질문 (가치관, 행동 스타일, 첫인상, 행복 상황, 스트레스 해소)
+- 각 질문당 4개 선택지
+- 이전/다음 버튼으로 질문 간 이동
+- 진행률 표시 (현재 질문/총 질문)
+- 응답 기반 별 속성 자동 생성
+- Canvas로 별 미리보기 렌더링
+- 별 전송 기능 (stars 테이블에 저장)
+- 전송 완료 후 대상 사용자 밤하늘 보기
+
+**별 속성 매핑:**
+- Q1: 색상 (빨강/초록/파랑/노랑)
+- Q2: 꼭짓점 (8/5/4/6개)
+- Q3: 크기 (0.35~0.40 비율)
+- Q4: 채도 (80~20%)
+- Q5: 날카로움 (0.5~0.2 비율)
+
+**파일:**
+- `src/pages/SurveyQuestionPage.jsx` (신규)
+- `src/App.jsx` (라우트 추가: `/survey/:userId/questions`)
 
 ---
 
-### 4. 별자리 AI 이름 생성 (우선순위: 낮음)
+### 9. 관리자 시스템 구현
+**날짜**: 2026-01-15
+
+**구현 내용:**
+- 관리자 이메일 기반 권한 체크
+- 대시보드 탭: 실시간 통계 (회원 수, 별 수, 연결 수, 설문 참여율)
+- 회원관리 탭: 검색, 목록 조회, 회원 삭제
+- 공지사항 탭: 작성, 수정, 삭제, 카테고리 분류
+- 설정 탭: 최대 별 개수, 점검 모드, 회원가입 허용
+
+**파일:**
+- `src/pages/AdminPage.jsx` (신규)
+- `src/config/admin.js` (신규)
+- `src/App.jsx` (라우트 추가: `/admin`)
+
+**관리자 접근:**
+- URL: `/admin`
+- 권한: `src/config/admin.js`의 `ADMIN_EMAILS` 배열에 이메일 등록 필요
+
+---
+
+## 개발 예정
+
+### 1. 별자리 AI 이름 생성 (우선순위: 중간)
 **계획:**
 - 설문 결과 기반 별자리 특성 분석
 - OpenAI API로 별자리 이름 생성
@@ -427,7 +519,7 @@ catch (error) {
 
 ---
 
-### 5. 이미지 캡쳐 및 공유 기능 (우선순위: 낮음)
+### 2. 이미지 캡쳐 및 공유 기능 (우선순위: 낮음)
 **계획:**
 - 밤하늘 화면 캡쳐
 - 이미지 다운로드
@@ -440,7 +532,7 @@ catch (error) {
 
 ---
 
-### 6. 다국어 지원 (우선순위: 낮음)
+### 3. 다국어 지원 (우선순위: 낮음)
 **계획:**
 - 영어/한국어 전환
 - i18n 라이브러리 적용
@@ -453,6 +545,27 @@ catch (error) {
 
 ---
 
+## 라우팅 구조
+
+| 경로 | 페이지 | 설명 |
+|------|--------|------|
+| `/` | LoadingPage | 로그인 페이지 |
+| `/signup` | SignupPage | 회원가입 페이지 |
+| `/profile-setup` | ProfileSetupPage | 프로필 설정 |
+| `/admin` | AdminPage | 관리자 페이지 |
+| `/starry` | StarryPage | Starry 메인 |
+| `/stars` | StarsPage | Stars 페이지 |
+| `/home` | HomePage | 홈 (별자리 표시) |
+| `/stat` | StatPage | 통계 페이지 |
+| `/stat/detail` | StatDetailPage | 통계 상세 |
+| `/user` | UserPage | 사용자 설정 |
+| `/notice` | NoticePage | 공지사항 목록 |
+| `/notice/:id` | NoticeDetailPage | 공지사항 상세 |
+| `/survey/:userId` | SurveyStartPage | 설문 시작 |
+| `/survey/:userId/questions` | SurveyQuestionPage | 설문 질문 |
+
+---
+
 ## 설치 및 실행
 
 ### 환경 변수 설정
@@ -460,6 +573,13 @@ catch (error) {
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Supabase Edge Functions 환경 변수 (Supabase Dashboard에서 설정):
+```env
+SOLAPI_API_KEY=your_solapi_api_key
+SOLAPI_API_SECRET=your_solapi_api_secret
+SOLAPI_SENDER=your_sender_phone_number
 ```
 
 ### 설치
