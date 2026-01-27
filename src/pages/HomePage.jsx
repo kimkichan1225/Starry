@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
@@ -85,6 +86,7 @@ const drawStarOnCanvas = (ctx, star, x, y, scale = 1) => {
 };
 
 function HomePage() {
+  const navigate = useNavigate();
   const { user, nickname } = useAuth();
   const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
@@ -660,6 +662,14 @@ function HomePage() {
             <span className="text-[#6155F5] text-base font-bold">{shareMessage}</span>
           </div>
         )}
+
+        {/* 3D 밤하늘 버튼 - 상단 우측 고정 */}
+        <button
+          onClick={() => navigate('/sky-rooms')}
+          className={`fixed right-8 top-36 z-40 flex items-center justify-center hover:opacity-80 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
+          <img src="/3dicon.png" alt="3D 밤하늘" className="w-13 h-13" />
+        </button>
 
         {/* 플로팅 버튼들 */}
         <div className={`fixed left-1/2 bottom-44 z-40 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ marginLeft: 'calc(185px - 60px)' }}>
