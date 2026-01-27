@@ -18,6 +18,8 @@
 - 회원가입 시 닉네임, 전화번호 등록
 - SMS 인증 기능 (Solapi API 연동)
 - 개발자 테스트 계정 (test@test.com)
+- 이메일 찾기 (전화번호 SMS 인증)
+- 비밀번호 찾기/재설정 (이메일 링크)
 
 ### 2. 관리자 시스템 (AdminPage)
 - 대시보드: 총 회원 수, 총 별 수, 총 연결 수, 오늘 가입자 통계
@@ -68,6 +70,9 @@ src/
 ├── pages/
 │   ├── LoadingPage.jsx          # 로그인 페이지
 │   ├── SignupPage.jsx           # 회원가입 페이지
+│   ├── FindEmailPage.jsx        # 이메일 찾기 페이지
+│   ├── FindPasswordPage.jsx     # 비밀번호 찾기 페이지
+│   ├── ResetPasswordPage.jsx    # 비밀번호 재설정 페이지
 │   ├── ProfileSetupPage.jsx     # 프로필 설정 페이지
 │   ├── AdminPage.jsx            # 관리자 페이지
 │   ├── HomePage.jsx             # 메인 홈 (별자리 표시)
@@ -504,6 +509,43 @@ catch (error) {
 
 ---
 
+### 10. 이메일/비밀번호 찾기 기능 구현
+**날짜**: 2026-01-21
+
+**구현 내용:**
+- 이메일 찾기 페이지 (FindEmailPage)
+  - 전화번호 입력 후 SMS 인증
+  - 인증 완료 시 마스킹된 이메일 표시 (예: ki***@gmail.com)
+  - 가입되지 않은 번호 예외 처리
+- 비밀번호 찾기 페이지 (FindPasswordPage)
+  - 이메일 입력 후 비밀번호 재설정 링크 발송
+  - Supabase Auth resetPasswordForEmail 활용
+  - 가입되지 않은 이메일 예외 처리
+- 비밀번호 재설정 페이지 (ResetPasswordPage)
+  - 이메일 링크의 토큰 검증
+  - 새 비밀번호 입력 및 확인
+  - 만료/유효하지 않은 링크 예외 처리
+  - 재설정 완료 후 자동 로그아웃
+
+**파일:**
+- `src/pages/FindEmailPage.jsx` (신규)
+- `src/pages/FindPasswordPage.jsx` (신규)
+- `src/pages/ResetPasswordPage.jsx` (신규)
+- `src/App.jsx` (라우트 추가: `/find-email`, `/find-password`, `/reset-password`)
+
+**이메일 마스킹 로직:**
+```javascript
+const maskEmail = (email) => {
+  const [localPart, domain] = email.split('@');
+  if (localPart.length <= 2) {
+    return `${localPart}***@${domain}`;
+  }
+  return `${localPart.slice(0, 2)}***@${domain}`;
+};
+```
+
+---
+
 ## 개발 예정
 
 ### 1. 별자리 AI 이름 생성 (우선순위: 중간)
@@ -551,6 +593,9 @@ catch (error) {
 |------|--------|------|
 | `/` | LoadingPage | 로그인 페이지 |
 | `/signup` | SignupPage | 회원가입 페이지 |
+| `/find-email` | FindEmailPage | 이메일 찾기 |
+| `/find-password` | FindPasswordPage | 비밀번호 찾기 |
+| `/reset-password` | ResetPasswordPage | 비밀번호 재설정 |
 | `/profile-setup` | ProfileSetupPage | 프로필 설정 |
 | `/admin` | AdminPage | 관리자 페이지 |
 | `/starry` | StarryPage | Starry 메인 |
@@ -600,7 +645,7 @@ npm run build
 ---
 
 ## 라이선스
-Copyright ©2025. All rights reserved.
+Copyright ©2026. All rights reserved.
 
 **개발자**: 김기찬
 **디자이너**: 김태희
