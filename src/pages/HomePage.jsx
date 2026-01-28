@@ -462,11 +462,15 @@ function HomePage() {
     };
   };
 
-  // 별 데이터 가져오기
+  // 별 데이터 가져오기 + 실시간 구독
   useEffect(() => {
-    const fetchStars = async () => {
-      if (!user) return;
+    if (!user) return;
 
+    const canvasWidth = 350;
+    const canvasHeight = 500;
+    const padding = 40;
+
+    const fetchStars = async () => {
       try {
         // 별 데이터 가져오기
         const { data, error } = await supabase
@@ -480,10 +484,6 @@ function HomePage() {
         setStars(data || []);
 
         // 각 별에 ID 기반 고정 위치 생성 (저장된 위치가 있으면 사용)
-        const canvasWidth = 350;
-        const canvasHeight = 500;
-        const padding = 40;
-
         const positions = (data || []).map((star, index) => {
           // 저장된 위치가 있으면 사용, 없으면 해시 기반 위치 생성
           if (star.position_x != null && star.position_y != null) {
@@ -517,6 +517,58 @@ function HomePage() {
     };
 
     fetchStars();
+
+    // 실시간 구독 설정 (새 별 추가 감지)
+    const channel = supabase
+      .channel('stars-realtime-home-page')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stars',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('새 별 추가됨:', payload.new);
+          const newStar = payload.new;
+
+          setStars(prev => [...prev, newStar]);
+
+          // 새 별의 위치 추가
+          setStarPositions(prev => {
+            const newPosition = newStar.position_x != null && newStar.position_y != null
+              ? { x: newStar.position_x, y: newStar.position_y }
+              : getPositionFromId(newStar.id, prev.length, canvasWidth, canvasHeight, padding);
+            return [...prev, newPosition];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'stars',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('별 삭제됨:', payload.old);
+          setStars(prev => {
+            const deleteIndex = prev.findIndex(star => star.id === payload.old.id);
+            if (deleteIndex !== -1) {
+              setStarPositions(positions => positions.filter((_, i) => i !== deleteIndex));
+            }
+            return prev.filter(star => star.id !== payload.old.id);
+          });
+        }
+      )
+      .subscribe();
+
+    // 클린업
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // 별자리 캔버스에 별 그리기

@@ -517,14 +517,14 @@ function StarsPage() {
     }
   };
 
-  // 별 데이터 가져오기
+  // 별 데이터 가져오기 + 실시간 구독
   useEffect(() => {
-    const fetchStars = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
+    const fetchStars = async () => {
       try {
         const { data, error } = await supabase
           .from('stars')
@@ -543,6 +543,42 @@ function StarsPage() {
     };
 
     fetchStars();
+
+    // 실시간 구독 설정 (새 별 추가 감지)
+    const channel = supabase
+      .channel('stars-realtime-stars-page')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stars',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('새 별 추가됨:', payload.new);
+          setStars(prev => [...prev, payload.new]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'stars',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('별 삭제됨:', payload.old);
+          setStars(prev => prev.filter(star => star.id !== payload.old.id));
+        }
+      )
+      .subscribe();
+
+    // 클린업
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // 빈 카드 슬롯 생성 (받은 별 + 빈 슬롯 = 11개, 마지막은 추가 버튼)
