@@ -1,6 +1,6 @@
 import { useState, useRef, Suspense, useMemo, useEffect, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Stars, Html } from '@react-three/drei';
+import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -195,8 +195,15 @@ function ConstellationLines({ points }) {
   }, [points]);
 
   return (
-    <line geometry={lineGeometry}>
-      <lineBasicMaterial color={LINE_COLOR} opacity={0.5} transparent linewidth={1} />
+    <line geometry={lineGeometry} renderOrder={1}>
+      <lineBasicMaterial
+        color={LINE_COLOR}
+        opacity={0.5}
+        transparent
+        linewidth={1}
+        depthTest={false}
+        depthWrite={false}
+      />
     </line>
   );
 }
@@ -316,19 +323,73 @@ function PositionIndicator({ position, isValid }) {
   );
 }
 
+// 원형 별 텍스처 생성
+function createCircleTexture() {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // 원형 그라데이션 (중심이 밝고 가장자리가 투명)
+  const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
+  gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.3)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+// 커스텀 배경 별 컴포넌트 (depth 문제 해결)
+function BackgroundStars({ count = 5000, radius = 100 }) {
+  const [geometry, texture] = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+
+    for (let i = 0; i < count; i++) {
+      // 구 표면에 랜덤 분포
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const tex = createCircleTexture();
+
+    return [geo, tex];
+  }, [count, radius]);
+
+  return (
+    <points geometry={geometry} renderOrder={0}>
+      <pointsMaterial
+        map={texture}
+        color="#ffffff"
+        size={0.8}
+        sizeAttenuation={true}
+        transparent
+        opacity={0.9}
+        depthTest={false}
+        depthWrite={false}
+      />
+    </points>
+  );
+}
+
 // 천구 배경
 function SkyDome() {
   return (
     <>
-      <Stars
-        radius={100}
-        depth={50}
-        count={5000}
-        factor={4}
-        saturation={0}
-        fade
-        speed={0.5}
-      />
+      <BackgroundStars count={5000} radius={100} />
       <ambientLight intensity={0.1} />
     </>
   );
