@@ -202,11 +202,14 @@ export function StarsProvider({ children }) {
 
   // 별 삭제 함수
   const deleteStar = useCallback(async (starId) => {
+    if (!user) return false;
+
     try {
       const { error } = await supabase
         .from('stars')
         .delete()
-        .eq('id', starId);
+        .eq('id', starId)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       return true;
@@ -214,7 +217,7 @@ export function StarsProvider({ children }) {
       console.error('Error deleting star:', error);
       return false;
     }
-  }, []);
+  }, [user]);
 
   const value = {
     stars,
