@@ -395,6 +395,53 @@ function SkyDome() {
   );
 }
 
+// 자이로스코프 컨트롤 컴포넌트
+function GyroscopeControls({ enabled }) {
+  const { camera } = useThree();
+  const initialOrientation = useRef(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      initialOrientation.current = null;
+      return;
+    }
+
+    const handleOrientation = (event) => {
+      const { alpha, beta, gamma } = event;
+      if (alpha === null || beta === null || gamma === null) return;
+
+      // 초기 방향 저장 (처음 활성화될 때)
+      if (!initialOrientation.current) {
+        initialOrientation.current = { alpha, beta, gamma };
+      }
+
+      // 초기 방향 대비 상대적인 회전 계산
+      const deltaAlpha = (alpha - initialOrientation.current.alpha) * (Math.PI / 180);
+      const deltaBeta = (beta - initialOrientation.current.beta) * (Math.PI / 180);
+      const deltaGamma = (gamma - initialOrientation.current.gamma) * (Math.PI / 180);
+
+      // 오일러 각도로 카메라 회전 설정
+      // 핸드폰을 세로로 들고 있을 때 기준
+      const euler = new THREE.Euler(
+        Math.PI / 2 - deltaBeta * 0.5,  // 위아래 기울기
+        -deltaAlpha * 0.5,               // 좌우 회전
+        deltaGamma * 0.3,                // 좌우 기울기
+        'YXZ'
+      );
+
+      camera.quaternion.setFromEuler(euler);
+    };
+
+    window.addEventListener('deviceorientation', handleOrientation, true);
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation, true);
+    };
+  }, [enabled, camera]);
+
+  return null;
+}
+
 // 클릭 감지 구체 (등록 모드용)
 function ClickableSphere({ onPositionSelect, isRegistrationMode }) {
   const { camera, raycaster, pointer } = useThree();
@@ -426,7 +473,8 @@ function Scene({
   previewConstellation,
   previewPosition,
   onPositionSelect,
-  isValidPosition
+  isValidPosition,
+  isGyroEnabled
 }) {
   return (
     <>
@@ -465,13 +513,18 @@ function Scene({
         isRegistrationMode={isRegistrationMode}
       />
 
-      <OrbitControls
-        enableZoom={false}
-        enablePan={false}
-        rotateSpeed={0.5}
-        minDistance={0.1}
-        maxDistance={0.1}
-      />
+      {/* 자이로스코프 활성화 시 OrbitControls 비활성화 */}
+      {isGyroEnabled ? (
+        <GyroscopeControls enabled={true} />
+      ) : (
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          rotateSpeed={0.5}
+          minDistance={0.1}
+          maxDistance={0.1}
+        />
+      )}
     </>
   );
 }
@@ -496,6 +549,17 @@ export default function SkyPage() {
   const [previewPosition, setPreviewPosition] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [hasRegistered, setHasRegistered] = useState(false);
+
+  // 자이로스코프 상태
+  const [isGyroEnabled, setIsGyroEnabled] = useState(false);
+  const [isGyroAvailable, setIsGyroAvailable] = useState(false);
+
+  // 자이로스코프 사용 가능 여부 확인
+  useEffect(() => {
+    if (window.DeviceOrientationEvent) {
+      setIsGyroAvailable(true);
+    }
+  }, []);
 
   // 위치 유효성 검사
   const isValidPosition = useMemo(() => {
@@ -765,6 +829,7 @@ export default function SkyPage() {
             previewPosition={previewPosition}
             onPositionSelect={handlePositionSelect}
             isValidPosition={isValidPosition}
+            isGyroEnabled={isGyroEnabled}
           />
         </Suspense>
       </Canvas>
@@ -785,7 +850,36 @@ export default function SkyPage() {
             {isRegistrationMode ? '위치 선택' : '3D 밤하늘'}
           </h1>
 
-          <div className="w-10" />
+          {/* 자이로스코프 토글 버튼 */}
+          {isGyroAvailable && !isRegistrationMode ? (
+            <button
+              onClick={async () => {
+                // iOS에서는 권한 요청 필요
+                if (typeof DeviceOrientationEvent !== 'undefined' &&
+                    typeof DeviceOrientationEvent.requestPermission === 'function') {
+                  try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                      setIsGyroEnabled(!isGyroEnabled);
+                    }
+                  } catch (err) {
+                    console.error('자이로스코프 권한 오류:', err);
+                  }
+                } else {
+                  setIsGyroEnabled(!isGyroEnabled);
+                }
+              }}
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                isGyroEnabled ? 'bg-blue-500' : 'bg-white/10'
+              }`}
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </button>
+          ) : (
+            <div className="w-10" />
+          )}
         </div>
       </div>
 
