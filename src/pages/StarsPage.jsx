@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 
@@ -465,8 +466,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
 
 function StarsPage() {
   const { user, nickname } = useAuth();
-  const [stars, setStars] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { stars, loading, deleteStar } = useStars();
   const [selectedStar, setSelectedStar] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const maxStars = 20;
@@ -491,95 +491,17 @@ function StarsPage() {
     }
   };
 
-  // 별 삭제
+  // 별 삭제 (Context의 deleteStar 사용)
   const handleDeleteStar = async (starId) => {
-    try {
-      const { data, error } = await supabase
-        .from('stars')
-        .delete()
-        .eq('id', starId)
-        .eq('user_id', user.id)
-        .select();
-
-      if (error) {
-        console.error('Delete error:', error);
-        throw error;
-      }
-
-      console.log('Deleted:', data);
-
-      // 로컬 상태에서 삭제
-      setStars(stars.filter((s) => s.id !== starId));
+    const success = await deleteStar(starId);
+    if (success) {
       handleCloseModal();
-    } catch (error) {
-      console.error('Error deleting star:', error);
+    } else {
       alert('별 삭제에 실패했습니다.');
     }
   };
 
-  // 별 데이터 가져오기 + 실시간 구독
-  useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchStars = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('stars')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-
-        setStars(data || []);
-      } catch (error) {
-        console.error('Error fetching stars:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStars();
-
-    // 실시간 구독 설정 (새 별 추가 감지)
-    const channel = supabase
-      .channel('stars-realtime-stars-page')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'stars',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('새 별 추가됨:', payload.new);
-          setStars(prev => [...prev, payload.new]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'stars',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('별 삭제됨:', payload.old);
-          setStars(prev => prev.filter(star => star.id !== payload.old.id));
-        }
-      )
-      .subscribe();
-
-    // 클린업
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  // 별 데이터는 StarsContext에서 관리됨 (실시간 구독 포함)
 
   // 빈 카드 슬롯 생성 (받은 별 + 빈 슬롯 = 11개, 마지막은 추가 버튼)
   const totalSlots = 11;

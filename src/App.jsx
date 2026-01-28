@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { StarsProvider } from './contexts/StarsContext';
 import LoadingPage from './pages/LoadingPage';
 import SignupPage from './pages/SignupPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
@@ -23,7 +24,8 @@ import SkyPage from './pages/SkyPage';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <StarsProvider>
+        <Router>
         <Routes>
           <Route path="/" element={<LoadingPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -55,7 +57,8 @@ function App() {
           {/* <Route path="/login" element={<LoginPage />} /> */}
           {/* <Route path="/u/:userId" element={<NightSkyPage />} /> */}
         </Routes>
-      </Router>
+        </Router>
+      </StarsProvider>
     </AuthProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 
@@ -88,19 +89,37 @@ const drawStarOnCanvas = (ctx, star, x, y, scale = 1) => {
 function HomePage() {
   const navigate = useNavigate();
   const { user, nickname } = useAuth();
+  const {
+    stars: contextStars,
+    starPositions: contextStarPositions,
+    connections: contextConnections,
+    setConnections: setContextConnections,
+    setStarPositions: setContextStarPositions,
+    refreshStars
+  } = useStars();
+
   const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
+
+  // Context에서 가져온 데이터를 로컬 상태로 사용 (편집 모드용)
   const [stars, setStars] = useState([]);
   const [starPositions, setStarPositions] = useState([]);
   const canvasRef = useRef(null);
+
+  // Context 데이터로 로컬 상태 동기화
+  useEffect(() => {
+    setStars(contextStars);
+    setStarPositions(contextStarPositions);
+    setConnections(contextConnections);
+  }, [contextStars, contextStarPositions, contextConnections]);
 
   // 밤하늘 제작 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
 
-  // 별 연결 상태
+  // 별 연결 상태 (로컬 - 편집용)
   const [connections, setConnections] = useState([]); // [{fromIndex, toIndex}, ...]
   const [isDraggingLine, setIsDraggingLine] = useState(false);
   const [dragStartStarIndex, setDragStartStarIndex] = useState(null);
@@ -182,6 +201,9 @@ function HomePage() {
           console.error('연결 저장 실패:', insertError);
         }
       }
+
+      // Context 데이터 새로고침
+      await refreshStars();
     } catch (error) {
       console.error('저장 실패:', error);
     }
@@ -462,114 +484,7 @@ function HomePage() {
     };
   };
 
-  // 별 데이터 가져오기 + 실시간 구독
-  useEffect(() => {
-    if (!user) return;
-
-    const canvasWidth = 350;
-    const canvasHeight = 500;
-    const padding = 40;
-
-    const fetchStars = async () => {
-      try {
-        // 별 데이터 가져오기
-        const { data, error } = await supabase
-          .from('stars')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-
-        setStars(data || []);
-
-        // 각 별에 ID 기반 고정 위치 생성 (저장된 위치가 있으면 사용)
-        const positions = (data || []).map((star, index) => {
-          // 저장된 위치가 있으면 사용, 없으면 해시 기반 위치 생성
-          if (star.position_x != null && star.position_y != null) {
-            return { x: star.position_x, y: star.position_y };
-          }
-          return getPositionFromId(star.id, index, canvasWidth, canvasHeight, padding);
-        });
-        setStarPositions(positions);
-
-        // 연결 데이터 가져오기
-        const { data: connectionsData, error: connError } = await supabase
-          .from('star_connections')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (connError) throw connError;
-
-        // 연결 데이터를 인덱스 기반으로 변환
-        if (connectionsData && connectionsData.length > 0 && data) {
-          const loadedConnections = connectionsData.map(conn => {
-            const fromIndex = data.findIndex(s => s.id === conn.from_star_id);
-            const toIndex = data.findIndex(s => s.id === conn.to_star_id);
-            return { fromIndex, toIndex };
-          }).filter(conn => conn.fromIndex !== -1 && conn.toIndex !== -1);
-
-          setConnections(loadedConnections);
-        }
-      } catch (error) {
-        console.error('Error fetching stars:', error);
-      }
-    };
-
-    fetchStars();
-
-    // 실시간 구독 설정 (새 별 추가 감지)
-    const channel = supabase
-      .channel('stars-realtime-home-page')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'stars',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('새 별 추가됨:', payload.new);
-          const newStar = payload.new;
-
-          setStars(prev => [...prev, newStar]);
-
-          // 새 별의 위치 추가
-          setStarPositions(prev => {
-            const newPosition = newStar.position_x != null && newStar.position_y != null
-              ? { x: newStar.position_x, y: newStar.position_y }
-              : getPositionFromId(newStar.id, prev.length, canvasWidth, canvasHeight, padding);
-            return [...prev, newPosition];
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'stars',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('별 삭제됨:', payload.old);
-          setStars(prev => {
-            const deleteIndex = prev.findIndex(star => star.id === payload.old.id);
-            if (deleteIndex !== -1) {
-              setStarPositions(positions => positions.filter((_, i) => i !== deleteIndex));
-            }
-            return prev.filter(star => star.id !== payload.old.id);
-          });
-        }
-      )
-      .subscribe();
-
-    // 클린업
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  // 별 데이터는 StarsContext에서 관리됨 (실시간 구독 포함)
 
   // 별자리 캔버스에 별 그리기
   useEffect(() => {
