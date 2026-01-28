@@ -665,7 +665,7 @@ function HomePage() {
 
         {/* 3D 밤하늘 버튼 - 상단 우측 고정 */}
         <button
-          onClick={() => navigate('/sky-rooms')}
+          onClick={() => navigate('/sky-demo')}
           className={`fixed right-8 top-36 z-40 flex items-center justify-center hover:opacity-80 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         >
           <img src="/3dicon.png" alt="3D 밤하늘" className="w-13 h-13" />
