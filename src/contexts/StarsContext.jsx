@@ -200,11 +200,25 @@ export function StarsProvider({ children }) {
     setStarPositions(newPositions);
   }, []);
 
-  // 별 삭제 함수
+  // 별 삭제 함수 (낙관적 업데이트)
   const deleteStar = useCallback(async (starId) => {
     if (!user) return false;
 
     try {
+      // 먼저 로컬에서 즉시 제거 (빠른 UI 반응)
+      const deleteIndex = stars.findIndex(star => star.id === starId);
+      if (deleteIndex !== -1) {
+        setStars(prev => prev.filter(star => star.id !== starId));
+        setStarPositions(prev => prev.filter((_, i) => i !== deleteIndex));
+        setConnections(prev => prev.filter(
+          conn => conn.fromIndex !== deleteIndex && conn.toIndex !== deleteIndex
+        ).map(conn => ({
+          fromIndex: conn.fromIndex > deleteIndex ? conn.fromIndex - 1 : conn.fromIndex,
+          toIndex: conn.toIndex > deleteIndex ? conn.toIndex - 1 : conn.toIndex
+        })));
+      }
+
+      // 서버에서 삭제
       const { error } = await supabase
         .from('stars')
         .delete()
@@ -215,9 +229,11 @@ export function StarsProvider({ children }) {
       return true;
     } catch (error) {
       console.error('Error deleting star:', error);
+      // 실패 시 데이터 다시 로드
+      await refreshStars();
       return false;
     }
-  }, [user]);
+  }, [user, stars, refreshStars]);
 
   const value = {
     stars,
