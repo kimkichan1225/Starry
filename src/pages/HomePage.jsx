@@ -129,7 +129,9 @@ function HomePage() {
   const [isMovingStar, setIsMovingStar] = useState(false);
   const [movingStarIndex, setMovingStarIndex] = useState(null);
   const longPressTimerRef = useRef(null);
-  const LONG_PRESS_DURATION = 500; // 0.5초
+  const longPressStartPos = useRef(null); // 롱프레스 시작 위치 저장
+  const LONG_PRESS_DURATION = 400; // 0.4초 (모바일 반응성 개선)
+  const LONG_PRESS_MOVE_THRESHOLD = 15; // 이 픽셀 이내 움직임은 롱프레스 유지
 
   // 선 삭제 상태
   const [isDeletingLine, setIsDeletingLine] = useState(false);
@@ -286,6 +288,9 @@ function HomePage() {
     const starIndex = findStarAtPosition(coords.x, coords.y);
 
     if (starIndex !== null) {
+      // 롱프레스 시작 위치 저장
+      longPressStartPos.current = coords;
+
       // 롱프레스 타이머 시작 (별 이동 모드)
       longPressTimerRef.current = setTimeout(() => {
         setIsMovingStar(true);
@@ -311,10 +316,18 @@ function HomePage() {
     if (!coords) return;
 
     // 움직이면 롱프레스 취소 (이동 모드가 아닌 경우에만)
-    if (!isMovingStar && longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-      setIsDraggingLine(true);
+    // 단, threshold 이내의 움직임은 허용
+    if (!isMovingStar && longPressTimerRef.current && longPressStartPos.current) {
+      const dx = coords.x - longPressStartPos.current.x;
+      const dy = coords.y - longPressStartPos.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > LONG_PRESS_MOVE_THRESHOLD) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+        longPressStartPos.current = null;
+        setIsDraggingLine(true);
+      }
     }
 
     if (isMovingStar && movingStarIndex !== null) {
@@ -348,6 +361,7 @@ function HomePage() {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
+    longPressStartPos.current = null;
 
     if (isDraggingLine && dragStartStarIndex !== null && dragCurrentPos) {
       // 드래그 종료 위치에서 별 찾기
