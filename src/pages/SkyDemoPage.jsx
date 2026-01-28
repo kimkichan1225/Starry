@@ -401,7 +401,7 @@ function Constellation3D({ constellation, onSelect, isSelected }) {
 
     return constellation.stars.map((star, index) => {
       // 스케일 조정 (2D 좌표를 3D 공간에 맞게)
-      const scale = 0.15;
+      const scale = 0.04; // 0.15 → 0.04로 축소
       const offset = new THREE.Vector3()
         .addScaledVector(right, star.x * scale)
         .addScaledVector(localUp, star.y * scale);

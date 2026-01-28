@@ -18,6 +18,7 @@ import FindEmailPage from './pages/FindEmailPage';
 import FindPasswordPage from './pages/FindPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SkyDemoPage from './pages/SkyDemoPage';
+import SkyPage from './pages/SkyPage';
 
 function App() {
   return (
@@ -46,7 +47,8 @@ function App() {
           <Route path="/survey/:userId" element={<SurveyStartPage />} />
           <Route path="/survey/:userId/questions" element={<SurveyQuestionPage />} />
 
-          {/* 3D 밤하늘 데모 */}
+          {/* 3D 밤하늘 */}
+          <Route path="/sky" element={<SkyPage />} />
           <Route path="/sky-demo" element={<SkyDemoPage />} />
 
           {/* 추후 페이지 라우트 추가 예정 */}
