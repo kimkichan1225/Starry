@@ -395,41 +395,37 @@ function SkyDome() {
   );
 }
 
-// 자이로스코프 컨트롤 컴포넌트
+// 자이로스코프 컨트롤 컴포넌트 (AR 카메라 스타일)
 function GyroscopeControls({ enabled }) {
   const { camera } = useThree();
-  const initialOrientation = useRef(null);
 
   useEffect(() => {
-    if (!enabled) {
-      initialOrientation.current = null;
-      return;
-    }
+    if (!enabled) return;
+
+    const zee = new THREE.Vector3(0, 0, 1);
+    const euler = new THREE.Euler();
+    const q0 = new THREE.Quaternion();
+    const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // 화면 방향 보정
 
     const handleOrientation = (event) => {
       const { alpha, beta, gamma } = event;
-      if (alpha === null || beta === null || gamma === null) return;
+      if (alpha === null) return;
 
-      // 초기 방향 저장 (처음 활성화될 때)
-      if (!initialOrientation.current) {
-        initialOrientation.current = { alpha, beta, gamma };
-      }
+      // 도를 라디안으로 변환
+      const alphaRad = THREE.MathUtils.degToRad(alpha);
+      const betaRad = THREE.MathUtils.degToRad(beta);
+      const gammaRad = THREE.MathUtils.degToRad(gamma);
 
-      // 초기 방향 대비 상대적인 회전 계산
-      const deltaAlpha = (alpha - initialOrientation.current.alpha) * (Math.PI / 180);
-      const deltaBeta = (beta - initialOrientation.current.beta) * (Math.PI / 180);
-      const deltaGamma = (gamma - initialOrientation.current.gamma) * (Math.PI / 180);
-
-      // 오일러 각도로 카메라 회전 설정
-      // 핸드폰을 세로로 들고 있을 때 기준
-      const euler = new THREE.Euler(
-        Math.PI / 2 - deltaBeta * 0.5,  // 위아래 기울기
-        -deltaAlpha * 0.5,               // 좌우 회전
-        deltaGamma * 0.3,                // 좌우 기울기
-        'YXZ'
-      );
+      // 오일러 각도 설정 (ZXY 순서 - 디바이스 방향 표준)
+      euler.set(betaRad, alphaRad, -gammaRad, 'YXZ');
 
       camera.quaternion.setFromEuler(euler);
+      camera.quaternion.multiply(q1); // 카메라가 화면 바깥쪽을 보도록 보정
+
+      // 화면 방향에 따른 보정 (세로 모드 기준)
+      const orient = window.orientation || 0;
+      q0.setFromAxisAngle(zee, -THREE.MathUtils.degToRad(orient));
+      camera.quaternion.multiply(q0);
     };
 
     window.addEventListener('deviceorientation', handleOrientation, true);
