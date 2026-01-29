@@ -324,8 +324,22 @@ const SignupPage = () => {
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8"></div>
+        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            ← 이전
+          </button>
+          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <button
+            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            다음 →
+          </button>
+        </div>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center px-4 py-8 relative">
@@ -566,18 +580,32 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8"></div>
+        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            ← 이전
+          </button>
+          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <button
+            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            다음 →
+          </button>
+        </div>
 
         {/* 상단 헤더 */}
-        <div className="px-6 py-4">
-          <div className="flex items-center space-x-2 text-white">
-            <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+        <nav className="px-6 py-5">
+          <div className="flex items-center gap-1">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="font-medium">프로필 설정</span>
+            <span className="text-white font-bold text-2xl">프로필 설정</span>
           </div>
-        </div>
+        </nav>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
@@ -588,16 +616,19 @@ const SignupPage = () => {
           <img
             src="/StarryCharacter.png"
             alt="Starry Character"
-            className="w-48 h-48 object-contain mb-12"
+            className="w-60 h-60 object-contain mb-12"
           />
 
           {/* 다음 버튼 */}
           <button
             onClick={() => setCurrentStep(3)}
-            className="w-full max-w-[280px] py-3 rounded-full bg-[#6B5CFF] text-white font-medium hover:bg-[#5a4de6] transition-colors"
+            className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
           >
             다음
           </button>
+
+          {/* 진행 단계 표시 */}
+          <img src="/Step2.png" alt="Step 2" className="mt-2 w-72 translate-x-1" />
         </div>
 
         {/* 하단 정보 */}
@@ -633,30 +664,44 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8"></div>
-
-        {/* 상단 헤더 */}
-        <div className="px-6 py-4">
-          <div className="flex items-center space-x-2 text-white">
-            <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="font-medium">프로필 설정</span>
-          </div>
+        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            ← 이전
+          </button>
+          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <button
+            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            다음 →
+          </button>
         </div>
 
+        {/* 상단 헤더 */}
+        <nav className="px-6 py-5">
+          <div className="flex items-center gap-1">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <span className="text-white font-bold text-2xl">프로필 설정</span>
+          </div>
+        </nav>
+
         {/* 중앙 콘텐츠 */}
-        <div className="flex-1 flex flex-col items-center px-6 pt-8">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 -translate-y-2">
           <h1 className="text-white text-xl font-bold mb-1">이름 또는 닉네임을</h1>
-          <p className="text-white text-xl font-bold mb-8">입력해주세요!</p>
+          <p className="text-white text-xl mb-8">입력해주세요!</p>
 
           {/* 캐릭터 머리 (위에서 내려다보는) */}
           <div className="relative w-full max-w-[280px] mb-4">
             <img
               src="/Starry-head.png"
               alt="Starry Head"
-              className="w-32 h-auto mx-auto -mb-4 relative z-10"
+              className="w-72 h-auto mx-auto -mb-9 relative z-10"
             />
 
             {/* 입력창 + 손 */}
@@ -673,12 +718,12 @@ const SignupPage = () => {
               <img
                 src="/Starry-hand.png"
                 alt="Left Hand"
-                className="absolute -left-3 top-1/2 -translate-y-1/2 w-8 h-8 rotate-[30deg]"
+                className="absolute -left-3 top-1/2 -translate-y w-10 h-10"
               />
               <img
                 src="/Starry-hand.png"
                 alt="Right Hand"
-                className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-8 -rotate-[30deg] scale-x-[-1]"
+                className="absolute -right-3 top-1/2 -translate-y w-10 h-10 scale-x-[-1]"
               />
             </div>
           </div>
@@ -694,10 +739,13 @@ const SignupPage = () => {
               setCurrentStep(4);
             }}
             disabled={!formData.nickname.trim()}
-            className="w-full max-w-[280px] py-3 rounded-full bg-[#6B5CFF] text-white font-medium hover:bg-[#5a4de6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed mt-8"
+            className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed mt-24"
           >
             다음
           </button>
+
+          {/* 진행 단계 표시 */}
+          <img src="/Step3.png" alt="Step 3" className="mt-2 w-72 translate-x-1" />
 
           {error && (
             <p className="text-red-400 text-sm mt-4">{error}</p>
@@ -737,30 +785,44 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8"></div>
-
-        {/* 상단 헤더 */}
-        <div className="px-6 py-4">
-          <div className="flex items-center space-x-2 text-white">
-            <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="font-medium">프로필 설정</span>
-          </div>
+        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            ← 이전
+          </button>
+          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <button
+            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            다음 →
+          </button>
         </div>
 
+        {/* 상단 헤더 */}
+        <nav className="px-6 py-5">
+          <div className="flex items-center gap-1">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <span className="text-white font-bold text-2xl">프로필 설정</span>
+          </div>
+        </nav>
+
         {/* 중앙 콘텐츠 */}
-        <div className="flex-1 flex flex-col items-center px-6 pt-8">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 -translate-y-2">
           <h1 className="text-white text-xl font-bold mb-1">{formData.nickname}님의</h1>
-          <p className="text-white text-xl font-bold mb-8">생일은 언제인가요?</p>
+          <p className="text-white text-xl mb-8">생일은 언제인가요?</p>
 
           {/* 캐릭터 머리 */}
-          <div className="relative w-full max-w-[320px] mb-4">
+          <div className="relative w-full max-w-[280px] mb-4">
             <img
               src="/Starry-head.png"
               alt="Starry Head"
-              className="w-32 h-auto mx-auto -mb-4 relative z-10"
+              className="w-72 h-auto mx-auto -mb-9 relative z-10"
             />
 
             {/* 날짜 선택 UI */}
@@ -769,12 +831,12 @@ const SignupPage = () => {
               <img
                 src="/Starry-hand.png"
                 alt="Left Hand"
-                className="absolute -left-3 top-8 w-8 h-8 rotate-[30deg]"
+                className="absolute -left-3 top-1/2 -translate-y w-10 h-10"
               />
               <img
                 src="/Starry-hand.png"
                 alt="Right Hand"
-                className="absolute -right-3 top-8 w-8 h-8 -rotate-[30deg] scale-x-[-1]"
+                className="absolute -right-3 top-1/2 -translate-y w-10 h-10 scale-x-[-1]"
               />
 
               {/* 년/월/일 선택 */}
@@ -828,19 +890,17 @@ const SignupPage = () => {
             </div>
           </div>
 
-          {/* 다음 버튼 + 별 아이콘 */}
-          <div className="flex items-center space-x-4 mt-8">
-            <button
-              onClick={handleStep4Next}
-              disabled={loading}
-              className="px-12 py-3 rounded-full bg-[#6B5CFF] text-white font-medium hover:bg-[#5a4de6] transition-colors disabled:bg-gray-500"
-            >
-              {loading ? '가입 중...' : '다음'}
-            </button>
-            <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          </div>
+          {/* 다음 버튼 */}
+          <button
+            onClick={handleStep4Next}
+            disabled={loading}
+            className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed mt-24"
+          >
+            {loading ? '가입 중...' : '다음'}
+          </button>
+
+          {/* 진행 단계 표시 */}
+          <img src="/Step4.png" alt="Step 4" className="mt-2 w-72 translate-x-1" />
 
           {error && (
             <p className="text-red-400 text-sm mt-4">{error}</p>
@@ -880,18 +940,32 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8"></div>
+        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            ← 이전
+          </button>
+          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <button
+            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
+            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
+          >
+            다음 →
+          </button>
+        </div>
 
         {/* 상단 헤더 */}
-        <div className="px-6 py-4">
-          <div className="flex items-center space-x-2 text-white">
-            <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+        <nav className="px-6 py-5">
+          <div className="flex items-center gap-1">
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="font-medium">프로필 설정</span>
+            <span className="text-white font-bold text-2xl">프로필 설정</span>
           </div>
-        </div>
+        </nav>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
@@ -910,7 +984,7 @@ const SignupPage = () => {
               // TODO: SNS 연동 기능
               alert('SNS 연동 기능은 추후 업데이트 예정입니다.');
             }}
-            className="w-full max-w-[280px] py-3 rounded-full bg-transparent border-2 border-white/50 text-white/80 font-medium hover:bg-white/10 transition-colors mb-4"
+            className="w-full max-w-[280px] py-3 rounded-lg bg-transparent border-2 border-white/50 text-white/80 font-medium hover:bg-white/10 transition-colors mb-4"
           >
             SNS 연동하기
           </button>
@@ -918,10 +992,13 @@ const SignupPage = () => {
           {/* 밤하늘 만들러가기 버튼 */}
           <button
             onClick={() => navigate('/home')}
-            className="w-full max-w-[280px] py-3 rounded-full bg-[#6B5CFF] text-white font-medium hover:bg-[#5a4de6] transition-colors"
+            className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
           >
             밤하늘 만들러가기
           </button>
+
+          {/* 진행 단계 표시 */}
+          <img src="/Step5.png" alt="Step 5" className="mt-2 w-72 translate-x-1" />
         </div>
 
         {/* 하단 정보 */}
