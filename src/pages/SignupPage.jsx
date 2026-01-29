@@ -826,78 +826,90 @@ const SignupPage = () => {
             />
 
             {/* 날짜 선택 UI */}
-            <div className="relative bg-[#3D3A5C] rounded-2xl p-4 border-2 border-[#6B5CFF]">
-              {/* 양쪽 손 */}
-              <img
-                src="/Starry-hand.png"
-                alt="Left Hand"
-                className="absolute -left-3 top-1/2 -translate-y w-10 h-10"
-              />
-              <img
-                src="/Starry-hand.png"
-                alt="Right Hand"
-                className="absolute -right-3 top-1/2 -translate-y w-10 h-10 scale-x-[-1]"
-              />
+            <div className="flex flex-col items-center">
+              <div className="relative flex items-center justify-center gap-2">
+                {/* 왼쪽 손 */}
+                <img
+                  src="/Starry-hand.png"
+                  alt="Left Hand"
+                  className="w-10 h-10 translate-x-7 translate-y-7"
+                />
 
-              {/* 년/월/일 선택 */}
-              <div className="flex justify-center items-center space-x-2 py-4">
-                {/* 년 */}
-                <div className="flex flex-col items-center">
-                  <select
-                    value={formData.birthYear}
-                    onChange={(e) => handleScrollSelect('Year', e.target.value)}
-                    className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-20"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year} className="bg-[#3D3A5C]">{year}</option>
-                    ))}
-                  </select>
+                {/* 흰색 테두리 외부 박스 */}
+                <div className="rounded-3xl px-3 py-3 border-2 border-white flex items-center gap-2">
+                  {/* 년 */}
+                  <div className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF]">
+                    <select
+                      value={formData.birthYear}
+                      onChange={(e) => handleScrollSelect('Year', e.target.value)}
+                      className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-16"
+                    >
+                      {years.map(year => (
+                        <option key={year} value={year} className="bg-[#3D3A5C]">{year}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 월 */}
+                  <div className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF]">
+                    <select
+                      value={formData.birthMonth}
+                      onChange={(e) => handleScrollSelect('Month', e.target.value)}
+                      className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-10"
+                    >
+                      {months.map(month => (
+                        <option key={month} value={month} className="bg-[#3D3A5C]">{month}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 일 */}
+                  <div className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF]">
+                    <select
+                      value={formData.birthDay}
+                      onChange={(e) => handleScrollSelect('Day', e.target.value)}
+                      className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-10"
+                    >
+                      {days.map(day => (
+                        <option key={day} value={day} className="bg-[#3D3A5C]">{day}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* 월 */}
-                <div className="flex flex-col items-center">
-                  <select
-                    value={formData.birthMonth}
-                    onChange={(e) => handleScrollSelect('Month', e.target.value)}
-                    className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-16"
-                  >
-                    {months.map(month => (
-                      <option key={month} value={month} className="bg-[#3D3A5C]">{month}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 일 */}
-                <div className="flex flex-col items-center">
-                  <select
-                    value={formData.birthDay}
-                    onChange={(e) => handleScrollSelect('Day', e.target.value)}
-                    className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-16"
-                  >
-                    {days.map(day => (
-                      <option key={day} value={day} className="bg-[#3D3A5C]">{day}</option>
-                    ))}
-                  </select>
-                </div>
+                {/* 오른쪽 손 */}
+                <img
+                  src="/Starry-hand.png"
+                  alt="Right Hand"
+                  className="w-10 h-10 scale-x-[-1] -translate-x-7 translate-y-8"
+                />
               </div>
 
               {/* 년/월/일 라벨 */}
-              <div className="flex justify-center items-center space-x-8 text-white/60 text-sm">
-                <span>년</span>
-                <span>월</span>
-                <span>일</span>
+              <div className="flex justify-center items-center mt-2 -translate-x-1">
+                <span className="text-white/60 text-sm w-24 text-center">년</span>
+                <span className="text-white/60 text-sm w-24 text-center">월</span>
+                <span className="text-white/60 text-sm w-16 text-center">일</span>
               </div>
             </div>
           </div>
 
-          {/* 다음 버튼 */}
-          <button
-            onClick={handleStep4Next}
-            disabled={loading}
-            className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed mt-24"
-          >
-            {loading ? '가입 중...' : '다음'}
-          </button>
+          {/* 이전/다음 버튼 */}
+          <div className="flex gap-3 mt-20">
+            <button
+              onClick={() => setCurrentStep(3)}
+              className="w-24 py-3 rounded-lg bg-[#9F9F9F] text-white font-medium hover:bg-[#8a8a8a] transition-colors"
+            >
+              이전
+            </button>
+            <button
+              onClick={handleStep4Next}
+              disabled={loading}
+              className="w-44 py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              {loading ? '가입 중...' : '다음'}
+            </button>
+          </div>
 
           {/* 진행 단계 표시 */}
           <img src="/Step4.png" alt="Step 4" className="mt-2 w-72 translate-x-1" />
