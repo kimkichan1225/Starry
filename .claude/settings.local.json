@@ -24,7 +24,8 @@
       "Bash(cmd /c \"tasklist | findstr 27240\")",
       "Bash(cmd /c \"taskkill /F /IM node.exe\")",
       "Bash(cmd /c \"wmic process where ProcessId=27240 get Name,ProcessId,CommandLine\")",
-      "Bash(dir /s /b)"
+      "Bash(dir /s /b)",
+      "Bash(git push:*)"
     ]
   }
 }
