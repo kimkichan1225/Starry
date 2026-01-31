@@ -42,6 +42,9 @@ const SignupPage = () => {
   const monthRef = useRef(null);
   const dayRef = useRef(null);
 
+  // 커스텀 드롭다운 상태
+  const [openDropdown, setOpenDropdown] = useState(null); // 'year', 'month', 'day', or null
+
   // 년/월/일 옵션 생성
   const years = Array.from({ length: 100 }, (_, i) => String(2025 - i));
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
@@ -837,45 +840,90 @@ const SignupPage = () => {
 
                 {/* 흰색 테두리 외부 박스 */}
                 <div className="rounded-3xl px-3 py-3 border-2 border-white flex items-center gap-2">
-                  {/* 년 */}
-                  <div className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF]">
-                    <select
-                      value={formData.birthYear}
-                      onChange={(e) => handleScrollSelect('Year', e.target.value)}
-                      className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-16"
+                  {/* 년 - 커스텀 드롭다운 */}
+                  <div className="relative">
+                    <div
+                      onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
+                      className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                     >
-                      {years.map(year => (
-                        <option key={year} value={year} className="bg-[#3D3A5C]">{year}</option>
-                      ))}
-                    </select>
+                      <span className="text-white text-2xl font-bold w-16 block text-center">{formData.birthYear}</span>
+                    </div>
                   </div>
 
-                  {/* 월 */}
-                  <div className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF]">
-                    <select
-                      value={formData.birthMonth}
-                      onChange={(e) => handleScrollSelect('Month', e.target.value)}
-                      className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-10"
+                  {/* 월 - 커스텀 드롭다운 */}
+                  <div className="relative">
+                    <div
+                      onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
+                      className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                     >
-                      {months.map(month => (
-                        <option key={month} value={month} className="bg-[#3D3A5C]">{month}</option>
-                      ))}
-                    </select>
+                      <span className="text-white text-2xl font-bold w-10 block text-center">{formData.birthMonth}</span>
+                    </div>
                   </div>
 
-                  {/* 일 */}
-                  <div className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF]">
-                    <select
-                      value={formData.birthDay}
-                      onChange={(e) => handleScrollSelect('Day', e.target.value)}
-                      className="bg-transparent text-white text-2xl font-bold text-center appearance-none cursor-pointer focus:outline-none w-10"
+                  {/* 일 - 커스텀 드롭다운 */}
+                  <div className="relative">
+                    <div
+                      onClick={() => setOpenDropdown(openDropdown === 'day' ? null : 'day')}
+                      className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                     >
-                      {days.map(day => (
-                        <option key={day} value={day} className="bg-[#3D3A5C]">{day}</option>
-                      ))}
-                    </select>
+                      <span className="text-white text-2xl font-bold w-10 block text-center">{formData.birthDay}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* 커스텀 드롭다운 모달 (바텀 시트 스타일) */}
+                {openDropdown && (
+                  <div className="fixed inset-0 z-50 flex items-end justify-center">
+                    {/* 배경 오버레이 */}
+                    <div
+                      className="absolute inset-0 bg-black/50"
+                      onClick={() => setOpenDropdown(null)}
+                    />
+
+                    {/* 드롭다운 컨텐츠 */}
+                    <div className="relative w-full max-w-md bg-[#2D2A4C] rounded-t-3xl p-4 pb-8 max-h-[50vh] flex flex-col">
+                      {/* 헤더 */}
+                      <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/20">
+                        <span className="text-white font-bold text-lg">
+                          {openDropdown === 'year' ? '년도 선택' : openDropdown === 'month' ? '월 선택' : '일 선택'}
+                        </span>
+                        <button
+                          onClick={() => setOpenDropdown(null)}
+                          className="text-white/60 text-2xl leading-none"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      {/* 옵션 목록 */}
+                      <div className="overflow-y-auto flex-1 -mx-2">
+                        <div className="grid grid-cols-4 gap-2 px-2">
+                          {(openDropdown === 'year' ? years : openDropdown === 'month' ? months : days).map(item => (
+                            <button
+                              key={item}
+                              onClick={() => {
+                                handleScrollSelect(
+                                  openDropdown === 'year' ? 'Year' : openDropdown === 'month' ? 'Month' : 'Day',
+                                  item
+                                );
+                                setOpenDropdown(null);
+                              }}
+                              className={`py-3 rounded-xl text-center text-lg font-medium transition-colors ${
+                                (openDropdown === 'year' && formData.birthYear === item) ||
+                                (openDropdown === 'month' && formData.birthMonth === item) ||
+                                (openDropdown === 'day' && formData.birthDay === item)
+                                  ? 'bg-[#6B5CFF] text-white'
+                                  : 'bg-[#3D3A5C] text-white/80 hover:bg-[#4D4A6C]'
+                              }`}
+                            >
+                              {item}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* 오른쪽 손 */}
                 <img
@@ -981,13 +1029,13 @@ const SignupPage = () => {
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <h1 className="text-white text-2xl font-bold mb-12">가입이 완료되었어요!</h1>
+          <h1 className="text-white text-2xl font-bold mb-6">가입이 완료되었어요!</h1>
 
           {/* 파티모자 캐릭터 */}
           <img
             src="/StarryCharacter2.png"
             alt="Starry Character Celebration"
-            className="w-48 h-48 object-contain mb-12"
+            className="w-64 h-64 object-contain mb-6"
           />
 
           {/* SNS 연동하기 버튼 */}
@@ -1003,7 +1051,7 @@ const SignupPage = () => {
 
           {/* 밤하늘 만들러가기 버튼 */}
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => navigate('/')}
             className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
           >
             밤하늘 만들러가기

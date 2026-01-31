@@ -206,17 +206,19 @@ function StatDetailPage() {
     }
     ctx.closePath();
 
-    // 그라데이션 채우기
-    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxRadius);
-    gradient.addColorStop(0, 'rgba(255, 80, 80, 0.8)');
-    gradient.addColorStop(1, 'rgba(200, 50, 50, 0.6)');
-    ctx.fillStyle = gradient;
+    // 보라색 글로우 효과
+    ctx.shadowColor = '#7C3AED';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // 흰색 채우기
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
 
-    // 테두리
-    ctx.strokeStyle = 'rgba(255, 100, 100, 0.9)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // 글로우 효과 리셋
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
 
   }, [stats]);
 
