@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -6,6 +6,34 @@ import NavBar from '../components/NavBar';
 
 function UserPage() {
   const { user, nickname, setNickname } = useAuth();
+
+  // linkIdentity 후 리다이렉트로 돌아왔을 때 google_linked 플래그 설정
+  useEffect(() => {
+    const checkAndSetGoogleLinked = async () => {
+      if (!user) return;
+
+      const isGoogleSignup = user?.app_metadata?.provider === 'google';
+      const googleIdentity = user?.identities?.find(i => i.provider === 'google');
+      const googleLinked = user?.user_metadata?.google_linked;
+
+      // 이메일 가입 사용자가 구글 identity가 있는데 google_linked가 설정 안 된 경우
+      // URL에 hash가 있으면 (OAuth 리다이렉트 후) google_linked 설정
+      if (!isGoogleSignup && googleIdentity && !googleLinked && window.location.hash) {
+        try {
+          await supabase.auth.updateUser({
+            data: { google_linked: true }
+          });
+          // 페이지 새로고침하여 상태 업데이트
+          window.location.hash = '';
+          window.location.reload();
+        } catch (error) {
+          console.error('google_linked 설정 오류:', error);
+        }
+      }
+    };
+
+    checkAndSetGoogleLinked();
+  }, [user]);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,6 +45,84 @@ function UserPage() {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState('');
   const [nicknameLoading, setNicknameLoading] = useState(false);
+
+  // 소셜 연동 관련 상태
+  const [socialLoading, setSocialLoading] = useState(false);
+
+  // 구글 연동 상태 확인
+  const isGoogleSignup = user?.app_metadata?.provider === 'google'; // 구글로 가입했는지
+  const googleIdentity = user?.identities?.find(i => i.provider === 'google'); // 구글 identity 존재 여부
+  const socialLinked = user?.user_metadata?.social_linked; // 프로필 설정 완료 여부
+  const googleLinkedFromUserPage = user?.user_metadata?.google_linked; // UserPage에서 연동 완료 여부
+
+  // 구글 연동 여부:
+  // 1. 구글 가입: social_linked가 true여야 연동 완료
+  // 2. 이메일 가입 → 구글 연동: social_linked 또는 google_linked가 true여야 연동 완료
+  const isGoogleLinked = isGoogleSignup
+    ? socialLinked === true
+    : (!!googleIdentity && (socialLinked === true || googleLinkedFromUserPage === true));
+  const googleEmail = googleIdentity?.identity_data?.email || null;
+
+  // 구글 연동하기
+  const handleLinkGoogle = async () => {
+    setSocialLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/user`,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setError(error.message || '구글 연동에 실패했습니다.');
+      setSocialLoading(false);
+    }
+  };
+
+  // 구글 연동 해제
+  const handleUnlinkGoogle = async () => {
+    if (isGoogleSignup) {
+      setError('구글로 가입한 계정은 연동을 해제할 수 없습니다.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (!googleIdentity?.identity_id) {
+      setError('연동 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    const confirmed = window.confirm('구글 연동을 해제하시겠습니까?');
+    if (!confirmed) return;
+
+    setSocialLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.unlinkIdentity(googleIdentity);
+      if (error) throw error;
+      setSuccessMessage('구글 연동이 해제되었습니다.');
+      setTimeout(() => setSuccessMessage(''), 2000);
+      // 페이지 새로고침하여 상태 업데이트
+      window.location.reload();
+    } catch (error) {
+      setError(error.message || '구글 연동 해제에 실패했습니다.');
+    } finally {
+      setSocialLoading(false);
+    }
+  };
+
+  // 구글 토글 클릭 핸들러
+  const handleGoogleToggle = () => {
+    if (socialLoading) return;
+
+    if (isGoogleLinked) {
+      handleUnlinkGoogle();
+    } else {
+      handleLinkGoogle();
+    }
+  };
 
   // 닉네임 변경 시작
   const handleEditNickname = () => {
@@ -266,34 +372,52 @@ function UserPage() {
             {/* 소셜 계정 연동 관리 */}
             <div className="mt-6">
               <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">소셜 계정 연동 관리</label>
-              <div className="ml-12 flex gap-3">
+              <div className="ml-12 space-y-3 max-w-[260px]">
                 {/* 구글 */}
-                <button className="w-12 h-12 rounded-xl bg-white hover:bg-gray-100 transition-colors flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 48 48">
-                    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
-                    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
-                    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-                    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-                  </svg>
-                </button>
-                {/* 카카오 */}
-                <button className="w-12 h-12 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] transition-colors flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 48 48">
-                    <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
-                  </svg>
-                </button>
-                {/* 네이버 */}
-                <button className="w-12 h-12 rounded-xl bg-[#03C75A] hover:bg-[#02b350] transition-colors flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 48 48">
-                    <path fill="white" d="M26.5 24.5L18 12h-4v24h7.5v-12.5L30 36h4V12h-7.5z"/>
-                  </svg>
-                </button>
-                {/* 페이스북 */}
-                <button className="w-12 h-12 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] transition-colors flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 48 48">
-                    <path fill="white" d="M26.707 29.301V24h2.854l.427-3.316h-3.281V18.77c0-.958.266-1.611 1.639-1.611h1.755v-2.967c-.304-.041-1.347-.131-2.561-.131-2.534 0-4.269 1.547-4.269 4.388v2.445h-2.866V24h2.866v5.301h3.436z"/>
-                  </svg>
-                </button>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5" viewBox="0 0 48 48">
+                      <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                      <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                      <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                      <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-white text-sm truncate">
+                    {isGoogleLinked ? (googleEmail || user?.email) : '연동안됨'}
+                  </span>
+                  {!isGoogleSignup && (
+                    <button
+                      onClick={handleGoogleToggle}
+                      disabled={socialLoading}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${
+                        isGoogleLinked ? 'bg-[#6155F5]' : 'bg-gray-500'
+                      } ${socialLoading ? 'cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                          isGoogleLinked ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
+
+                {/* 카카오 (준비중) */}
+                <div className="flex items-center gap-3 opacity-50">
+                  <div className="w-10 h-10 rounded-lg bg-[#FEE500] flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5" viewBox="0 0 48 48">
+                      <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
+                    </svg>
+                  </div>
+                  <span className="flex-1 text-white text-sm">준비중</span>
+                  <button
+                    disabled
+                    className="w-12 h-6 rounded-full bg-gray-500 relative cursor-not-allowed"
+                  >
+                    <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white" />
+                  </button>
+                </div>
               </div>
             </div>
 

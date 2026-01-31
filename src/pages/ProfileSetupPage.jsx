@@ -77,12 +77,12 @@ const ProfileSetupPage = () => {
           phone: existingProfile.phone || ''
         }));
       } else {
-        // 신규 사용자 - 기존 메타데이터에서 불러오기
+        // 신규 사용자 - 필드 비워두기
         setFormData(prev => ({
           ...prev,
-          nickname: metadata.nickname || '',
-          birthdate: metadata.birthdate || '',
-          phone: metadata.phone || ''
+          nickname: '',
+          birthdate: '',
+          phone: ''
         }));
       }
 

@@ -291,6 +291,21 @@ const SignupPage = () => {
       if (error) throw error;
 
       if (data.user) {
+        // profiles 테이블에도 저장 (upsert: 있으면 업데이트, 없으면 insert)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: formData.email,
+            nickname: formData.nickname,
+            birthdate: birthdate,
+            phone: formData.phone
+          }, { onConflict: 'id' });
+
+        if (profileError) {
+          console.error('profiles 저장 오류:', profileError);
+        }
+
         setCurrentStep(5); // 가입완료 화면
       }
     } catch (error) {
