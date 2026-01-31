@@ -55,7 +55,7 @@ function StarryPage() {
             {/* 명함 섹션 */}
             <div className="my-12">
               <div className="rounded-3xl mb-4 shadow-lg transform rotate-6 w-72 h-40 -translate-x-10 overflow-hidden">
-                <img src="/BC_Kichan.png" alt="제작자 명함" className="w-full h-full object-cover" />
+                <img src="/BC_Kichan-1.png" alt="제작자 명함" className="w-full h-full object-cover" />
               </div>
               <div className="rounded-3xl shadow-lg transform -rotate-6 w-72 h-40 ml-auto translate-x-10 overflow-hidden">
                 <img src="/BC_Taehui.png" alt="디자이너 명함" className="w-full h-full object-cover" />
