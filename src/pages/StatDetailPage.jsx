@@ -10,10 +10,10 @@ const questions = [
     questionLine1: (nickname) => `${nickname} 님이`,
     questionLine2: '가장 중요하게 생각하는 것은?',
     options: [
-      { id: 'a', emoji: '🔥', label: '도전!', description: '용감하게 밀고 나간다' },
-      { id: 'b', emoji: '📐', label: '실력!', description: '확실하게 해낸다' },
-      { id: 'c', emoji: '📚', label: '지식!', description: '새로운 것을 알아낸다' },
-      { id: 'd', emoji: '💖', label: '마음!', description: '사람들과 함께 해낸다' },
+      { id: 'a', emoji: '🔥', label: '도전!', shortLabel: '도전', description: '용감하게 밀고 나간다' },
+      { id: 'b', emoji: '📐', label: '실력!', shortLabel: '실력', description: '확실하게 해낸다' },
+      { id: 'c', emoji: '📚', label: '지식!', shortLabel: '지식', description: '새로운 것을 알아낸다' },
+      { id: 'd', emoji: '💖', label: '마음!', shortLabel: '마음', description: '사람들과 함께 해낸다' },
     ],
   },
   {
@@ -21,10 +21,10 @@ const questions = [
     questionLine1: (nickname) => `${nickname} 님의`,
     questionLine2: '새로운 상황에서 행동 스타일은?',
     options: [
-      { id: 'a', emoji: '🧑‍🏫', label: '리더형!', description: '내가 이끌어간다' },
-      { id: 'b', emoji: '🗺️', label: '유지형!', description: '방식을 끝까지 유지한다' },
-      { id: 'c', emoji: '🧩', label: '유연형!', description: '상황에 따라 바뀐다' },
-      { id: 'd', emoji: '💬', label: '중재형!', description: '모두의 의견을 들어본다' },
+      { id: 'a', emoji: '🧑‍🏫', label: '리더형!', shortLabel: '리더', description: '내가 이끌어간다' },
+      { id: 'b', emoji: '🗺️', label: '유지형!', shortLabel: '유지', description: '방식을 끝까지 유지한다' },
+      { id: 'c', emoji: '🧩', label: '유연형!', shortLabel: '유연', description: '상황에 따라 바뀐다' },
+      { id: 'd', emoji: '💬', label: '중재형!', shortLabel: '중재', description: '모두의 의견을 들어본다' },
     ],
   },
   {
@@ -32,10 +32,10 @@ const questions = [
     questionLine1: (nickname) => `${nickname} 님의`,
     questionLine2: '첫인상은?',
     options: [
-      { id: 'a', emoji: '😀', label: '외향적!', description: '활발한 에너지' },
-      { id: 'b', emoji: '😳', label: '내향적!', description: '차분하고 신중함' },
-      { id: 'c', emoji: '😊', label: '균형적!', description: '친근하고 편함' },
-      { id: 'd', emoji: '😝', label: '개성!', description: '어디로 튈지 모름' },
+      { id: 'a', emoji: '😀', label: '외향적!', shortLabel: '외향', description: '활발한 에너지' },
+      { id: 'b', emoji: '😳', label: '내향적!', shortLabel: '내향', description: '차분하고 신중함' },
+      { id: 'c', emoji: '😊', label: '균형적!', shortLabel: '균형', description: '친근하고 편함' },
+      { id: 'd', emoji: '😝', label: '개성!', shortLabel: '개성', description: '어디로 튈지 모름' },
     ],
   },
   {
@@ -43,10 +43,10 @@ const questions = [
     questionLine1: (nickname) => `${nickname} 님이`,
     questionLine2: '가장 행복한 상황은?',
     options: [
-      { id: 'a', emoji: '🎮', label: '게임 레벨이', description: '올랐을 때' },
-      { id: 'b', emoji: '🔒', label: '재미있는 비밀을', description: '알았을 때' },
-      { id: 'c', emoji: '🏆️', label: '노력한 일에', description: '칭찬을 받을 때' },
-      { id: 'd', emoji: '☕', label: '친구들과', description: '카페에 갈 때' },
+      { id: 'a', emoji: '🎮', label: '게임 레벨이', shortLabel: '게임', description: '올랐을 때' },
+      { id: 'b', emoji: '🔒', label: '재미있는 비밀을', shortLabel: '비밀', description: '알았을 때' },
+      { id: 'c', emoji: '🏆️', label: '노력한 일에', shortLabel: '노력', description: '칭찬을 받을 때' },
+      { id: 'd', emoji: '☕', label: '친구들과', shortLabel: '카페', description: '카페에 갈 때' },
     ],
   },
   {
@@ -54,10 +54,10 @@ const questions = [
     questionLine1: (nickname) => `${nickname} 님이`,
     questionLine2: '스트레스를 푸는 방법은?',
     options: [
-      { id: 'a', emoji: '🍰', label: '맛있는걸 먹거나', description: '푹 잔다' },
-      { id: 'b', emoji: '🗣', label: '친한 사람에게', description: '이야기한다' },
-      { id: 'c', emoji: '🏃‍♂️', label: '운동이나', description: '노래를 한다' },
-      { id: 'd', emoji: '🧮', label: '스트레스 받은', description: '이유를 따져본다' },
+      { id: 'a', emoji: '🍰', label: '맛있는걸 먹거나', shortLabel: '음식', description: '푹 잔다' },
+      { id: 'b', emoji: '🗣', label: '친한 사람에게', shortLabel: '대화', description: '이야기한다' },
+      { id: 'c', emoji: '🏃‍♂️', label: '운동이나', shortLabel: '활동', description: '노래를 한다' },
+      { id: 'd', emoji: '🧮', label: '스트레스 받은', shortLabel: '해결', description: '이유를 따져본다' },
     ],
   },
 ];
@@ -135,13 +135,16 @@ function StatDetailPage() {
     // 배경 클리어
     ctx.clearRect(0, 0, W, H);
 
-    // 각 질문별 가장 많이 선택된 답변의 비율 계산
-    const percentages = questions.map((q) => {
-      const qStats = stats[q.id];
-      if (!qStats || qStats.total === 0) return 0;
-      const maxCount = Math.max(qStats.a, qStats.b, qStats.c, qStats.d);
-      return (maxCount / qStats.total) * 100;
-    });
+    // 현재 질문의 4개 옵션 % 계산
+    const q = questions[currentQuestion];
+    const qStats = stats[q.id];
+    const percentages = [
+      50, // 위쪽 (Q 레이블) - 50% 고정
+      qStats && qStats.total > 0 ? (qStats.d / qStats.total) * 100 : 0, // 오른쪽 위 (d 옵션 - 마음/중재/개성/카페/해결)
+      qStats && qStats.total > 0 ? (qStats.c / qStats.total) * 100 : 0, // 오른쪽 아래 (c 옵션 - 지식/유연/균형/노력/활동)
+      qStats && qStats.total > 0 ? (qStats.b / qStats.total) * 100 : 0, // 왼쪽 아래 (b 옵션 - 실력/유지/내향/비밀/대화)
+      qStats && qStats.total > 0 ? (qStats.a / qStats.total) * 100 : 0, // 왼쪽 위 (a 옵션 - 도전/리더/외향/게임/음식)
+    ];
 
     // 5개의 바깥 꼭짓점 각도 (위쪽부터 시계방향)
     const outerAngles = [
@@ -181,7 +184,7 @@ function StatDetailPage() {
       ctx.stroke();
     });
 
-    // 데이터 영역 그리기 (빨간색 별 모양)
+    // 데이터 영역 그리기 (별 모양)
     ctx.beginPath();
     const points = [];
     for (let i = 0; i < 5; i++) {
@@ -220,7 +223,7 @@ function StatDetailPage() {
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 
-  }, [stats]);
+  }, [stats, currentQuestion]);
 
   // 현재 질문의 통계 계산
   const getCurrentQuestionStats = () => {
@@ -314,25 +317,29 @@ function StatDetailPage() {
               {/* 레이블들 */}
               {stats && (
                 <>
-                  {/* 위쪽 레이블 */}
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 text-white text-xl text-center">
-                    <span>{getMostPopularAnswer(1)?.emoji}</span>
+                  {/* 위쪽 레이블 - Q 번호 */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 text-white text-sm font-bold text-center">
+                    <span>Q{question.id}</span>
                   </div>
-                  {/* 오른쪽 위 레이블 */}
-                  <div className="absolute top-[75px] right-[60px] text-white text-xl text-center">
-                    <span>{getMostPopularAnswer(2)?.emoji}</span>
+                  {/* 오른쪽 위 레이블 - d 옵션 */}
+                  <div className="absolute top-[75px] right-[60px] text-white text-xs text-center">
+                    <div>{question.options[3].emoji}</div>
+                    <div>{question.options[3].shortLabel}</div>
                   </div>
-                  {/* 오른쪽 아래 레이블 */}
-                  <div className="absolute bottom-[30px] right-[95px] text-white text-xl text-center">
-                    <span>{getMostPopularAnswer(3)?.emoji}</span>
+                  {/* 오른쪽 아래 레이블 - c 옵션 */}
+                  <div className="absolute bottom-[25px] right-[95px] text-white text-xs text-center">
+                    <div>{question.options[2].emoji}</div>
+                    <div>{question.options[2].shortLabel}</div>
                   </div>
-                  {/* 왼쪽 아래 레이블 */}
-                  <div className="absolute bottom-[30px] left-[95px] text-white text-xl text-center">
-                    <span>{getMostPopularAnswer(4)?.emoji}</span>
+                  {/* 왼쪽 아래 레이블 - b 옵션 */}
+                  <div className="absolute bottom-[25px] left-[95px] text-white text-xs text-center">
+                    <div>{question.options[1].emoji}</div>
+                    <div>{question.options[1].shortLabel}</div>
                   </div>
-                  {/* 왼쪽 위 레이블 */}
-                  <div className="absolute top-[75px] left-[60px] text-white text-xl text-center">
-                    <span>{getMostPopularAnswer(5)?.emoji}</span>
+                  {/* 왼쪽 위 레이블 - a 옵션 */}
+                  <div className="absolute top-[75px] left-[60px] text-white text-xs text-center">
+                    <div>{question.options[0].emoji}</div>
+                    <div>{question.options[0].shortLabel}</div>
                   </div>
                 </>
               )}
