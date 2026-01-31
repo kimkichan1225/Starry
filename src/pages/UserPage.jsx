@@ -5,13 +5,70 @@ import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 
 function UserPage() {
-  const { user, nickname } = useAuth();
+  const { user, nickname, setNickname } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // 닉네임 변경 관련 상태
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [newNickname, setNewNickname] = useState('');
+  const [nicknameLoading, setNicknameLoading] = useState(false);
+
+  // 닉네임 변경 시작
+  const handleEditNickname = () => {
+    setNewNickname(nickname);
+    setIsEditingNickname(true);
+    setError('');
+    setSuccessMessage('');
+  };
+
+  // 닉네임 변경 취소
+  const handleCancelNickname = () => {
+    setIsEditingNickname(false);
+    setNewNickname('');
+  };
+
+  // 닉네임 저장
+  const handleSaveNickname = async () => {
+    if (!newNickname.trim()) {
+      setError('닉네임을 입력해주세요.');
+      return;
+    }
+
+    if (newNickname.trim().length < 2) {
+      setError('닉네임은 2자 이상이어야 합니다.');
+      return;
+    }
+
+    if (newNickname.trim().length > 10) {
+      setError('닉네임은 10자 이하여야 합니다.');
+      return;
+    }
+
+    setNicknameLoading(true);
+    setError('');
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { nickname: newNickname.trim() }
+      });
+
+      if (error) throw error;
+
+      setNickname(newNickname.trim());
+      setIsEditingNickname(false);
+      setSuccessMessage('닉네임이 변경되었습니다.');
+      setTimeout(() => setSuccessMessage(''), 2000);
+    } catch (error) {
+      setError(error.message || '닉네임 변경에 실패했습니다.');
+    } finally {
+      setNicknameLoading(false);
+    }
+  };
 
   // 비밀번호 변경
   const handlePasswordChange = async () => {
@@ -115,14 +172,49 @@ function UserPage() {
             <div className="flex items-center">
               <label className="text-white text-base font-bold whitespace-nowrap ml-12">닉네임</label>
               <div className="flex-1 flex items-center gap-2">
-                <div className="flex-1 border-b border-white/30 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
-                  {nickname || 'User1'}
-                </div>
-                <button className="p-2 hover:opacity-70 transition">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
+                {isEditingNickname ? (
+                  <>
+                    <input
+                      type="text"
+                      value={newNickname}
+                      onChange={(e) => setNewNickname(e.target.value)}
+                      maxLength={10}
+                      className="flex-1 border-b-2 border-purple-500 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px] bg-transparent focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveNickname}
+                      disabled={nicknameLoading}
+                      className="p-2 hover:opacity-70 transition text-green-400"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={handleCancelNickname}
+                      className="p-2 hover:opacity-70 transition text-red-400"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1 border-b border-white/30 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
+                      {nickname || 'User1'}
+                    </div>
+                    <button
+                      onClick={handleEditNickname}
+                      className="p-2 hover:opacity-70 transition"
+                    >
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
