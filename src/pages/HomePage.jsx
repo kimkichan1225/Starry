@@ -148,6 +148,9 @@ function HomePage() {
   const [isDeletingLine, setIsDeletingLine] = useState(false);
   const [deleteStartPos, setDeleteStartPos] = useState(null);
 
+  // 저장 중 상태
+  const [saving, setSaving] = useState(false);
+
   // 밤하늘 제작 모드 진입
   const handleEnterEditMode = () => {
     setIsEditMode(true);
@@ -167,8 +170,9 @@ function HomePage() {
 
   // 저장
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || saving) return;
 
+    setSaving(true);
     try {
       // 1. 각 별의 위치 업데이트
       for (let i = 0; i < stars.length; i++) {
@@ -219,6 +223,8 @@ function HomePage() {
       await refreshStars();
     } catch (error) {
       console.error('저장 실패:', error);
+    } finally {
+      setSaving(false);
     }
 
     setIsEditMode(false);
@@ -815,9 +821,14 @@ function HomePage() {
           <div className="fixed bottom-12 left-0 right-0 flex justify-center z-50 px-6">
             <button
               onClick={handleSave}
-              className="w-full max-w-[320px] py-2 bg-[#6155F5] text-white font-bold text-lg rounded-full shadow-lg hover:bg-[#5044d4] transition"
+              disabled={saving}
+              className={`w-full max-w-[320px] py-2 font-bold text-lg rounded-full shadow-lg transition ${
+                saving
+                  ? 'bg-[#6155F5]/50 text-white/50 cursor-not-allowed'
+                  : 'bg-[#6155F5] text-white hover:bg-[#5044d4]'
+              }`}
             >
-              저장
+              {saving ? '저장 중...' : '저장'}
             </button>
           </div>
         </>

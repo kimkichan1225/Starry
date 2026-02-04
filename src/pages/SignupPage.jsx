@@ -632,7 +632,7 @@ const SignupPage = () => {
 
           {/* 캐릭터 이미지 */}
           <img
-            src="/StarryCharacter.png"
+            src="/starry-character.gif"
             alt="Starry Character"
             className="w-60 h-60 object-contain mb-12"
           />
@@ -1048,7 +1048,7 @@ const SignupPage = () => {
 
           {/* 파티모자 캐릭터 */}
           <img
-            src="/StarryCharacter2.png"
+            src="/starry-character2.gif"
             alt="Starry Character Celebration"
             className="w-64 h-64 object-contain mb-6"
           />

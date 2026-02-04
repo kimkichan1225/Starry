@@ -21,9 +21,11 @@ function NavBar() {
         {navItems.map((item) => {
           // /notice 경로일 때는 스타리 버튼을 활성화
           // /stat/detail 경로일 때는 응답 통계 버튼을 활성화
+          // /warehouse 경로일 때는 내 밤하늘 버튼을 활성화
           const isActive = location.pathname === item.path ||
                           (location.pathname.startsWith('/notice') && item.path === '/starry') ||
-                          (location.pathname.startsWith('/stat') && item.path === '/stat');
+                          (location.pathname.startsWith('/stat') && item.path === '/stat') ||
+                          (location.pathname === '/warehouse' && item.path === '/home');
           const iconSrc = isActive
             ? `/${item.icon}_On.png`
             : `/${item.icon}_Off.png`;

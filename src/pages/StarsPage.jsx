@@ -571,19 +571,6 @@ function StarsPage() {
             </div>
           </div>
 
-          {/* 로그인 안내 박스 */}
-          <div className="mb-6 max-w-[340px] mx-auto">
-            <div className="flex flex-col items-center gap-2 text-center bg-white/5 border-2 border-dashed border-white/50 rounded-xl p-6">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <div className="text-white">
-                <div className="text-sm">광고 보고</div>
-                <div className="text-sm">별 보관함 확장하기 (+3)</div>
-              </div>
-            </div>
-          </div>
-
           {/* 푸터 */}
           <footer className="pt-6 text-center">
             <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
