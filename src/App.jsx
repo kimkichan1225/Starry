@@ -20,6 +20,7 @@ import FindPasswordPage from './pages/FindPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SkyDemoPage from './pages/SkyDemoPage';
 import SkyPage from './pages/SkyPage';
+import WarehousePage from './pages/WarehousePage';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/starry" element={<StarryPage />} />
           <Route path="/stars" element={<StarsPage />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/warehouse" element={<WarehousePage />} />
           <Route path="/stat" element={<StatPage />} />
           <Route path="/stat/detail" element={<StatDetailPage />} />
           <Route path="/user" element={<UserPage />} />

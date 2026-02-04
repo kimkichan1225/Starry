@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
@@ -88,9 +88,11 @@ const drawStarOnCanvas = (ctx, star, x, y, scale = 1) => {
 
 function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, nickname } = useAuth();
   const {
-    stars: contextStars,
+    skyStars: contextStars,
+    warehouseStars,
     starPositions: contextStarPositions,
     connections: contextConnections,
     setConnections: setContextConnections,
@@ -118,6 +120,15 @@ function HomePage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(1);
+
+  // 창고 페이지에서 돌아올 때 편집 모드 유지
+  useEffect(() => {
+    if (location.state?.editMode) {
+      setIsEditMode(true);
+      // state 초기화 (뒤로가기 시 재진입 방지)
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // 별 연결 상태 (로컬 - 편집용)
   const [connections, setConnections] = useState([]); // [{fromIndex, toIndex}, ...]
@@ -782,6 +793,21 @@ function HomePage() {
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
+            </button>
+          </div>
+
+          {/* 상단 우측 버튼 (별 보관함) */}
+          <div className="fixed top-40 right-7 z-50">
+            <button
+              onClick={() => navigate('/warehouse')}
+              className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition"
+            >
+              <img src="/staricon.png" alt="별 보관함" className="w-9 h-11" />
+              {warehouseStars.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#6155F5] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                  {warehouseStars.length}
+                </span>
+              )}
             </button>
           </div>
 

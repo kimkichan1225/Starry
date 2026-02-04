@@ -214,6 +214,24 @@ function SurveyQuestionPage() {
 
     setSending(true);
     try {
+      // 사용자의 현재 밤하늘 별 개수와 max_sky_slots 확인
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('max_sky_slots')
+        .eq('id', userId)
+        .single();
+
+      const maxSkySlots = profileData?.max_sky_slots || 11;
+
+      const { count: skyStarsCount } = await supabase
+        .from('stars')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('in_sky', true);
+
+      // 밤하늘 슬롯이 가득 찼으면 창고로, 아니면 밤하늘로
+      const inSky = (skyStarsCount || 0) < maxSkySlots;
+
       const starData = {
         user_id: userId,
         surveyor_name: surveyorName,
@@ -223,6 +241,7 @@ function SurveyQuestionPage() {
         star_saturation: optionToNumber(finalAnswers[4]),
         star_sharpness: optionToNumber(finalAnswers[5]),
         answers: finalAnswers,
+        in_sky: inSky,
       };
 
       const { error } = await supabase
@@ -370,11 +389,12 @@ function SurveyQuestionPage() {
   // 밤하늘 데이터 가져오기
   const fetchNightSkyData = async () => {
     try {
-      // 별 데이터 가져오기
+      // 별 데이터 가져오기 (밤하늘에 있는 별만)
       const { data: starsData, error: starsError } = await supabase
         .from('stars')
         .select('*')
         .eq('user_id', userId)
+        .eq('in_sky', true)
         .order('created_at', { ascending: true });
 
       if (starsError) throw starsError;

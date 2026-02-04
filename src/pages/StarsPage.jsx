@@ -503,7 +503,7 @@ function StarsPage() {
 
   // 별 데이터는 StarsContext에서 관리됨 (실시간 구독 포함)
 
-  // 빈 카드 슬롯 생성 (받은 별 + 빈 슬롯 = 11개, 마지막은 추가 버튼)
+  // 빈 카드 슬롯 생성 (받은 별 + 빈 슬롯 = 11개)
   const totalSlots = 11;
   const emptySlots = Math.max(0, totalSlots - stars.length);
 
@@ -534,21 +534,21 @@ function StarsPage() {
         </nav>
 
         {/* 메인 컨텐츠 영역 */}
-        <div className="flex-1 px-6 pt-3 pb-8">
+        <div className="flex-1 px-6 pb-8">
           {/* 별 개수 표시 */}
           <div className="text-center mb-6">
-            <span className="text-white text-lg">{stars.length} / {maxStars} 개의 별을 선물 받았어요!</span>
+            <span className="text-white text-lg">{stars.length}개의 별을 선물 받았어요!</span>
           </div>
 
           {/* 카드 그리드 */}
           <div className="grid grid-cols-3 gap-3 max-w-[340px] mx-auto mb-6">
-            {/* 받은 별 카드들 */}
+            {/* 받은 모든 별 카드들 */}
             {stars.map((star, index) => (
               <StarCard key={star.id} star={star} index={index} onClick={handleStarClick} />
             ))}
 
             {/* 빈 슬롯들 */}
-            {Array.from({ length: emptySlots }, (_, i) => (
+            {Array.from({ length: Math.max(0, totalSlots - stars.length) }, (_, i) => (
               <div
                 key={`empty-${i}`}
                 className="aspect-[4/5] bg-white/5 border-2 border-white/30 border-dashed rounded-2xl p-2"
