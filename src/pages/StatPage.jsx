@@ -87,75 +87,148 @@ function StatPage() {
               </h2>
             </div>
 
-            {/* 별 이미지 + 공전하는 원들 */}
-            <div className="flex justify-center mb-6 relative">
-              {/* 메인 별 이미지 */}
+            {/* 별 캐릭터 + 원자 모델 스타일 궤도 */}
+            <div className="flex justify-center mb-6 relative" style={{ width: '280px', height: '280px', margin: '0 auto' }}>
+
+              {/* 궤도 뒷부분 (캐릭터 뒤에 보임) - 전체 궤도 */}
+              <svg
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                width="280"
+                height="280"
+                viewBox="0 0 280 280"
+                style={{ zIndex: 1 }}
+              >
+                {/* 궤도 1 - \ 방향 */}
+                <ellipse
+                  cx="140"
+                  cy="140"
+                  rx="130"
+                  ry="35"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.7)"
+                  strokeWidth="3"
+                  transform="rotate(30 140 140)"
+                />
+                {/* 궤도 2 - 가로 방향 */}
+                <ellipse
+                  cx="140"
+                  cy="140"
+                  rx="130"
+                  ry="35"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.7)"
+                  strokeWidth="3"
+                />
+              </svg>
+
+              {/* 메인 캐릭터 이미지 */}
               <img
-                src="/StatExample.png"
-                alt="별 통계"
-                className="w-[280px] h-[280px] object-contain"
+                src="/StatCharacter.png"
+                alt="별 캐릭터"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[170px] h-[170px] object-contain"
+                style={{ zIndex: 10 }}
               />
 
-              {/* 공전하는 원 1 */}
-              <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  animation: 'orbit1 33s linear infinite',
-                }}
+              {/* 궤도 앞부분 (캐릭터 앞에 보임) - 클리핑으로 일부만 표시 */}
+              <svg
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                width="280"
+                height="280"
+                viewBox="0 0 280 280"
+                style={{ zIndex: 20 }}
               >
-                <img
-                  src="/StatCircle.png"
-                  alt="circle1"
-                  className="w-[10px] h-[10px]"
-                  style={{ transform: 'translate(105px, 0)' }}
+                <defs>
+                  {/* 왼쪽 아래 부분만 보이게 하는 클립 */}
+                  <clipPath id="clipLeft">
+                    <rect x="0" y="140" width="140" height="140" />
+                  </clipPath>
+                  {/* 오른쪽 아래 부분만 보이게 하는 클립 */}
+                  <clipPath id="clipRight">
+                    <rect x="140" y="140" width="140" height="140" />
+                  </clipPath>
+                  {/* 아래쪽 전체 보이게 하는 클립 */}
+                  <clipPath id="clipBottom">
+                    <rect x="0" y="140" width="280" height="140" />
+                  </clipPath>
+                </defs>
+                {/* 궤도 1 앞부분 - \ 방향, 아래쪽 */}
+                <ellipse
+                  cx="140"
+                  cy="140"
+                  rx="130"
+                  ry="35"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.7)"
+                  strokeWidth="3"
+                  transform="rotate(30 140 140)"
+                  clipPath="url(#clipBottom)"
                 />
-              </div>
+                {/* 궤도 2 앞부분 - 가로, 아래쪽만 표시 */}
+                <ellipse
+                  cx="140"
+                  cy="140"
+                  rx="130"
+                  ry="35"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.7)"
+                  strokeWidth="3"
+                  transform="rotate(0 140 140)"
+                  clipPath="url(#clipBottom)"
+                />
+              </svg>
 
-              {/* 공전하는 원 2 */}
-              <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  animation: 'orbit2 28s linear infinite',
-                }}
+              {/* 공전하는 원들 - SVG animateMotion 사용 */}
+              <svg
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                width="280"
+                height="280"
+                viewBox="0 0 280 280"
+                style={{ zIndex: 30 }}
               >
-                <img
-                  src="/StatCircle.png"
-                  alt="circle2"
-                  className="w-[17px] h-[17px]"
-                  style={{ transform: 'translate(105px, 0)' }}
-                />
-              </div>
+                <defs>
+                  {/* 수평 타원 경로 */}
+                  <path
+                    id="orbitPath"
+                    d="M 10,140 a 130,35 0 1,0 260,0 a 130,35 0 1,0 -260,0"
+                    fill="none"
+                  />
+                </defs>
 
-              {/* 공전하는 원 3 */}
-              <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                style={{
-                  animation: 'orbit3 28s linear infinite',
-                }}
-              >
-                <img
-                  src="/StatCircle.png"
-                  alt="circle3"
-                  className="w-[17px] h-[17px]"
-                  style={{ transform: 'translate(140px, 0)' }}
-                />
-              </div>
+                {/* 공전하는 원 1 - \ 궤도 (그룹 전체를 30도 회전) */}
+                <g transform="rotate(30 140 140)">
+                  <image
+                    href="/StatCircle.png"
+                    width="12"
+                    height="12"
+                    x="-6"
+                    y="-6"
+                  >
+                    <animateMotion
+                      dur="6s"
+                      repeatCount="indefinite"
+                    >
+                      <mpath href="#orbitPath" />
+                    </animateMotion>
+                  </image>
+                </g>
 
-              {/* 공전 애니메이션 스타일 */}
-              <style>{`
-                @keyframes orbit1 {
-                  from { transform: translate(-50%, -50%) rotate(60deg); }
-                  to { transform: translate(-50%, -50%) rotate(360deg); }
-                }
-                @keyframes orbit2 {
-                  from { transform: translate(-50%, -50%) rotate(80deg); }
-                  to { transform: translate(-50%, -50%) rotate(480deg); }
-                }
-                @keyframes orbit3 {
-                  from { transform: translate(-50%, -50%) rotate(230deg); }
-                  to { transform: translate(-50%, -50%) rotate(600deg); }
-                }
-              `}</style>
+                {/* 공전하는 원 2 - 가로 궤도 */}
+                <image
+                  href="/StatCircle.png"
+                  width="12"
+                  height="12"
+                  x="-6"
+                  y="-6"
+                >
+                  <animateMotion
+                    dur="8s"
+                    repeatCount="indefinite"
+                    begin="-4s"
+                  >
+                    <mpath href="#orbitPath" />
+                  </animateMotion>
+                </image>
+              </svg>
             </div>
 
             {/* 참여자 수 */}
