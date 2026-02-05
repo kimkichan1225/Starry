@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 // 별 생성을 위한 설정 (StarsPage와 동일)
 const palette = [
@@ -90,6 +92,8 @@ function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, nickname } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const {
     skyStars: contextStars,
     warehouseStars,
@@ -412,14 +416,14 @@ function HomePage() {
   // 공유 링크 복사
   const handleShare = () => {
     if (!user?.id) {
-      setShareMessage('로그인이 필요합니다.');
+      setShareMessage(t.home.loginRequired);
       setTimeout(() => setShareMessage(''), 2000);
       return;
     }
 
     const surveyLink = `${window.location.origin}/survey/${user.id}`;
     navigator.clipboard.writeText(surveyLink);
-    setShareMessage('링크가 복사되었습니다!');
+    setShareMessage(t.home.linkCopied);
     setTimeout(() => setShareMessage(''), 2000);
   };
 
@@ -479,11 +483,11 @@ function HomePage() {
       link.href = dataUrl;
       link.click();
 
-      setShareMessage('이미지가 저장되었습니다!');
+      setShareMessage(t.home.imageSaved);
       setTimeout(() => setShareMessage(''), 2000);
     } catch (error) {
       console.error('이미지 캡쳐 실패:', error);
-      setShareMessage('이미지 저장에 실패했습니다.');
+      setShareMessage(t.home.imageSaveFailed);
       setTimeout(() => setShareMessage(''), 2000);
     }
   };
@@ -619,7 +623,7 @@ function HomePage() {
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              {nickname && <span className="text-white font-bold text-2xl">{nickname} 님의 밤하늘</span>}
+              {nickname && <span className="text-white font-bold text-2xl">{nickname}{t.home.title}</span>}
             </div>
           </div>
         </nav>
@@ -731,7 +735,7 @@ function HomePage() {
             className="w-full px-5 pt-2 pb-4 flex justify-center items-center"
           >
             <span className={`text-2xl ${isConstellationExpanded ? 'text-[#6155F5] font-bold' : 'text-black font-medium'}`}>
-              ABCD한 EFGE자리
+              {t.home.constellationName}
             </span>
           </button>
           {isConstellationExpanded && (
@@ -752,23 +756,23 @@ function HomePage() {
             {/* 중앙 원형 이미지 영역 */}
             <div className="flex justify-center mb-4">
               <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>별자리 커스텀 이미지</span>
+                <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>{t.home.constellationImage}</span>
               </div>
             </div>
 
             {/* 카드 2개 */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">궁합 좋은</span> 별자리</span>
+                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.goodMatch}</span> {t.home.constellation}</span>
               </div>
               <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">궁합 안 좋은</span> 별자리</span>
+                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.badMatch}</span> {t.home.constellation}</span>
               </div>
             </div>
 
             {/* AI 별자리 이름 바꾸기 버튼 */}
             <button className="w-full py-3 bg-[#A6A6A6] text-white font-semibold rounded-full hover:bg-[#959595] transition">
-              AI 별자리 이름 바꾸기
+              {t.home.aiRename}
             </button>
           </div>
         )}
@@ -828,7 +832,7 @@ function HomePage() {
                   : 'bg-[#6155F5] text-white hover:bg-[#5044d4]'
               }`}
             >
-              {saving ? '저장 중...' : '저장'}
+              {saving ? t.home.saving : t.common.save}
             </button>
           </div>
         </>
@@ -859,8 +863,8 @@ function HomePage() {
                 {/* 튜토리얼 내용 - 중앙 정렬 */}
                 <div className="text-center max-w-[150px] mx-auto">
                   <p className="text-[#727272] font-bold text-sm">Step 1</p>
-                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">별 잇기</h3>
-                  <p className="text-black text-base mt-3">별과 별을 드래그해 선을 이으세요.</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">{t.home.tutorial.step1Title}</h3>
+                  <p className="text-black text-base mt-3">{t.home.tutorial.step1Desc}</p>
                 </div>
 
                 {/* 시뮬레이션 영역 */}
@@ -956,8 +960,8 @@ function HomePage() {
                 {/* 튜토리얼 내용 - 중앙 정렬 */}
                 <div className="text-center max-w-[170px] mx-auto">
                   <p className="text-[#727272] font-bold text-sm">Step 2</p>
-                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">선 삭제하기</h3>
-                  <p className="text-black text-base mt-3">선을 가로질러 드래그해 선을 삭제하세요.</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">{t.home.tutorial.step2Title}</h3>
+                  <p className="text-black text-base mt-3">{t.home.tutorial.step2Desc}</p>
                 </div>
 
                 {/* 시뮬레이션 영역 */}
@@ -1067,8 +1071,8 @@ function HomePage() {
                 {/* 튜토리얼 내용 - 중앙 정렬 */}
                 <div className="text-center max-w-[170px] mx-auto">
                   <p className="text-[#727272] font-bold text-sm">Step 3</p>
-                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">별 이동하기</h3>
-                  <p className="text-black text-base mt-3">별을 길게 눌러 위치를 이동하세요.</p>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">{t.home.tutorial.step3Title}</h3>
+                  <p className="text-black text-base mt-3">{t.home.tutorial.step3Desc}</p>
                 </div>
 
                 {/* 시뮬레이션 영역 */}
@@ -1248,7 +1252,7 @@ function HomePage() {
                 {/* 튜토리얼 내용 - 중앙 정렬 */}
                 <div className="text-center">
                   <p className="text-[#727272] font-bold text-sm">Step 4</p>
-                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">저장하기</h3>
+                  <h3 className="text-[#6155F5] font-bold text-lg mt-3">{t.home.tutorial.step4Title}</h3>
                 </div>
 
                 {/* 저장 옵션들 */}
@@ -1256,9 +1260,9 @@ function HomePage() {
                   {/* 저장 버튼 */}
                   <div className="flex flex-col items-center">
                     <div className="px-6 py-2 bg-[#6155F5] text-white text-sm font-bold rounded-full">
-                      저장
+                      {t.home.tutorial.step4Save}
                     </div>
-                    <p className="text-black text-sm mt-2">내 <span className="font-bold">밤하늘 꾸미기</span> 저장</p>
+                    <p className="text-black text-sm mt-2">{t.home.tutorial.step4SaveDesc}</p>
                   </div>
 
                   {/* 이미지 캡쳐 */}
@@ -1272,7 +1276,7 @@ function HomePage() {
                         <circle cx="12" cy="12" r="3" strokeWidth="2" />
                       </svg>
                     </div>
-                    <p className="text-black text-sm mt-2">사진을 <span className="font-bold">갤러리에 저장</span></p>
+                    <p className="text-black text-sm mt-2">{t.home.tutorial.step4Capture}</p>
                   </div>
 
                   {/* 링크 복사 */}
@@ -1282,7 +1286,7 @@ function HomePage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                       </svg>
                     </div>
-                    <p className="text-black text-sm mt-2">내 <span className="font-bold">밤하늘 링크</span> 복사</p>
+                    <p className="text-black text-sm mt-2">{t.home.tutorial.step4Link}</p>
                   </div>
                 </div>
               </>

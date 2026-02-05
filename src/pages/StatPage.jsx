@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 function StatPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [nickname, setNickname] = useState('User1');
   const [starCount, setStarCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -69,7 +73,7 @@ function StatPage() {
               <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              <span className="text-white font-bold text-2xl">{nickname} 님의 대표별</span>
+              <span className="text-white font-bold text-2xl">{nickname}{t.stat.title}</span>
             </div>
           </div>
         </nav>
@@ -80,10 +84,10 @@ function StatPage() {
             {/* 질문 텍스트 */}
             <div className="mb-6">
               <h1 className="text-white text-2xl font-bold leading-relaxed">
-                {nickname} 님은
+                {nickname}{language === 'ko' ? ' 님은' : ''}
               </h1>
               <h2 className="text-white text-2xl font-bold">
-                어떤 별일까요?
+                {t.stat.whatStar}
               </h2>
             </div>
 
@@ -241,8 +245,8 @@ function StatPage() {
 
             {/* 참여자 수 */}
             <p className="text-white/80 text-sm mb-8">
-              {starCount}명이 모여 {nickname}님의 별을<br />
-              만들고있어요!
+              {starCount}{t.stat.participants}<br />
+              {t.stat.makingStar}{nickname}{t.stat.makingStar2}
             </p>
 
             {/* 질문별 통계보기 버튼 */}
@@ -250,7 +254,7 @@ function StatPage() {
               onClick={() => navigate('/stat/detail')}
               className="w-[300px] py-3 text-base rounded-full font-semibold bg-[#6155F5] text-white hover:bg-[#5044d4] transition-colors"
             >
-              질문별 통계보기
+              {t.stat.viewStats}
             </button>
           </div>
         </div>

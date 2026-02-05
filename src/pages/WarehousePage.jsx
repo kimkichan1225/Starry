@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 // 별 생성을 위한 설정
 const palette = [
@@ -116,7 +118,7 @@ function SkySlot({ star }) {
 }
 
 // 하단 별 카드 컴포넌트
-function StarCard({ star, index, isSelected, onClick }) {
+function StarCard({ star, index, isSelected, onClick, t }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -139,7 +141,7 @@ function StarCard({ star, index, isSelected, onClick }) {
         <canvas ref={canvasRef} width={70} height={70} />
       </div>
       <div className="text-white/60 text-[10px] text-center truncate">
-        from. {star.surveyor_name}
+        {t.stars.starFrom} {star.surveyor_name}
       </div>
     </div>
   );
@@ -148,6 +150,8 @@ function StarCard({ star, index, isSelected, onClick }) {
 function WarehousePage() {
   const navigate = useNavigate();
   const { user, nickname } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const { stars, skyStars, warehouseStars, maxSkySlots, refreshStars } = useStars();
 
   // 선택된 별들 (밤하늘에 추가할 별들의 id)
@@ -173,7 +177,7 @@ function WarehousePage() {
     } else {
       // 선택되지 않음 → 선택 (밤하늘에 추가)
       if (localSkyStars.length >= maxSkySlots) {
-        alert(`밤하늘에는 최대 ${maxSkySlots}개의 별만 등록할 수 있습니다.`);
+        alert(`${t.warehouse.maxStarsAlert} ${maxSkySlots} ${t.warehouse.maxStarsAlert2}`);
         return;
       }
       newSelected.add(star.id);
@@ -239,7 +243,7 @@ function WarehousePage() {
       navigate('/home', { state: { editMode: true } });
     } catch (error) {
       console.error('저장 실패:', error);
-      alert('저장에 실패했습니다.');
+      alert(t.warehouse.saveFailed);
     } finally {
       setSaving(false);
     }
@@ -268,7 +272,7 @@ function WarehousePage() {
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              {nickname && <span className="text-white font-bold text-2xl">{nickname} 님의 밤하늘</span>}
+              {nickname && <span className="text-white font-bold text-2xl">{nickname}{t.home.title}</span>}
             </div>
           </div>
         </nav>
@@ -306,6 +310,7 @@ function WarehousePage() {
                 index={index}
                 isSelected={selectedStarIds.has(star.id)}
                 onClick={handleStarClick}
+                t={t}
               />
             ))}
 
@@ -313,10 +318,10 @@ function WarehousePage() {
             <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer hover:bg-white/10">
               <div className="text-white text-4xl mb-1">+</div>
               <div className="text-white text-xs text-center px-2">
-                링크 공유하고
+                {t.stars.shareAndGet}
               </div>
               <div className="text-white text-xs text-center px-2">
-                별 선물받기
+                {t.stars.getStar}
               </div>
             </div>
           </div>
@@ -332,7 +337,7 @@ function WarehousePage() {
                   : 'bg-[#6155F5] text-white hover:bg-[#5044d4]'
               }`}
             >
-              {saving ? '저장 중...' : '저장'}
+              {saving ? t.home.saving : t.common.save}
             </button>
           </div>
         </div>

@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 // 별 생성을 위한 설정
 const palette = [
@@ -156,7 +158,7 @@ const drawStarOnCanvas = (canvas, star) => {
 };
 
 // 별 카드 컴포넌트
-function StarCard({ star, index, onClick }) {
+function StarCard({ star, index, onClick, t }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -186,7 +188,7 @@ function StarCard({ star, index, onClick }) {
       )}
       {star && (
         <div className="text-white/60 text-[10px] text-center truncate">
-          from. {star.surveyor_name}
+          {t.stars.starFrom} {star.surveyor_name}
         </div>
       )}
     </div>
@@ -194,7 +196,7 @@ function StarCard({ star, index, onClick }) {
 }
 
 // 별 상세 모달 컴포넌트
-function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, nickname }) {
+function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, nickname, t, language }) {
   const canvasRef = useRef(null);
   const answersCanvasRef = useRef(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -239,13 +241,22 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
     }
   };
 
-  // 답변에서 선택된 옵션 찾기
+  // 답변에서 선택된 옵션 찾기 (원본 질문에서 이모지 가져오기)
   const getSelectedOption = (questionId) => {
     if (!star.answers) return null;
     const answerId = star.answers[questionId];
     const question = questions.find(q => q.id === questionId);
     if (!question) return null;
     return question.options.find(opt => opt.id === answerId);
+  };
+
+  // 번역된 질문과 옵션 가져오기
+  const getTranslatedQuestion = (questionIndex) => {
+    return t.survey.questions[questionIndex];
+  };
+
+  const getTranslatedOption = (questionIndex, optionIndex) => {
+    return t.survey.questions[questionIndex].options[optionIndex];
   };
 
   // 전체 답변 보기 화면
@@ -271,7 +282,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
                 <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <span className="text-white font-bold text-xl">{nickname} 님의 밤하늘</span>
+                <span className="text-white font-bold text-xl">{nickname}{t.stars.nightSky}</span>
               </div>
             </div>
           </nav>
@@ -325,19 +336,22 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
           {/* 질문과 답변 목록 */}
           <div className="flex-1 overflow-y-auto px-6 pb-32">
             <div className="max-w-[340px] mx-auto space-y-4">
-              {questions.map((question) => {
+              {questions.map((question, qIndex) => {
                 const selectedOption = getSelectedOption(question.id);
+                const translatedQuestion = getTranslatedQuestion(qIndex);
+                const optionIndex = selectedOption ? question.options.findIndex(opt => opt.id === selectedOption.id) : -1;
+                const translatedOption = optionIndex >= 0 ? getTranslatedOption(qIndex, optionIndex) : null;
                 return (
                   <div key={question.id} className="text-center">
                     <p className="text-white text-sm mb-2">
-                      {question.questionLine1(nickname)}<br />
-                      {question.questionLine2}
+                      {translatedQuestion.questionLine1(nickname)}<br />
+                      {translatedQuestion.questionLine2}
                     </p>
-                    {selectedOption && (
+                    {selectedOption && translatedOption && (
                       <div className="bg-white rounded-full px-4 py-2 inline-block">
                         <span className="text-base mr-1">{selectedOption.emoji}</span>
-                        <span className="text-[#6155F5] font-bold">{selectedOption.label}</span>
-                        <span className="text-black ml-1">{selectedOption.description}</span>
+                        <span className="text-[#6155F5] font-bold">{translatedOption.label}</span>
+                        <span className="text-black ml-1">{translatedOption.description}</span>
                       </div>
                     )}
                   </div>
@@ -368,7 +382,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
           {/* 왼쪽: 번호와 이름 */}
           <div>
             <div className="text-[#6155F5] text-sm font-bold mt-1">no.{index + 1}</div>
-            <div className="text-[#6155F5] text-base mt-1"><span className="font-bold">{star.surveyor_name}</span>님이 보낸 별</div>
+            <div className="text-[#6155F5] text-base mt-1"><span className="font-bold">{star.surveyor_name}</span>{t.stars.sentStar}</div>
           </div>
 
           {/* 오른쪽: 닫기, 삭제 버튼 */}
@@ -408,7 +422,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
           onClick={() => setShowAnswers(true)}
           className="w-full py-2 bg-[#6155F5] text-white text-lg rounded-full hover:bg-[#5044d4] transition"
         >
-          전체 답변 보기
+          {t.stars.viewAllAnswers}
         </button>
 
         {/* 삭제 확인 오버레이 */}
@@ -419,7 +433,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
               {/* 왼쪽: 번호와 이름 */}
               <div>
                 <div className="text-[#C5C5C5] text-sm font-bold mt-1">no.{index + 1}</div>
-                <div className="text-[#C5C5C5] text-base mt-1"><span className="font-bold">{star.surveyor_name}</span>님이 보낸 별</div>
+                <div className="text-[#C5C5C5] text-base mt-1"><span className="font-bold">{star.surveyor_name}</span>{t.stars.sentStar}</div>
               </div>
 
               {/* 오른쪽: 닫기 버튼 */}
@@ -436,10 +450,10 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
             {/* 확인 메시지 */}
             <div className="flex-1 flex flex-col items-center justify-center">
               <p className="text-[#6155F5] text-center font-bold mb-6">
-                한 번 삭제한 별은<br />복구할 수 없습니다.
+                {t.stars.deleteWarning}<br />{t.stars.deleteWarning2}
               </p>
               <p className="text-[#6155F5] text-center font-medium mb-6">
-                정말 삭제하시겠습니까?
+                {t.stars.deleteConfirm}
               </p>
             </div>
 
@@ -448,13 +462,13 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
                 onClick={handleCancelDelete}
                 className="flex-1 py-2 border-2 border-gray-300 bg-[#C5C5C5] text-[#727272] rounded-full hover:bg-gray-100 transition"
               >
-                취소
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="flex-1 py-2 bg-[#6155F5] text-white rounded-full hover:bg-[#5044d4] transition"
               >
-                삭제
+                {t.stars.delete}
               </button>
             </div>
           </div>
@@ -467,6 +481,8 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
 function StarsPage() {
   const { user, nickname } = useAuth();
   const { stars, loading, deleteStar } = useStars();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [selectedStar, setSelectedStar] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const maxStars = 20;
@@ -497,7 +513,7 @@ function StarsPage() {
     if (success) {
       handleCloseModal();
     } else {
-      alert('별 삭제에 실패했습니다.');
+      alert(t.stars.deleteFailed);
     }
   };
 
@@ -528,7 +544,7 @@ function StarsPage() {
               <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              {nickname && <span className="text-white font-bold text-2xl">{nickname} 님의 별 보관소</span>}
+              {nickname && <span className="text-white font-bold text-2xl">{nickname}{t.stars.title}</span>}
             </div>
           </div>
         </nav>
@@ -537,14 +553,14 @@ function StarsPage() {
         <div className="flex-1 px-6 pb-8">
           {/* 별 개수 표시 */}
           <div className="text-center mb-6">
-            <span className="text-white text-lg">{stars.length}개의 별을 선물 받았어요!</span>
+            <span className="text-white text-lg">{stars.length}{t.stars.receivedStars}</span>
           </div>
 
           {/* 카드 그리드 */}
           <div className="grid grid-cols-3 gap-3 max-w-[340px] mx-auto mb-6">
             {/* 받은 모든 별 카드들 */}
             {stars.map((star, index) => (
-              <StarCard key={star.id} star={star} index={index} onClick={handleStarClick} />
+              <StarCard key={star.id} star={star} index={index} onClick={handleStarClick} t={t} />
             ))}
 
             {/* 빈 슬롯들 */}
@@ -563,10 +579,10 @@ function StarsPage() {
             <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer hover:bg-white/10">
               <div className="text-white text-4xl mb-1">+</div>
               <div className="text-white text-xs text-center px-2">
-                링크 공유하고
+                {t.stars.shareAndGet}
               </div>
               <div className="text-white text-xs text-center px-2">
-                별 선물받기
+                {t.stars.getStar}
               </div>
             </div>
           </div>
@@ -582,16 +598,16 @@ function StarsPage() {
               <div className="h-6 w-px bg-white/40 -translate-y-[18px]"></div>
               <div className="text-left space-y-1">
                 <div className="text-[9px] leading-snug">
-                  광고 문의: 123456789@gmail.com <br />
-                  기타 문의: 987654321@gmail.com <br />
-                  Copyright ©2025 123456789. All rights reserved.
+                  {t.footer.adInquiry}: 123456789@gmail.com <br />
+                  {t.footer.otherInquiry}: 987654321@gmail.com <br />
+                  {t.footer.copyright}
                 </div>
                 {/* 개발자/디자이너 정보 */}
                 <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-white">개발자</span>
+                  <span className="font-semibold text-white">{t.footer.developer}</span>
                   <span>김기찬</span>
                   <span className="text-white/40">·</span>
-                  <span className="font-semibold text-white">디자이너</span>
+                  <span className="font-semibold text-white">{t.footer.designer}</span>
                   <span>김태희</span>
                 </div>
               </div>
@@ -613,6 +629,8 @@ function StarsPage() {
           stars={stars}
           onNavigate={handleNavigate}
           nickname={nickname}
+          t={t}
+          language={language}
         />
       )}
     </div>

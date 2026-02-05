@@ -152,6 +152,96 @@ export const translations = {
       developer: '개발자',
       designer: '디자이너',
     },
+
+    // Starry 페이지 (소개)
+    starry: {
+      title: 'Starry의 이야기',
+      section1Title: '모두는 하나의 별',
+      section1Text: '모든 사람은 저마다의 개성을 가진 별이라고 생각했어요. 각자의 빛은 다르지만 모두 소중하니까요.',
+      section2Title: '관계가 그려지는 별자리',
+      section2Text: '사람 사이의 마음과 관계를 어둠속에 두고 싶지 않았어요. 그래서 별을 주고 받고, 그 별과 별을 이어, 감정을 별자리로 시각화하는 서비스를 개발했어요.',
+      devHistory: '서비스 개발 히스토리',
+      notice: '공지사항',
+      viewAll: '전체보기',
+      noNotice: '공지사항이 없습니다.',
+      tableNo: '번호',
+      tableTitle: '제목',
+      tableDate: '작성일',
+      important: '중요',
+    },
+
+    // Stars 페이지 (별 보관소)
+    stars: {
+      title: '님의 별 보관소',
+      receivedStars: '개의 별을 선물 받았어요!',
+      starFrom: 'from.',
+      sentStar: '님이 보낸 별',
+      viewAllAnswers: '전체 답변 보기',
+      deleteWarning: '한 번 삭제한 별은',
+      deleteWarning2: '복구할 수 없습니다.',
+      deleteConfirm: '정말 삭제하시겠습니까?',
+      delete: '삭제',
+      deleteFailed: '별 삭제에 실패했습니다.',
+      shareAndGet: '링크 공유하고',
+      getStar: '별 선물받기',
+      nightSky: '님의 밤하늘',
+    },
+
+    // Home 페이지 (밤하늘)
+    home: {
+      title: '님의 밤하늘',
+      loginRequired: '로그인이 필요합니다.',
+      linkCopied: '링크가 복사되었습니다!',
+      imageSaved: '이미지가 저장되었습니다!',
+      imageSaveFailed: '이미지 저장에 실패했습니다.',
+      saving: '저장 중...',
+      constellationName: 'ABCD한 EFGE자리',
+      constellationImage: '별자리 커스텀 이미지',
+      goodMatch: '궁합 좋은',
+      badMatch: '궁합 안 좋은',
+      constellation: '별자리',
+      aiRename: 'AI 별자리 이름 바꾸기',
+      tutorial: {
+        step1Title: '별 잇기',
+        step1Desc: '별과 별을 드래그해 선을 이으세요.',
+        step2Title: '선 삭제하기',
+        step2Desc: '선을 가로질러 드래그해 선을 삭제하세요.',
+        step3Title: '별 이동하기',
+        step3Desc: '별을 길게 눌러 위치를 이동하세요.',
+        step4Title: '저장하기',
+        step4Save: '저장',
+        step4SaveDesc: '내 밤하늘 꾸미기 저장',
+        step4Capture: '사진을 갤러리에 저장',
+        step4Link: '내 밤하늘 링크 복사',
+      },
+    },
+
+    // Stat 페이지 (통계)
+    stat: {
+      title: '님의 대표별',
+      whatStar: '어떤 별일까요?',
+      participants: '명이 모여',
+      makingStar: '님의 별을',
+      makingStar2: '만들고있어요!',
+      viewStats: '질문별 통계보기',
+    },
+
+    // Warehouse 페이지 (별 보관함)
+    warehouse: {
+      title: '별 보관함',
+      moveToSky: '밤하늘로 보내기',
+      emptyWarehouse: '보관함이 비어있어요',
+      noStarsInWarehouse: '아직 보관함에 별이 없습니다.',
+      maxStarsAlert: '밤하늘에는 최대',
+      maxStarsAlert2: '개의 별만 등록할 수 있습니다.',
+      saveFailed: '저장에 실패했습니다.',
+    },
+
+    // Notice 페이지
+    notice: {
+      title: '공지사항',
+      noNotices: '공지사항이 없습니다.',
+    },
   },
 
   en: {
@@ -306,6 +396,96 @@ export const translations = {
       copyright: 'Copyright ©2025 123456789. All rights reserved.',
       developer: 'Developer',
       designer: 'Designer',
+    },
+
+    // Starry Page (About)
+    starry: {
+      title: "Starry's Story",
+      section1Title: 'Everyone is a Star',
+      section1Text: 'We believe everyone is a unique star with their own personality. Each shines differently, but all are precious.',
+      section2Title: 'Constellations of Relationships',
+      section2Text: "We didn't want to leave people's hearts and relationships in the dark. So we created a service to exchange stars, connect them, and visualize emotions as constellations.",
+      devHistory: 'Development History',
+      notice: 'Notices',
+      viewAll: 'View All',
+      noNotice: 'No notices available.',
+      tableNo: 'No.',
+      tableTitle: 'Title',
+      tableDate: 'Date',
+      important: 'Important',
+    },
+
+    // Stars Page (Star Collection)
+    stars: {
+      title: "'s Star Collection",
+      receivedStars: ' stars received!',
+      starFrom: 'from.',
+      sentStar: ' sent this star',
+      viewAllAnswers: 'View All Answers',
+      deleteWarning: 'Once deleted,',
+      deleteWarning2: 'stars cannot be recovered.',
+      deleteConfirm: 'Are you sure you want to delete?',
+      delete: 'Delete',
+      deleteFailed: 'Failed to delete star.',
+      shareAndGet: 'Share link and',
+      getStar: 'receive stars',
+      nightSky: "'s Night Sky",
+    },
+
+    // Home Page (Night Sky)
+    home: {
+      title: "'s Night Sky",
+      loginRequired: 'Login required.',
+      linkCopied: 'Link copied!',
+      imageSaved: 'Image saved!',
+      imageSaveFailed: 'Failed to save image.',
+      saving: 'Saving...',
+      constellationName: 'My Constellation',
+      constellationImage: 'Custom constellation image',
+      goodMatch: 'Good match',
+      badMatch: 'Bad match',
+      constellation: 'Constellation',
+      aiRename: 'AI Rename Constellation',
+      tutorial: {
+        step1Title: 'Connect Stars',
+        step1Desc: 'Drag between stars to draw lines.',
+        step2Title: 'Delete Lines',
+        step2Desc: 'Drag across a line to delete it.',
+        step3Title: 'Move Stars',
+        step3Desc: 'Long press a star to move it.',
+        step4Title: 'Save',
+        step4Save: 'Save',
+        step4SaveDesc: 'Save my night sky design',
+        step4Capture: 'Save photo to gallery',
+        step4Link: 'Copy my night sky link',
+      },
+    },
+
+    // Stat Page (Statistics)
+    stat: {
+      title: "'s Star Profile",
+      whatStar: 'What kind of star are you?',
+      participants: ' people are helping',
+      makingStar: 'create ',
+      makingStar2: "'s star!",
+      viewStats: 'View Statistics',
+    },
+
+    // Warehouse Page
+    warehouse: {
+      title: 'Star Warehouse',
+      moveToSky: 'Move to Night Sky',
+      emptyWarehouse: 'Warehouse is empty',
+      noStarsInWarehouse: 'No stars in warehouse yet.',
+      maxStarsAlert: 'You can only add up to',
+      maxStarsAlert2: 'stars to your night sky.',
+      saveFailed: 'Failed to save.',
+    },
+
+    // Notice Page
+    notice: {
+      title: 'Notices',
+      noNotices: 'No notices available.',
     },
   },
 };
