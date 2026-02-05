@@ -177,58 +177,66 @@ function StatPage() {
                 />
               </svg>
 
-              {/* 공전하는 원들 - SVG animateMotion 사용 */}
-              <svg
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                width="280"
-                height="280"
-                viewBox="0 0 280 280"
-                style={{ zIndex: 30 }}
+              {/* 공전하는 원들 - 캐릭터 뒤 */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px]" style={{ zIndex: 5 }}>
+                {/* \ 궤도 원들 (30도 회전된 컨테이너) */}
+                <div className="absolute inset-0" style={{ transform: 'rotate(30deg)' }}>
+                  <img src="/StatCircle.png" alt="" className="orbit-path orbit-1" />
+                  <img src="/StatCircle.png" alt="" className="orbit-path orbit-3" />
+                </div>
+                {/* 가로 궤도 원 */}
+                <img src="/StatCircle.png" alt="" className="orbit-path orbit-2" />
+              </div>
+
+              {/* 공전하는 원들 - 캐릭터 앞: \ 궤도 (30도 회전된 클리핑) */}
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px]"
+                style={{ zIndex: 30, clipPath: 'polygon(0% 35%, 100% 65%, 100% 100%, 0% 100%)' }}
               >
-                <defs>
-                  {/* 수평 타원 경로 */}
-                  <path
-                    id="orbitPath"
-                    d="M 10,140 a 130,35 0 1,0 260,0 a 130,35 0 1,0 -260,0"
-                    fill="none"
-                  />
-                </defs>
+                <div className="absolute inset-0" style={{ transform: 'rotate(30deg)' }}>
+                  <img src="/StatCircle.png" alt="" className="orbit-path orbit-1" />
+                  <img src="/StatCircle.png" alt="" className="orbit-path orbit-3" />
+                </div>
+              </div>
 
-                {/* 공전하는 원 1 - \ 궤도 (그룹 전체를 30도 회전) */}
-                <g transform="rotate(30 140 140)">
-                  <image
-                    href="/StatCircle.png"
-                    width="12"
-                    height="12"
-                    x="-6"
-                    y="-6"
-                  >
-                    <animateMotion
-                      dur="6s"
-                      repeatCount="indefinite"
-                    >
-                      <mpath href="#orbitPath" />
-                    </animateMotion>
-                  </image>
-                </g>
+              {/* 공전하는 원들 - 캐릭터 앞: 가로 궤도 */}
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px]"
+                style={{ zIndex: 30, clipPath: 'inset(50% 0 0 0)' }}
+              >
+                <img src="/StatCircle.png" alt="" className="orbit-path orbit-2" />
+              </div>
 
-                {/* 공전하는 원 2 - 가로 궤도 */}
-                <image
-                  href="/StatCircle.png"
-                  width="12"
-                  height="12"
-                  x="-6"
-                  y="-6"
-                >
-                  <animateMotion
-                    dur="8s"
-                    repeatCount="indefinite"
-                    begin="-4s"
-                  >
-                    <mpath href="#orbitPath" />
-                  </animateMotion>
-                </image>
-              </svg>
+              {/* CSS offset-path 애니메이션 */}
+              <style>{`
+                .orbit-path {
+                  position: absolute;
+                  offset-rotate: 0deg;
+                  offset-path: path('M 10,140 a 130,35 0 1,0 260,0 a 130,35 0 1,0 -260,0');
+                }
+                .orbit-1 {
+                  width: 16px;
+                  height: 16px;
+                  animation: movePath 12s linear infinite;
+                  animation-delay: -4s;
+                }
+                .orbit-3 {
+                  width: 10px;
+                  height: 10px;
+                  animation: movePath 9s linear infinite;
+                  animation-delay: -6s;
+                }
+                .orbit-2 {
+                  width: 16px;
+                  height: 16px;
+                  animation: movePath 16s linear infinite;
+                  animation-delay: -8s;
+                }
+                @keyframes movePath {
+                  0% { offset-distance: 0%; }
+                  100% { offset-distance: 100%; }
+                }
+              `}</style>
             </div>
 
             {/* 참여자 수 */}
