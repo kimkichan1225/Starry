@@ -1,14 +1,34 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import { supabase } from '../lib/supabase';
 
 function StarryPage() {
   const navigate = useNavigate();
-  // 임시 공지사항 데이터
-  const notices = [
-    { id: 1, category: '중요', title: '개인정보 수집 및 이용 안내', date: '25.12.25' },
-    { id: 2, category: '1', title: 'STARRY(스타리) 이용 안내', date: '25.12.25' },
-    { id: 3, category: '2', title: 'SNS 이벤트 당첨자 발표', date: '25.12.25' },
-  ];
+  const [notices, setNotices] = useState([]);
+
+  useEffect(() => {
+    fetchNotices();
+  }, []);
+
+  const fetchNotices = async () => {
+    const { data } = await supabase
+      .from('notices')
+      .select('id, title, category, created_at')
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    setNotices(data || []);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const year = String(date.getFullYear()).slice(2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#030025]">
@@ -99,23 +119,27 @@ function StarryPage() {
 
                 {/* 테이블 바디 */}
                 <div>
-                  {notices.map((notice, index) => (
-                    <div key={notice.id}>
-                      <div
-                        onClick={() => navigate(`/notice/${notice.id}`)}
-                        className="grid grid-cols-[50px_1fr_70px] gap-2 px-4 py-2 text-white hover:bg-[#252547] transition cursor-pointer"
-                      >
-                        <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category}</div>
-                        <div className="truncate text-center text-xs">{notice.title}</div>
-                        <div className="text-gray-400 text-xs text-center">{notice.date}</div>
-                      </div>
-                      {index === 0 && (
-                        <div className="flex justify-center">
-                          <div className="w-[85%] h-px bg-[#FBFBFB]/50"></div>
+                  {notices.length === 0 ? (
+                    <div className="text-center text-white/50 py-4 text-xs">공지사항이 없습니다.</div>
+                  ) : (
+                    notices.map((notice, index) => (
+                      <div key={notice.id}>
+                        <div
+                          onClick={() => navigate(`/notice/${notice.id}`)}
+                          className="grid grid-cols-[50px_1fr_70px] gap-2 px-4 py-2 text-white hover:bg-[#252547] transition cursor-pointer"
+                        >
+                          <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category === '중요' ? '중요' : index + 1}</div>
+                          <div className="truncate text-center text-xs">{notice.title}</div>
+                          <div className="text-gray-400 text-xs text-center">{formatDate(notice.created_at)}</div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {index === 0 && (
+                          <div className="flex justify-center">
+                            <div className="w-[85%] h-px bg-[#FBFBFB]/50"></div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

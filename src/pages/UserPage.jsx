@@ -3,9 +3,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 function UserPage() {
   const { user, nickname, setNickname } = useAuth();
+  const { language, setLanguage } = useLanguage();
+  const t = translations[language];
 
   // linkIdentity 후 리다이렉트로 돌아왔을 때 google_linked 플래그 설정
   useEffect(() => {
@@ -76,7 +80,7 @@ function UserPage() {
       });
       if (error) throw error;
     } catch (error) {
-      setError(error.message || '구글 연동에 실패했습니다.');
+      setError(error.message || t.user.googleLinkFailed);
       setSocialLoading(false);
     }
   };
@@ -84,17 +88,17 @@ function UserPage() {
   // 구글 연동 해제
   const handleUnlinkGoogle = async () => {
     if (isGoogleSignup) {
-      setError('구글로 가입한 계정은 연동을 해제할 수 없습니다.');
+      setError(t.user.googleCannotUnlink);
       setTimeout(() => setError(''), 3000);
       return;
     }
 
     if (!googleIdentity?.identity_id) {
-      setError('연동 정보를 찾을 수 없습니다.');
+      setError(t.user.linkInfoNotFound);
       return;
     }
 
-    const confirmed = window.confirm('구글 연동을 해제하시겠습니까?');
+    const confirmed = window.confirm(t.user.unlinkConfirm);
     if (!confirmed) return;
 
     setSocialLoading(true);
@@ -102,12 +106,12 @@ function UserPage() {
     try {
       const { error } = await supabase.auth.unlinkIdentity(googleIdentity);
       if (error) throw error;
-      setSuccessMessage('구글 연동이 해제되었습니다.');
+      setSuccessMessage(t.user.googleUnlinked);
       setTimeout(() => setSuccessMessage(''), 2000);
       // 페이지 새로고침하여 상태 업데이트
       window.location.reload();
     } catch (error) {
-      setError(error.message || '구글 연동 해제에 실패했습니다.');
+      setError(error.message || t.user.googleUnlinkFailed);
     } finally {
       setSocialLoading(false);
     }
@@ -141,17 +145,17 @@ function UserPage() {
   // 닉네임 저장
   const handleSaveNickname = async () => {
     if (!newNickname.trim()) {
-      setError('닉네임을 입력해주세요.');
+      setError(t.user.enterNickname);
       return;
     }
 
     if (newNickname.trim().length < 2) {
-      setError('닉네임은 2자 이상이어야 합니다.');
+      setError(t.user.nicknameTooShort);
       return;
     }
 
     if (newNickname.trim().length > 10) {
-      setError('닉네임은 10자 이하여야 합니다.');
+      setError(t.user.nicknameTooLong);
       return;
     }
 
@@ -167,10 +171,10 @@ function UserPage() {
 
       setNickname(newNickname.trim());
       setIsEditingNickname(false);
-      setSuccessMessage('닉네임이 변경되었습니다.');
+      setSuccessMessage(t.user.nicknameChanged);
       setTimeout(() => setSuccessMessage(''), 2000);
     } catch (error) {
-      setError(error.message || '닉네임 변경에 실패했습니다.');
+      setError(error.message || t.user.nicknameChangeFailed);
     } finally {
       setNicknameLoading(false);
     }
@@ -179,17 +183,17 @@ function UserPage() {
   // 비밀번호 변경
   const handlePasswordChange = async () => {
     if (!newPassword || !confirmPassword) {
-      setError('새로운 비밀번호를 입력해주세요.');
+      setError(t.user.enterNewPassword);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('새로운 비밀번호가 일치하지 않습니다.');
+      setError(t.user.passwordMismatch);
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.');
+      setError(t.user.passwordTooShort);
       return;
     }
 
@@ -204,12 +208,12 @@ function UserPage() {
 
       if (error) throw error;
 
-      setSuccessMessage('비밀번호가 성공적으로 변경되었습니다.');
+      setSuccessMessage(t.user.passwordChanged);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      setError(error.message || '비밀번호 변경에 실패했습니다.');
+      setError(error.message || t.user.passwordChangeFailed);
     } finally {
       setLoading(false);
     }
@@ -221,7 +225,7 @@ function UserPage() {
   // QR코드 링크 복사
   const handleCopyLink = () => {
     navigator.clipboard.writeText(surveyLink);
-    setSuccessMessage('링크가 복사되었습니다.');
+    setSuccessMessage(t.common.linkCopied);
     setTimeout(() => setSuccessMessage(''), 2000);
   };
 
@@ -246,7 +250,7 @@ function UserPage() {
               <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              {nickname && <span className="text-white font-bold text-2xl">{nickname} 님의 개인설정</span>}
+              {nickname && <span className="text-white font-bold text-2xl">{nickname}{t.user.personalSettings}</span>}
             </div>
           </div>
         </nav>
@@ -268,7 +272,7 @@ function UserPage() {
 
             {/* 아이디 */}
             <div className="flex items-center mt-4">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12">아이디</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12">{t.user.userId}</label>
               <div className="flex-1 px-4 py-3 text-white text-base">
                 {user?.email || 'User1'}
               </div>
@@ -276,7 +280,7 @@ function UserPage() {
 
             {/* 닉네임 */}
             <div className="flex items-center">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12">닉네임</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12">{t.user.nickname}</label>
               <div className="flex-1 flex items-center gap-2">
                 {isEditingNickname ? (
                   <>
@@ -326,7 +330,7 @@ function UserPage() {
 
             {/* 전화번호 */}
             <div className="flex items-center mt-2">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12">전화번호</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12">{t.user.phone}</label>
               <div className="flex-1 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
                 {user?.user_metadata?.phone || '010-xxxx-xxxx'}
               </div>
@@ -334,25 +338,25 @@ function UserPage() {
 
             {/* 비밀번호 변경 */}
             <div className="mt-4">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">비밀번호</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">{t.user.password}</label>
               <div className="ml-12 space-y-2 max-w-[240px]">
                 <input
                   type="password"
-                  placeholder="현재 비밀번호"
+                  placeholder={t.user.currentPassword}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                 />
                 <input
                   type="password"
-                  placeholder="새로운 비밀번호"
+                  placeholder={t.user.newPassword}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                 />
                 <input
                   type="password"
-                  placeholder="새로운 비밀번호 확인"
+                  placeholder={t.user.confirmPassword}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-purple-600"
@@ -363,7 +367,7 @@ function UserPage() {
                     disabled={loading}
                     className="px-6 py-2 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    {loading ? '변경중...' : '변경'}
+                    {loading ? t.common.changing : t.common.change}
                   </button>
                 </div>
               </div>
@@ -371,7 +375,7 @@ function UserPage() {
 
             {/* 소셜 계정 연동 관리 */}
             <div className="mt-6">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">소셜 계정 연동 관리</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">{t.user.socialAccount}</label>
               <div className="ml-12 space-y-3 max-w-[260px]">
                 {/* 구글 */}
                 <div className="flex items-center gap-3">
@@ -384,7 +388,7 @@ function UserPage() {
                     </svg>
                   </div>
                   <span className="flex-1 text-white text-sm truncate">
-                    {isGoogleLinked ? (googleEmail || user?.email) : '연동안됨'}
+                    {isGoogleLinked ? (googleEmail || user?.email) : t.user.notLinked}
                   </span>
                   {!isGoogleSignup && (
                     <button
@@ -410,7 +414,7 @@ function UserPage() {
                       <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
                     </svg>
                   </div>
-                  <span className="flex-1 text-white text-sm">준비중</span>
+                  <span className="flex-1 text-white text-sm">{t.user.preparing}</span>
                   <button
                     disabled
                     className="w-12 h-6 rounded-full bg-gray-500 relative cursor-not-allowed"
@@ -423,18 +427,22 @@ function UserPage() {
 
             {/* 언어설정 */}
             <div className="mt-6">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">언어설정</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">{t.user.languageSetting}</label>
               <div className="ml-12 max-w-[240px]">
-                <select className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#6155F5]">
-                  <option value="ko" className="bg-gray-800">한국어</option>
-                  <option value="en" className="bg-gray-800">English</option>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#6155F5]"
+                >
+                  <option value="ko" className="bg-gray-800">{t.common.korean}</option>
+                  <option value="en" className="bg-gray-800">{t.common.english}</option>
                 </select>
               </div>
             </div>
 
             {/* 내 밤하늘 QR코드 */}
             <div className="mt-6">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">내 밤하늘 QR코드</label>
+              <label className="text-white text-base font-bold whitespace-nowrap ml-12 block mb-3">{t.user.myQRCode}</label>
               <div className="ml-12 max-w-[240px]">
                 <div className="bg-white rounded-2xl p-6 flex flex-col items-center">
                   <div className="w-40 h-40 flex items-center justify-center mb-4">
@@ -446,14 +454,14 @@ function UserPage() {
                         includeMargin={false}
                       />
                     ) : (
-                      <span className="text-gray-500 text-sm">로그인 필요</span>
+                      <span className="text-gray-500 text-sm">{t.user.loginRequired}</span>
                     )}
                   </div>
                   <button
                     onClick={handleCopyLink}
                     className="w-full py-3 bg-[#6155F5] text-white font-medium rounded-full hover:bg-[#5044d4] transition"
                   >
-                    링크 복사하기
+                    {t.common.copyLink}
                   </button>
                 </div>
               </div>

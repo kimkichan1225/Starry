@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { StarsProvider } from './contexts/StarsContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import LoadingPage from './pages/LoadingPage';
 import SignupPage from './pages/SignupPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
@@ -24,9 +25,10 @@ import WarehousePage from './pages/WarehousePage';
 
 function App() {
   return (
-    <AuthProvider>
-      <StarsProvider>
-        <Router>
+    <LanguageProvider>
+      <AuthProvider>
+        <StarsProvider>
+          <Router>
         <Routes>
           <Route path="/" element={<LoadingPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -59,9 +61,10 @@ function App() {
           {/* <Route path="/login" element={<LoginPage />} /> */}
           {/* <Route path="/u/:userId" element={<NightSkyPage />} /> */}
         </Routes>
-        </Router>
-      </StarsProvider>
-    </AuthProvider>
+          </Router>
+        </StarsProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

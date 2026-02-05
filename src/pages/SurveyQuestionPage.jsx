@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 // 별 생성을 위한 설정
 const palette = [
@@ -115,7 +117,9 @@ function SurveyQuestionPage() {
   const { userId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const surveyorName = location.state?.surveyorName || '익명';
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language];
+  const surveyorName = location.state?.surveyorName || (language === 'ko' ? '익명' : 'Anonymous');
 
   const [targetUserNickname, setTargetUserNickname] = useState('User1');
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -254,7 +258,7 @@ function SurveyQuestionPage() {
       setShowSent(true);
     } catch (error) {
       console.error('Error sending star:', error);
-      alert('별 전송에 실패했습니다. 다시 시도해주세요.');
+      alert(t.survey.sendFailed);
     } finally {
       setSending(false);
     }
@@ -476,7 +480,7 @@ function SurveyQuestionPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">로딩 중...</div>
+        <div className="text-white">{t.common.loading}</div>
       </div>
     );
   }
@@ -496,7 +500,7 @@ function SurveyQuestionPage() {
           {/* 상단 네비게이션 */}
           <nav className="px-6 py-5">
             <div className="max-w-[370px] mx-auto flex justify-between items-center relative">
-              <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <button onClick={toggleLanguage} className="flex items-center space-x-1 text-white/80 hover:text-white transition">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
                   <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
@@ -504,7 +508,7 @@ function SurveyQuestionPage() {
                   <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
                   <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
                 </svg>
-                <span className="text-sm font-light">English</span>
+                <span className="text-sm font-light">{language === 'ko' ? 'English' : '한국어'}</span>
               </button>
 
               <img
@@ -525,7 +529,7 @@ function SurveyQuestionPage() {
           <div className="flex-1 flex flex-col items-center px-6 pb-8">
             {/* 타이틀 */}
             <h1 className="text-white text-2xl font-bold mt-4 mb-6">
-              {targetUserNickname} 님의 밤하늘
+              {targetUserNickname}{t.survey.nightSky}
             </h1>
 
             {/* 별자리 캔버스 */}
@@ -543,7 +547,7 @@ function SurveyQuestionPage() {
               onClick={() => window.location.href = '/'}
               className="w-full max-w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors mt-6"
             >
-              내 밤하늘 만들기
+              {t.survey.createMyNightSky}
             </button>
           </div>
 
@@ -558,14 +562,14 @@ function SurveyQuestionPage() {
               <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
               <div className="text-left space-y-1">
                 <div className="text-[9px] leading-snug">
-                  광고 문의: 123456789@gmail.com <br />
-                  Copyright ©2025 123456789. All rights reserved.
+                  {t.footer.adInquiry}: 123456789@gmail.com <br />
+                  {t.footer.copyright}
                 </div>
                 <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-white">개발자</span>
+                  <span className="font-semibold text-white">{t.footer.developer}</span>
                   <span>김기찬</span>
                   <span className="text-white/40">·</span>
-                  <span className="font-semibold text-white">디자이너</span>
+                  <span className="font-semibold text-white">{t.footer.designer}</span>
                   <span>김태희</span>
                 </div>
               </div>
@@ -591,7 +595,7 @@ function SurveyQuestionPage() {
           {/* 상단 네비게이션 */}
           <nav className="px-6 py-5">
             <div className="max-w-[370px] mx-auto flex justify-between items-center relative">
-              <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <button onClick={toggleLanguage} className="flex items-center space-x-1 text-white/80 hover:text-white transition">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
                   <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
@@ -599,7 +603,7 @@ function SurveyQuestionPage() {
                   <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
                   <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
                 </svg>
-                <span className="text-sm font-light">English</span>
+                <span className="text-sm font-light">{language === 'ko' ? 'English' : '한국어'}</span>
               </button>
 
               <img
@@ -622,10 +626,14 @@ function SurveyQuestionPage() {
               {/* 완료 텍스트 */}
               <div className="mb-6">
                 <h1 className="text-white text-2xl font-bold leading-relaxed">
-                  {targetUserNickname} 님이 {surveyorName} 님이
+                  {language === 'ko'
+                    ? `${targetUserNickname} 님이 ${surveyorName} 님이`
+                    : `${targetUserNickname}${t.survey.receivedStar2}`}
                 </h1>
                 <h2 className="text-white text-2xl font-bold">
-                  선물한 별을 받았어요!
+                  {language === 'ko'
+                    ? '선물한 별을 받았어요!'
+                    : `${surveyorName}${t.survey.receivedStar3}`}
                 </h2>
               </div>
 
@@ -650,13 +658,13 @@ function SurveyQuestionPage() {
                   onClick={fetchNightSkyData}
                   className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-white hover:bg-[#B5B5B5] transition-colors"
                 >
-                  {targetUserNickname}님의 밤하늘 보기
+                  {language === 'ko' ? `${targetUserNickname}님의 밤하늘 보기` : `View ${targetUserNickname}${t.survey.viewNightSky}`}
                 </button>
                 <button
                   onClick={() => window.location.href = '/'}
                   className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
                 >
-                  내 밤하늘 만들기
+                  {t.survey.createMyNightSky}
                 </button>
               </div>
             </div>
@@ -673,14 +681,14 @@ function SurveyQuestionPage() {
               <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
               <div className="text-left space-y-1">
                 <div className="text-[9px] leading-snug">
-                  광고 문의: 123456789@gmail.com <br />
-                  Copyright ©2025 123456789. All rights reserved.
+                  {t.footer.adInquiry}: 123456789@gmail.com <br />
+                  {t.footer.copyright}
                 </div>
                 <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-white">개발자</span>
+                  <span className="font-semibold text-white">{t.footer.developer}</span>
                   <span>김기찬</span>
                   <span className="text-white/40">·</span>
-                  <span className="font-semibold text-white">디자이너</span>
+                  <span className="font-semibold text-white">{t.footer.designer}</span>
                   <span>김태희</span>
                 </div>
               </div>
@@ -706,7 +714,7 @@ function SurveyQuestionPage() {
           {/* 상단 네비게이션 */}
           <nav className="px-6 py-5">
             <div className="max-w-[370px] mx-auto flex justify-between items-center relative">
-              <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+              <button onClick={toggleLanguage} className="flex items-center space-x-1 text-white/80 hover:text-white transition">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
                   <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
@@ -714,7 +722,7 @@ function SurveyQuestionPage() {
                   <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
                   <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
                 </svg>
-                <span className="text-sm font-light">English</span>
+                <span className="text-sm font-light">{language === 'ko' ? 'English' : '한국어'}</span>
               </button>
 
               <img
@@ -737,10 +745,10 @@ function SurveyQuestionPage() {
               {/* 완료 텍스트 */}
               <div className="mb-6">
                 <h1 className="text-white text-2xl font-bold leading-relaxed">
-                  {targetUserNickname} 님께 보낼
+                  {language === 'ko' ? `${targetUserNickname} 님께 보낼` : `${t.survey.starCompleted} ${targetUserNickname}`}
                 </h1>
                 <h2 className="text-white text-2xl font-bold">
-                  별이 완성되었어요!
+                  {t.survey.starCompletedLine2}
                 </h2>
               </div>
 
@@ -764,7 +772,7 @@ function SurveyQuestionPage() {
                     : 'bg-[#9E4EFF] text-white hover:bg-[#8A3EE8]'
                 }`}
               >
-                {sending ? '전송 중...' : '전송'}
+                {sending ? t.common.sending : t.common.send}
               </button>
             </div>
           </div>
@@ -780,14 +788,14 @@ function SurveyQuestionPage() {
               <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
               <div className="text-left space-y-1">
                 <div className="text-[9px] leading-snug">
-                  광고 문의: 123456789@gmail.com <br />
-                  Copyright ©2025 123456789. All rights reserved.
+                  {t.footer.adInquiry}: 123456789@gmail.com <br />
+                  {t.footer.copyright}
                 </div>
                 <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-white">개발자</span>
+                  <span className="font-semibold text-white">{t.footer.developer}</span>
                   <span>김기찬</span>
                   <span className="text-white/40">·</span>
-                  <span className="font-semibold text-white">디자이너</span>
+                  <span className="font-semibold text-white">{t.footer.designer}</span>
                   <span>김태희</span>
                 </div>
               </div>
@@ -797,6 +805,9 @@ function SurveyQuestionPage() {
       </div>
     );
   }
+
+  // 번역된 질문 데이터 가져오기
+  const translatedQuestion = t.survey.questions[currentQuestion];
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -811,7 +822,7 @@ function SurveyQuestionPage() {
         {/* 상단 네비게이션 */}
         <nav className="px-6 py-5">
           <div className="max-w-[370px] mx-auto flex justify-between items-center relative">
-            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+            <button onClick={toggleLanguage} className="flex items-center space-x-1 text-white/80 hover:text-white transition">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
                 <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
@@ -819,7 +830,7 @@ function SurveyQuestionPage() {
                 <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
                 <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
               </svg>
-              <span className="text-sm font-light">English</span>
+              <span className="text-sm font-light">{language === 'ko' ? 'English' : '한국어'}</span>
             </button>
 
             <img
@@ -843,10 +854,10 @@ function SurveyQuestionPage() {
             {/* 질문 텍스트 */}
             <div className="mb-6">
               <h1 className="text-white text-2xl font-bold leading-relaxed">
-                {question.questionLine1(targetUserNickname)}
+                {translatedQuestion.questionLine1(targetUserNickname)}
               </h1>
               <h2 className="text-white text-2xl font-bold">
-                {question.questionLine2}
+                {translatedQuestion.questionLine2}
               </h2>
             </div>
 
@@ -855,7 +866,7 @@ function SurveyQuestionPage() {
 
             {/* 선택지들 */}
             <div className="space-y-3 mb-8 flex flex-col items-center">
-              {question.options.map((option) => (
+              {question.options.map((option, index) => (
                 <button
                   key={option.id}
                   onClick={() => handleOptionSelect(option.id)}
@@ -866,8 +877,8 @@ function SurveyQuestionPage() {
                   }`}
                 >
                   <span className="text-lg -translate-y-[3px]">{option.emoji}</span>
-                  <span className="font-semibold">{option.label}</span>
-                  <span className={`ml-2 ${selectedOption === option.id ? 'text-white' : 'text-black'}`}>{option.description}</span>
+                  <span className="font-semibold">{translatedQuestion.options[index].label}</span>
+                  <span className={`ml-2 ${selectedOption === option.id ? 'text-white' : 'text-black'}`}>{translatedQuestion.options[index].description}</span>
                 </button>
               ))}
             </div>
@@ -883,7 +894,7 @@ function SurveyQuestionPage() {
                     : 'bg-[#9E4EFF]/50 text-white/50 cursor-not-allowed'
                 }`}
               >
-                다음
+                {t.common.next}
               </button>
             ) : (
               <div className="flex justify-center gap-3">
@@ -891,7 +902,7 @@ function SurveyQuestionPage() {
                   onClick={handlePrev}
                   className="w-[144px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-black hover:bg-[#B5B5B5] transition-colors"
                 >
-                  이전
+                  {t.common.prev}
                 </button>
                 <button
                   onClick={handleNext}
@@ -902,7 +913,7 @@ function SurveyQuestionPage() {
                       : 'bg-[#9E4EFF]/50 text-white/50 cursor-not-allowed'
                   }`}
                 >
-                  다음
+                  {t.common.next}
                 </button>
               </div>
             )}
@@ -925,14 +936,14 @@ function SurveyQuestionPage() {
             <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
             <div className="text-left space-y-1">
               <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
+                {t.footer.adInquiry}: 123456789@gmail.com <br />
+                {t.footer.copyright}
               </div>
               <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
+                <span className="font-semibold text-white">{t.footer.developer}</span>
                 <span>김기찬</span>
                 <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
+                <span className="font-semibold text-white">{t.footer.designer}</span>
                 <span>김태희</span>
               </div>
             </div>

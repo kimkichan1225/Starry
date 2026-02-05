@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 function SurveyStartPage() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language];
   const [surveyorName, setSurveyorName] = useState('');
   const [targetUserNickname, setTargetUserNickname] = useState('User1');
   const [loading, setLoading] = useState(true);
@@ -51,7 +55,7 @@ function SurveyStartPage() {
 
   const handleNext = () => {
     if (!surveyorName.trim()) {
-      setError('이름을 입력해주세요.');
+      setError(t.surveyStart.pleaseEnterName);
       return;
     }
 
@@ -74,7 +78,10 @@ function SurveyStartPage() {
           isLoaded ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="max-w-[370px] mx-auto flex justify-between items-center relative">
-            <button className="flex items-center space-x-1 text-white/80 hover:text-white transition">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center space-x-1 text-white/80 hover:text-white transition"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
                 <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
@@ -82,7 +89,7 @@ function SurveyStartPage() {
                 <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
                 <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
               </svg>
-              <span className="text-sm font-light">English</span>
+              <span className="text-sm font-light">{language === 'ko' ? 'English' : '한국어'}</span>
             </button>
 
             <img
@@ -126,16 +133,16 @@ function SurveyStartPage() {
             isLoaded ? 'max-h-[700px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 translate-y-20'
           }`}>
             {loading ? (
-              <div className="text-white text-center">로딩 중...</div>
+              <div className="text-white text-center">{t.common.loading}</div>
             ) : (
               <>
                 {/* 타이틀 */}
                 <div className="text-center mb-12">
                   <h1 className="text-white text-3xl font-bold mb-2">
-                    {targetUserNickname} 님의
+                    {targetUserNickname}{language === 'ko' ? ' 님의' : "'s"}
                   </h1>
                   <h2 className="text-white text-2xl">
-                    밤하늘에 별을 선물하세요!
+                    {t.surveyStart.giftStar}
                   </h2>
                 </div>
 
@@ -151,7 +158,7 @@ function SurveyStartPage() {
                   {/* 이름 입력 */}
                   <input
                     type="text"
-                    placeholder="이름을 입력해주세요."
+                    placeholder={t.surveyStart.enterName}
                     value={surveyorName}
                     onChange={(e) => {
                       setSurveyorName(e.target.value);
@@ -165,13 +172,13 @@ function SurveyStartPage() {
                     onClick={handleNext}
                     className="w-full py-3 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors"
                   >
-                    다음
+                    {t.common.next}
                   </button>
 
                   {/* 안내 문구 */}
                   <p className="text-white/70 text-xs text-center leading-relaxed mt-8">
-                    * 한 번 입력한 이름은 바꿀 수 없어요.<br />
-                   * 신중하게 입력하고 '다음'으로 넘어가주세요.
+                    {t.surveyStart.notice1}<br />
+                    {t.surveyStart.notice2}
                   </p>
                 </div>
               </>

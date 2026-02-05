@@ -32,7 +32,6 @@ const AdminPage = () => {
 
   // 설정
   const [settings, setSettings] = useState({
-    maxStars: 30,
     maintenanceMode: false,
     allowSignup: true
   });
@@ -53,7 +52,56 @@ const AdminPage = () => {
 
     setLoading(false);
     fetchStats();
+    fetchSettings();
   }, [user, authLoading, navigate]);
+
+  // 설정 불러오기
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('key, value')
+        .in('key', ['maintenanceMode', 'allowSignup']);
+
+      if (!error && data) {
+        const settingsObj = { maintenanceMode: false, allowSignup: true };
+        data.forEach(item => {
+          settingsObj[item.key] = item.value;
+        });
+        setSettings(settingsObj);
+      }
+    } catch (error) {
+      console.error('설정 불러오기 실패:', error);
+    }
+  };
+
+  // 설정 저장하기
+  const saveSettings = async () => {
+    try {
+      // maintenanceMode 저장
+      await supabase
+        .from('settings')
+        .upsert({
+          key: 'maintenanceMode',
+          value: settings.maintenanceMode,
+          updated_at: new Date().toISOString()
+        });
+
+      // allowSignup 저장
+      await supabase
+        .from('settings')
+        .upsert({
+          key: 'allowSignup',
+          value: settings.allowSignup,
+          updated_at: new Date().toISOString()
+        });
+
+      alert('설정이 저장되었습니다.');
+    } catch (error) {
+      console.error('설정 저장 실패:', error);
+      alert('설정 저장에 실패했습니다.');
+    }
+  };
 
   // 통계 데이터 가져오기
   const fetchStats = async () => {
@@ -119,7 +167,33 @@ const AdminPage = () => {
 
       const { data, error } = await query.limit(50);
       if (error) throw error;
-      setUsers(data || []);
+
+      // 각 사용자의 받은 별 수 조회
+      if (data && data.length > 0) {
+        const userIds = data.map(u => u.id);
+        const { data: starsData } = await supabase
+          .from('stars')
+          .select('user_id')
+          .in('user_id', userIds);
+
+        // 별 수 카운트
+        const starCounts = {};
+        if (starsData) {
+          starsData.forEach(star => {
+            starCounts[star.user_id] = (starCounts[star.user_id] || 0) + 1;
+          });
+        }
+
+        // 사용자 데이터에 별 수 추가
+        const usersWithStars = data.map(u => ({
+          ...u,
+          star_count: starCounts[u.id] || 0
+        }));
+
+        setUsers(usersWithStars);
+      } else {
+        setUsers([]);
+      }
     } catch (error) {
       console.error('회원 조회 실패:', error);
     } finally {
@@ -157,13 +231,13 @@ const AdminPage = () => {
       const { data, error } = await supabase
         .from('notices')
         .select('*')
+        .order('sort_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setNotices(data || []);
     } catch (error) {
       console.error('공지사항 조회 실패:', error);
-      // 테이블이 없으면 빈 배열 유지
       setNotices([]);
     } finally {
       setNoticesLoading(false);
@@ -194,14 +268,19 @@ const AdminPage = () => {
         if (error) throw error;
         alert('공지사항이 수정되었습니다.');
       } else {
-        // 새로 작성
+        // 새로 작성 - 가장 낮은 sort_order 찾기 (맨 위에 추가)
+        const minOrder = notices.length > 0
+          ? Math.min(...notices.map(n => n.sort_order ?? 999)) - 1
+          : 0;
+
         const { error } = await supabase
           .from('notices')
           .insert({
             title: noticeForm.title,
             content: noticeForm.content,
             category: noticeForm.category,
-            author_id: user.id
+            author_id: user.id,
+            sort_order: minOrder
           });
 
         if (error) throw error;
@@ -244,6 +323,37 @@ const AdminPage = () => {
       content: notice.content,
       category: notice.category || '일반'
     });
+  };
+
+  // 공지사항 순서 변경
+  const handleMoveNotice = async (index, direction) => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === notices.length - 1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentNotice = notices[index];
+    const targetNotice = notices[targetIndex];
+
+    try {
+      // 두 공지사항의 sort_order를 서로 교환
+      const currentOrder = currentNotice.sort_order ?? index;
+      const targetOrder = targetNotice.sort_order ?? targetIndex;
+
+      await supabase
+        .from('notices')
+        .update({ sort_order: targetOrder })
+        .eq('id', currentNotice.id);
+
+      await supabase
+        .from('notices')
+        .update({ sort_order: currentOrder })
+        .eq('id', targetNotice.id);
+
+      fetchNotices();
+    } catch (error) {
+      console.error('순서 변경 실패:', error);
+      alert('순서 변경에 실패했습니다.');
+    }
   };
 
   // 탭 변경 시 데이터 로드
@@ -437,21 +547,36 @@ const AdminPage = () => {
                 ) : (
                   <div className="divide-y divide-white/10">
                     {users.map((u) => (
-                      <div key={u.id} className="p-4 flex items-center justify-between hover:bg-white/5">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-white font-medium truncate">{u.nickname || '(닉네임 없음)'}</div>
-                          <div className="text-white/50 text-sm truncate">{u.email}</div>
-                          <div className="text-white/30 text-xs">
-                            가입일: {new Date(u.created_at).toLocaleDateString('ko-KR')}
+                      <div key={u.id} className="p-4 hover:bg-white/5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-medium truncate">{u.nickname || '(닉네임 없음)'}</span>
+                              {u.social_linked && (
+                                <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] rounded">소셜</span>
+                              )}
+                            </div>
+                            <div className="text-white/50 text-sm truncate">{u.email}</div>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <button
+                              onClick={() => handleDeleteUser(u.id, u.email)}
+                              className="px-3 py-1 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 text-sm"
+                            >
+                              삭제
+                            </button>
                           </div>
                         </div>
-                        <div className="flex gap-2 ml-4">
-                          <button
-                            onClick={() => handleDeleteUser(u.id, u.email)}
-                            className="px-3 py-1 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 text-sm"
-                          >
-                            삭제
-                          </button>
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                          <span className="text-white/30">
+                            가입일: {new Date(u.created_at).toLocaleDateString('ko-KR')}
+                          </span>
+                          <span className="text-yellow-400/70">
+                            별 {u.star_count || 0}개
+                          </span>
+                          <span className="text-purple-400/70">
+                            슬롯 {u.max_sky_slots || 30}개
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -533,11 +658,35 @@ const AdminPage = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-white/10">
-                    {notices.map((notice) => (
+                    {notices.map((notice, index) => (
                       <div key={notice.id} className="p-4 hover:bg-white/5">
                         <div className="flex items-start justify-between">
+                          {/* 순서 변경 버튼 */}
+                          <div className="flex flex-col gap-1 mr-3">
+                            <button
+                              onClick={() => handleMoveNotice(index, 'up')}
+                              disabled={index === 0}
+                              className="p-1 text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="위로 이동"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleMoveNotice(index, 'down')}
+                              disabled={index === notices.length - 1}
+                              className="p-1 text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="아래로 이동"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
+                              <span className="text-white/40 text-xs w-6">{index + 1}</span>
                               <span className={`px-2 py-0.5 rounded text-xs ${
                                 notice.category === '중요' ? 'bg-red-500/20 text-red-300' :
                                 notice.category === '이벤트' ? 'bg-green-500/20 text-green-300' :
@@ -547,8 +696,8 @@ const AdminPage = () => {
                               </span>
                               <span className="text-white font-medium">{notice.title}</span>
                             </div>
-                            <p className="text-white/60 text-sm line-clamp-2">{notice.content}</p>
-                            <div className="text-white/30 text-xs mt-1">
+                            <p className="text-white/60 text-sm line-clamp-2 ml-6">{notice.content}</p>
+                            <div className="text-white/30 text-xs mt-1 ml-6">
                               {new Date(notice.created_at).toLocaleDateString('ko-KR')}
                             </div>
                           </div>
@@ -581,20 +730,6 @@ const AdminPage = () => {
               <h2 className="text-white text-xl font-bold">설정</h2>
 
               <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 space-y-4">
-                {/* 최대 별 개수 설정 */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-white font-medium">최대 별 개수</div>
-                    <div className="text-white/50 text-sm">사용자당 받을 수 있는 최대 별 개수</div>
-                  </div>
-                  <input
-                    type="number"
-                    value={settings.maxStars}
-                    onChange={(e) => setSettings({ ...settings, maxStars: parseInt(e.target.value) || 30 })}
-                    className="w-20 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm text-center focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
                 {/* 점검 모드 */}
                 <div className="flex items-center justify-between">
                   <div>
@@ -634,38 +769,11 @@ const AdminPage = () => {
 
               {/* 저장 버튼 */}
               <button
-                onClick={() => alert('설정이 저장되었습니다.\n(실제 저장은 settings 테이블 필요)')}
+                onClick={saveSettings}
                 className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
               >
                 설정 저장
               </button>
-
-              {/* 데이터베이스 정보 */}
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-                <h3 className="text-yellow-400 font-medium mb-2">데이터베이스 안내</h3>
-                <p className="text-yellow-200/70 text-sm">
-                  공지사항 및 설정 기능을 사용하려면 Supabase에 다음 테이블이 필요합니다:
-                </p>
-                <pre className="mt-2 p-2 bg-black/30 rounded text-xs text-yellow-200/60 overflow-x-auto">
-{`-- notices 테이블
-CREATE TABLE notices (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  category TEXT DEFAULT '일반',
-  author_id UUID REFERENCES auth.users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- settings 테이블 (선택)
-CREATE TABLE settings (
-  key TEXT PRIMARY KEY,
-  value JSONB NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);`}
-                </pre>
-              </div>
             </div>
           )}
         </div>

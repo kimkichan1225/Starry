@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { isAdminEmail } from '../config/admin';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 const LoadingPage = () => {
   const navigate = useNavigate();
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language];
   const [isLoaded, setIsLoaded] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,11 +45,11 @@ const LoadingPage = () => {
         }
       }
     } catch (error) {
-      // 로그인 실패 에러 메시지 한국어로 변경
+      // 로그인 실패 에러 메시지
       if (error.message === 'Invalid login credentials') {
-        setError('이메일 또는 비밀번호가 틀렸습니다.');
+        setError(t.loading.invalidCredentials);
       } else {
-        setError(error.message || '로그인에 실패했습니다.');
+        setError(error.message || t.loading.loginFailed);
       }
     } finally {
       setLoading(false);
@@ -124,16 +128,19 @@ const LoadingPage = () => {
             onClick={handleDevLogin}
             className="px-4 py-2 text-sm rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-800 transition-colors"
           >
-            개발자 로그인
+            {t.loading.devLogin}
           </button>
         </div>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center px-4 justify-center relative">
           {/* 언어 선택 버튼 */}
-          <button className={`absolute top-6 left-6 flex items-center space-x-0.5 text-white/80 hover:text-white transition-all duration-500 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}>
+          <button
+            onClick={toggleLanguage}
+            className={`absolute top-6 left-6 flex items-center space-x-0.5 text-white/80 hover:text-white transition-all duration-500 ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {/* 바깥 원 */}
               <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
@@ -146,7 +153,7 @@ const LoadingPage = () => {
               {/* 세로 곡선 */}
               <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
             </svg>
-            <span className="text-sm font-light -translate-y-[0.1rem]">English</span>
+            <span className="text-sm font-light -translate-y-[0.1rem]">{language === 'ko' ? 'English' : '한국어'}</span>
           </button>
 
           {/* STARRY 로고 이미지 */}
@@ -162,7 +169,7 @@ const LoadingPage = () => {
           <p className={`text-white font-normal tracking-wide transition-all duration-1000 ease-out ${
             isLoaded ? 'text-xs md:text-base mb-8' : 'text-lg md:text-xl'
           }`}>
-            당신을 닮은, 단 하나의 별자리
+            {t.loading.subtitle}
           </p>
 
           {/* 로그인 폼 */}
@@ -179,7 +186,7 @@ const LoadingPage = () => {
               {/* 이메일 입력 */}
               <input
                 type="email"
-                placeholder="이메일"
+                placeholder={t.loading.email}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -189,7 +196,7 @@ const LoadingPage = () => {
               {/* 비밀번호 입력 */}
               <input
                 type="password"
-                placeholder="비밀번호"
+                placeholder={t.loading.password}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -202,14 +209,14 @@ const LoadingPage = () => {
                 disabled={loading}
                 className="w-full py-3 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
               >
-                {loading ? '로그인 중...' : '로그인'}
+                {loading ? t.loading.loggingIn : t.common.login}
               </button>
 
               {/* 간편 로그인 */}
               <div className="text-center !mt-10">
                 <div className="flex items-center mb-3 text-white/70 text-xs">
                   <div className="flex-1 h-px bg-white"></div>
-                  <span className="px-2">간편 로그인</span>
+                  <span className="px-2">{t.loading.simpleLogin}</span>
                   <div className="flex-1 h-px bg-white"></div>
                 </div>
                 <div className="flex justify-center space-x-3">
@@ -218,7 +225,7 @@ const LoadingPage = () => {
                     type="button"
                     onClick={handleGoogleLogin}
                     className="w-12 h-12 rounded-xl bg-white hover:bg-gray-100 transition-colors flex items-center justify-center"
-                    title="구글 로그인"
+                    title={t.loading.googleLogin}
                   >
                     <svg className="w-6 h-6" viewBox="0 0 48 48">
                       <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
@@ -233,27 +240,27 @@ const LoadingPage = () => {
                     type="button"
                     disabled
                     className="w-12 h-12 rounded-xl bg-[#FEE500] flex items-center justify-center cursor-not-allowed relative overflow-hidden"
-                    title="카카오 로그인 (준비중)"
+                    title={t.loading.kakaoLogin}
                   >
                     <svg className="w-6 h-6 opacity-30" viewBox="0 0 48 48">
                       <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
                     </svg>
-                    <span className="absolute text-[#3C1E1E] text-[10px] font-bold">준비중</span>
+                    <span className="absolute text-[#3C1E1E] text-[10px] font-bold">{language === 'ko' ? '준비중' : 'Soon'}</span>
                   </button>
                 </div>
 
                 {/* 이메일 찾기 | 비밀번호 찾기 | 회원가입 */}
                 <div className="flex items-center justify-center space-x-2 mt-4 text-white/80 text-[10px]">
-                  <button type="button" onClick={() => navigate('/find-email')} className="hover:text-white transition-colors">이메일 찾기</button>
+                  <button type="button" onClick={() => navigate('/find-email')} className="hover:text-white transition-colors">{t.loading.findEmail}</button>
                   <span className="text-white/40">|</span>
-                  <button type="button" onClick={() => navigate('/find-password')} className="hover:text-white transition-colors">비밀번호 찾기</button>
+                  <button type="button" onClick={() => navigate('/find-password')} className="hover:text-white transition-colors">{t.loading.findPassword}</button>
                   <span className="text-white/40">|</span>
                   <button
                     type="button"
                     onClick={() => navigate('/signup')}
                     className="hover:text-white transition-colors"
                   >
-                    회원가입
+                    {t.common.signup}
                   </button>
                 </div>
               </div>

@@ -316,6 +316,18 @@ const ProfileSetupPage = () => {
           .from('profiles')
           .update({ social_linked: true })
           .eq('id', existingProfileId);
+      } else {
+        // 신규 소셜 로그인 사용자인 경우 profiles 테이블에 저장
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            nickname: formData.nickname,
+            phone: formData.phone,
+            birthdate: formData.birthdate,
+            social_linked: true
+          });
       }
 
       setSuccessMessage('프로필 설정이 완료되었습니다!');

@@ -1,17 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import { supabase } from '../lib/supabase';
 
 function NoticePage() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
+  const [notices, setNotices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
-  // 임시 공지사항 데이터
-  const notices = [
-    { id: 1, category: '중요', title: '개인정보 수집 및 이용 안내', date: '25.12.25' },
-    { id: 2, category: '1', title: 'STARRY(스타리) 이용안내', date: '25.12.25' },
-    { id: 3, category: '2', title: 'SNS 이벤트 당첨자 발표', date: '25.12.25' },
-  ];
+  useEffect(() => {
+    fetchNotices();
+  }, [currentPage]);
+
+  const fetchNotices = async () => {
+    setLoading(true);
+    const { data, error, count } = await supabase
+      .from('notices')
+      .select('*', { count: 'exact' })
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
+
+    if (!error) {
+      setNotices(data || []);
+      setTotalPages(Math.ceil((count || 0) / itemsPerPage));
+    }
+    setLoading(false);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const year = String(date.getFullYear()).slice(2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#030025]">
@@ -67,42 +93,52 @@ function NoticePage() {
 
               {/* 테이블 바디 */}
               <div>
-                {notices.map((notice, index) => (
-                  <div key={notice.id}>
-                    <div
-                      onClick={() => navigate(`/notice/${notice.id}`)}
-                      className="grid grid-cols-[60px_1fr_90px] gap-2 px-4 py-3 text-white hover:bg-[#252547]/30 transition cursor-pointer"
-                    >
-                      <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category}</div>
-                      <div className="text-center text-xs">{notice.title}</div>
-                      <div className="text-gray-400 text-xs text-center">{notice.date}</div>
-                    </div>
-                    {index === 0 && (
-                      <div className="flex justify-center">
-                        <div className="w-[85%] h-px bg-[#FBFBFB]/50"></div>
+                {loading ? (
+                  <div className="text-center text-white py-8">로딩 중...</div>
+                ) : notices.length === 0 ? (
+                  <div className="text-center text-white py-8">공지사항이 없습니다.</div>
+                ) : (
+                  notices.map((notice, index) => (
+                    <div key={notice.id}>
+                      <div
+                        onClick={() => navigate(`/notice/${notice.id}`)}
+                        className="grid grid-cols-[60px_1fr_90px] gap-2 px-4 py-3 text-white hover:bg-[#252547]/30 transition cursor-pointer"
+                      >
+                        <div className={`text-center text-white text-xs ${notice.category === '중요' ? 'font-bold' : ''}`}>{notice.category === '중요' ? '중요' : index + 1}</div>
+                        <div className="text-center text-xs">{notice.title}</div>
+                        <div className="text-gray-400 text-xs text-center">{formatDate(notice.created_at)}</div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {index === 0 && (
+                        <div className="flex justify-center">
+                          <div className="w-[85%] h-px bg-[#FBFBFB]/50"></div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
             {/* 페이지네이션 */}
-            <div className="flex justify-center items-center gap-4 mt-8 text-white text-sm">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                className="hover:text-gray-300 transition"
-              >
-                &lt;&lt;
-              </button>
-              <span className="font-bold">{currentPage}</span>
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                className="hover:text-gray-300 transition"
-              >
-                &gt;&gt;
-              </button>
-            </div>
+            {totalPages > 0 && (
+              <div className="flex justify-center items-center gap-4 mt-8 text-white text-sm">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  &lt;&lt;
+                </button>
+                <span className="font-bold">{currentPage} / {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  &gt;&gt;
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
