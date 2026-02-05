@@ -242,6 +242,74 @@ export const translations = {
       title: '공지사항',
       noNotices: '공지사항이 없습니다.',
     },
+
+    // Signup 페이지
+    signup: {
+      // Step navigation
+      prev: '← 이전',
+      next: '다음 →',
+      stepOf: '/5',
+
+      // Step 1 - 기본 정보
+      email: '아이디',
+      password: '비밀번호',
+      passwordConfirm: '비밀번호 확인',
+      phone: '휴대전화',
+      phonePlaceholder: '010-1234-5678',
+      verificationCode: '인증번호 6자리',
+      sendVerification: '인증하기',
+      sending: '발송 중...',
+      verifying: '확인 중...',
+      verify: '확인',
+      verified: '완료',
+      verificationComplete: '✓ 인증이 완료되었습니다.',
+      privacyAgreement: '개인정보 수집 및 활용 동의(필수)',
+      agree: '동의합니다',
+
+      // Step 2 - 환영
+      profileSetup: '프로필 설정',
+      welcomeSubtitle: '나를 닮은 별자리,',
+      welcomeTitle: 'Starry에 오신걸 환영해요!',
+
+      // Step 3 - 닉네임
+      enterNickname: '이름 또는 닉네임을',
+      enterNickname2: '입력해주세요!',
+      nicknamePlaceholder: '행복한별과',
+
+      // Step 4 - 생년월일
+      birthdayQuestion: '생일은 언제인가요?',
+      selectYear: '년도 선택',
+      selectMonth: '월 선택',
+      selectDay: '일 선택',
+      year: '년',
+      month: '월',
+      day: '일',
+      signingUp: '가입 중...',
+
+      // Step 5 - 완료
+      signupComplete: '가입이 완료되었어요!',
+      linkSNS: 'SNS 연동하기',
+      goToNightSky: '밤하늘 만들러가기',
+
+      // Error messages
+      emailDuplicate: '이미 가입된 이메일입니다.',
+      phoneDuplicate: '이미 가입된 전화번호입니다.',
+      phoneInvalid: '올바른 전화번호를 입력해주세요.',
+      phoneCheckError: '전화번호 확인 중 오류가 발생했습니다.',
+      verificationExpired: '인증번호가 만료되었습니다. 다시 요청해주세요.',
+      verificationSent: '인증번호가 발송되었습니다.',
+      verificationCodeInvalid: '인증번호 6자리를 입력해주세요.',
+      verificationFailed: '인증번호가 일치하지 않습니다.',
+      phoneVerificationComplete: '휴대전화 인증이 완료되었습니다.',
+      phoneVerificationRequired: '휴대전화 인증을 완료해주세요.',
+      privacyRequired: '개인정보 수집 및 활용에 동의해주세요.',
+      passwordMismatch: '비밀번호가 일치하지 않습니다.',
+      passwordTooShort: '비밀번호는 최소 6자 이상이어야 합니다.',
+      nicknameRequired: '닉네임을 입력해주세요.',
+      signupFailed: '회원가입에 실패했습니다.',
+      smsFailed: 'SMS 발송에 실패했습니다.',
+      snsComingSoon: 'SNS 연동 기능은 추후 업데이트 예정입니다.',
+    },
   },
 
   en: {
@@ -486,6 +554,74 @@ export const translations = {
     notice: {
       title: 'Notices',
       noNotices: 'No notices available.',
+    },
+
+    // Signup Page
+    signup: {
+      // Step navigation
+      prev: '← Back',
+      next: 'Next →',
+      stepOf: '/5',
+
+      // Step 1 - Basic Info
+      email: 'Email',
+      password: 'Password',
+      passwordConfirm: 'Confirm Password',
+      phone: 'Phone',
+      phonePlaceholder: '010-1234-5678',
+      verificationCode: '6-digit code',
+      sendVerification: 'Verify',
+      sending: 'Sending...',
+      verifying: 'Verifying...',
+      verify: 'Verify',
+      verified: 'Done',
+      verificationComplete: '✓ Verification complete.',
+      privacyAgreement: 'Privacy Policy Agreement (Required)',
+      agree: 'I agree',
+
+      // Step 2 - Welcome
+      profileSetup: 'Profile Setup',
+      welcomeSubtitle: 'Your unique constellation,',
+      welcomeTitle: 'Welcome to Starry!',
+
+      // Step 3 - Nickname
+      enterNickname: 'Enter your name',
+      enterNickname2: 'or nickname!',
+      nicknamePlaceholder: 'HappyStar',
+
+      // Step 4 - Birthday
+      birthdayQuestion: 'When is your birthday?',
+      selectYear: 'Select Year',
+      selectMonth: 'Select Month',
+      selectDay: 'Select Day',
+      year: 'Year',
+      month: 'Month',
+      day: 'Day',
+      signingUp: 'Signing up...',
+
+      // Step 5 - Complete
+      signupComplete: 'Sign up complete!',
+      linkSNS: 'Link SNS Account',
+      goToNightSky: 'Create My Night Sky',
+
+      // Error messages
+      emailDuplicate: 'This email is already registered.',
+      phoneDuplicate: 'This phone number is already registered.',
+      phoneInvalid: 'Please enter a valid phone number.',
+      phoneCheckError: 'Error checking phone number.',
+      verificationExpired: 'Verification code expired. Please request again.',
+      verificationSent: 'Verification code sent.',
+      verificationCodeInvalid: 'Please enter a 6-digit code.',
+      verificationFailed: 'Verification code does not match.',
+      phoneVerificationComplete: 'Phone verification complete.',
+      phoneVerificationRequired: 'Please complete phone verification.',
+      privacyRequired: 'Please agree to the privacy policy.',
+      passwordMismatch: 'Passwords do not match.',
+      passwordTooShort: 'Password must be at least 6 characters.',
+      nicknameRequired: 'Please enter a nickname.',
+      signupFailed: 'Sign up failed.',
+      smsFailed: 'Failed to send SMS.',
+      snsComingSoon: 'SNS linking will be available soon.',
     },
   },
 };

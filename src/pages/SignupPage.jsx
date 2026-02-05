@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../locales/translations';
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language];
   const [currentStep, setCurrentStep] = useState(1); // 1~5 단계
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
@@ -78,7 +82,7 @@ const SignupPage = () => {
         timerActive: false,
         sent: false
       }));
-      setError('인증번호가 만료되었습니다. 다시 요청해주세요.');
+      setError(t.signup.verificationExpired);
     }
     return () => clearInterval(interval);
   }, [smsVerification.timerActive, smsVerification.timer]);
@@ -120,7 +124,7 @@ const SignupPage = () => {
         return;
       }
       if (existingUser) {
-        setEmailError('이미 가입된 이메일입니다.');
+        setEmailError(t.signup.emailDuplicate);
       } else {
         setEmailError('');
       }
@@ -132,7 +136,7 @@ const SignupPage = () => {
   // SMS 발송 핸들러
   const handleSendSMS = async () => {
     if (!formData.phone || formData.phone.length !== 13) {
-      setError('올바른 전화번호를 입력해주세요.');
+      setError(t.signup.phoneInvalid);
       return;
     }
 
@@ -146,8 +150,8 @@ const SignupPage = () => {
         .eq('phone', formData.phone)
         .maybeSingle();
 
-      if (checkError) throw new Error('전화번호 확인 중 오류가 발생했습니다.');
-      if (existingUser) throw new Error('이미 가입된 전화번호입니다.');
+      if (checkError) throw new Error(t.signup.phoneCheckError);
+      if (existingUser) throw new Error(t.signup.phoneDuplicate);
 
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
@@ -172,10 +176,10 @@ const SignupPage = () => {
           timerActive: true,
           error: ''
         }));
-        setSuccessMessage('인증번호가 발송되었습니다.');
+        setSuccessMessage(t.signup.verificationSent);
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
-        throw new Error(data.message || 'SMS 발송에 실패했습니다.');
+        throw new Error(data.message || t.signup.smsFailed);
       }
     } catch (error) {
       setSmsVerification(prev => ({
@@ -190,7 +194,7 @@ const SignupPage = () => {
   // SMS 검증 핸들러
   const handleVerifySMS = async () => {
     if (!formData.verificationCode || formData.verificationCode.length !== 6) {
-      setError('인증번호 6자리를 입력해주세요.');
+      setError(t.signup.verificationCodeInvalid);
       return;
     }
 
@@ -223,10 +227,10 @@ const SignupPage = () => {
           timerActive: false,
           verificationToken: data.verificationToken
         }));
-        setSuccessMessage('휴대전화 인증이 완료되었습니다.');
+        setSuccessMessage(t.signup.phoneVerificationComplete);
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
-        throw new Error(data.message || '인증번호가 일치하지 않습니다.');
+        throw new Error(data.message || t.signup.verificationFailed);
       }
     } catch (error) {
       setSmsVerification(prev => ({
@@ -243,23 +247,23 @@ const SignupPage = () => {
     setError('');
 
     if (emailError) {
-      setError('이미 가입된 이메일입니다.');
+      setError(t.signup.emailDuplicate);
       return;
     }
     if (!smsVerification.verified) {
-      setError('휴대전화 인증을 완료해주세요.');
+      setError(t.signup.phoneVerificationRequired);
       return;
     }
     if (!agreePrivacy) {
-      setError('개인정보 수집 및 활용에 동의해주세요.');
+      setError(t.signup.privacyRequired);
       return;
     }
     if (formData.password !== formData.passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다.');
+      setError(t.signup.passwordMismatch);
       return;
     }
     if (formData.password.length < 6) {
-      setError('비밀번호는 최소 6자 이상이어야 합니다.');
+      setError(t.signup.passwordTooShort);
       return;
     }
 
@@ -309,7 +313,7 @@ const SignupPage = () => {
         setCurrentStep(5); // 가입완료 화면
       }
     } catch (error) {
-      setError(error.message || '회원가입에 실패했습니다.');
+      setError(error.message || t.signup.signupFailed);
       setCurrentStep(1); // 에러 시 처음으로
     } finally {
       setLoading(false);
@@ -348,21 +352,24 @@ const SignupPage = () => {
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            ← 이전
+            {t.signup.prev}
           </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
           <button
             onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            다음 →
+            {t.signup.next}
           </button>
         </div>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center px-4 py-8 relative">
           {/* 언어 선택 버튼 */}
-          <button className="absolute top-6 left-6 flex items-center space-x-0.5 text-white/80 hover:text-white transition-all duration-500">
+          <button
+            onClick={toggleLanguage}
+            className="absolute top-6 left-6 flex items-center space-x-0.5 text-white/80 hover:text-white transition-all duration-500"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" strokeWidth="1.4" />
               <path strokeLinecap="round" strokeWidth="1.4" d="M4 8h16" />
@@ -370,7 +377,7 @@ const SignupPage = () => {
               <path strokeLinecap="round" strokeWidth="1.4" d="M4 16h16" />
               <path strokeLinecap="round" strokeWidth="1.4" d="M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z" />
             </svg>
-            <span className="text-sm font-light -translate-y-[0.1rem]">English</span>
+            <span className="text-sm font-light -translate-y-[0.1rem]">{language === 'ko' ? 'English' : '한국어'}</span>
           </button>
 
           {/* STARRY 로고 이미지 */}
@@ -396,7 +403,7 @@ const SignupPage = () => {
 
             {/* 이메일 */}
             <div>
-              <label className="block text-white text-sm mb-2">아이디</label>
+              <label className="block text-white text-sm mb-2">{t.signup.email}</label>
               <input
                 type="email"
                 name="email"
@@ -416,7 +423,7 @@ const SignupPage = () => {
 
             {/* 비밀번호 */}
             <div>
-              <label className="block text-white text-sm mb-2">비밀번호</label>
+              <label className="block text-white text-sm mb-2">{t.signup.password}</label>
               <input
                 type="password"
                 name="password"
@@ -429,7 +436,7 @@ const SignupPage = () => {
 
             {/* 비밀번호 확인 */}
             <div>
-              <label className="block text-white text-sm mb-2">비밀번호 확인</label>
+              <label className="block text-white text-sm mb-2">{t.signup.passwordConfirm}</label>
               <input
                 type="password"
                 name="passwordConfirm"
@@ -442,7 +449,7 @@ const SignupPage = () => {
 
             {/* 휴대전화 */}
             <div>
-              <label className="block text-white text-sm mb-2">휴대전화</label>
+              <label className="block text-white text-sm mb-2">{t.signup.phone}</label>
               <div className="space-y-2">
                 <div className="flex space-x-2">
                   <input
@@ -450,7 +457,7 @@ const SignupPage = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="010-1234-5678"
+                    placeholder={t.signup.phonePlaceholder}
                     required
                     maxLength="13"
                     disabled={smsVerification.verified}
@@ -469,12 +476,12 @@ const SignupPage = () => {
                     }`}
                   >
                     {smsVerification.verified
-                      ? '완료'
+                      ? t.signup.verified
                       : smsVerification.timerActive
                         ? `${Math.floor(smsVerification.timer / 60)}:${String(smsVerification.timer % 60).padStart(2, '0')}`
                         : smsVerification.loading
-                          ? '발송 중...'
-                          : '인증하기'
+                          ? t.signup.sending
+                          : t.signup.sendVerification
                     }
                   </button>
                 </div>
@@ -484,7 +491,7 @@ const SignupPage = () => {
                     name="verificationCode"
                     value={formData.verificationCode}
                     onChange={handleChange}
-                    placeholder="인증번호 6자리"
+                    placeholder={t.signup.verificationCode}
                     maxLength="6"
                     disabled={!smsVerification.sent || smsVerification.verified}
                     className={`flex-1 px-4 py-[6px] text-center text-xs rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:cursor-not-allowed ${
@@ -499,11 +506,11 @@ const SignupPage = () => {
                     disabled={!smsVerification.sent || smsVerification.verified || smsVerification.loading || !formData.verificationCode}
                     className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    {smsVerification.verified ? '완료' : smsVerification.loading ? '확인 중...' : '확인'}
+                    {smsVerification.verified ? t.signup.verified : smsVerification.loading ? t.signup.verifying : t.signup.verify}
                   </button>
                 </div>
                 {smsVerification.verified && (
-                  <p className="text-green-400 text-xs text-center">✓ 인증이 완료되었습니다.</p>
+                  <p className="text-green-400 text-xs text-center">{t.signup.verificationComplete}</p>
                 )}
               </div>
             </div>
@@ -514,7 +521,7 @@ const SignupPage = () => {
                 className="flex items-center justify-between text-white/80 text-xs cursor-pointer mb-2"
                 onClick={() => setShowPrivacyPolicy(!showPrivacyPolicy)}
               >
-                <span>개인정보 수집 및 활용 동의(필수)</span>
+                <span>{t.signup.privacyAgreement}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${showPrivacyPolicy ? 'rotate-180' : ''}`}
                   fill="none"
@@ -544,7 +551,7 @@ const SignupPage = () => {
 
               {/* 동의 체크박스 */}
               <label className="flex items-center justify-end space-x-2 text-white/80 text-xs cursor-pointer">
-                <span>동의합니다</span>
+                <span>{t.signup.agree}</span>
                 <input
                   type="checkbox"
                   checked={agreePrivacy}
@@ -560,7 +567,7 @@ const SignupPage = () => {
               onClick={handleStep1Next}
               className="w-full py-2.5 text-sm rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors !mt-6"
             >
-              다음
+              {t.common.next}
             </button>
           </div>
         </div>
@@ -572,14 +579,14 @@ const SignupPage = () => {
             <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
             <div className="text-left space-y-1">
               <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
+                {t.footer.adInquiry}: 123456789@gmail.com <br />
+                {t.footer.copyright}
               </div>
               <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
+                <span className="font-semibold text-white">{t.footer.developer}</span>
                 <span>김기찬</span>
                 <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
+                <span className="font-semibold text-white">{t.footer.designer}</span>
                 <span>김태희</span>
               </div>
             </div>
@@ -604,14 +611,14 @@ const SignupPage = () => {
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            ← 이전
+            {t.signup.prev}
           </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
           <button
             onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            다음 →
+            {t.signup.next}
           </button>
         </div>
 
@@ -621,14 +628,14 @@ const SignupPage = () => {
             <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="text-white font-bold text-2xl">프로필 설정</span>
+            <span className="text-white font-bold text-2xl">{t.signup.profileSetup}</span>
           </div>
         </nav>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <p className="text-white/80 text-sm mb-2">나를 닮은 별자리,</p>
-          <h1 className="text-white text-2xl font-bold mb-12">Starry에 오신걸 환영해요!</h1>
+          <p className="text-white/80 text-sm mb-2">{t.signup.welcomeSubtitle}</p>
+          <h1 className="text-white text-2xl font-bold mb-12">{t.signup.welcomeTitle}</h1>
 
           {/* 캐릭터 이미지 */}
           <img
@@ -642,7 +649,7 @@ const SignupPage = () => {
             onClick={() => setCurrentStep(3)}
             className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
           >
-            다음
+            {t.common.next}
           </button>
 
           {/* 진행 단계 표시 */}
@@ -656,14 +663,14 @@ const SignupPage = () => {
             <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
             <div className="text-left space-y-1">
               <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
+                {t.footer.adInquiry}: 123456789@gmail.com <br />
+                {t.footer.copyright}
               </div>
               <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
+                <span className="font-semibold text-white">{t.footer.developer}</span>
                 <span>김기찬</span>
                 <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
+                <span className="font-semibold text-white">{t.footer.designer}</span>
                 <span>김태희</span>
               </div>
             </div>
@@ -688,14 +695,14 @@ const SignupPage = () => {
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            ← 이전
+            {t.signup.prev}
           </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
           <button
             onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            다음 →
+            {t.signup.next}
           </button>
         </div>
 
@@ -705,14 +712,14 @@ const SignupPage = () => {
             <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="text-white font-bold text-2xl">프로필 설정</span>
+            <span className="text-white font-bold text-2xl">{t.signup.profileSetup}</span>
           </div>
         </nav>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 -translate-y-2">
-          <h1 className="text-white text-xl font-bold mb-1">이름 또는 닉네임을</h1>
-          <p className="text-white text-xl mb-8">입력해주세요!</p>
+          <h1 className="text-white text-xl font-bold mb-1">{t.signup.enterNickname}</h1>
+          <p className="text-white text-xl mb-8">{t.signup.enterNickname2}</p>
 
           {/* 캐릭터 머리 (위에서 내려다보는) */}
           <div className="relative w-full max-w-[280px] mb-4">
@@ -729,7 +736,7 @@ const SignupPage = () => {
                 name="nickname"
                 value={formData.nickname}
                 onChange={handleChange}
-                placeholder="행복한별과"
+                placeholder={t.signup.nicknamePlaceholder}
                 className="w-full px-6 py-4 text-center text-lg rounded-2xl bg-[#3D3A5C] text-white placeholder-white/50 border-2 border-[#6B5CFF] focus:outline-none focus:ring-2 focus:ring-[#6B5CFF]"
               />
               {/* 양쪽 손 이미지 */}
@@ -750,7 +757,7 @@ const SignupPage = () => {
           <button
             onClick={() => {
               if (!formData.nickname.trim()) {
-                setError('닉네임을 입력해주세요.');
+                setError(t.signup.nicknameRequired);
                 return;
               }
               setError('');
@@ -759,7 +766,7 @@ const SignupPage = () => {
             disabled={!formData.nickname.trim()}
             className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed mt-24"
           >
-            다음
+            {t.common.next}
           </button>
 
           {/* 진행 단계 표시 */}
@@ -777,14 +784,14 @@ const SignupPage = () => {
             <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
             <div className="text-left space-y-1">
               <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
+                {t.footer.adInquiry}: 123456789@gmail.com <br />
+                {t.footer.copyright}
               </div>
               <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
+                <span className="font-semibold text-white">{t.footer.developer}</span>
                 <span>김기찬</span>
                 <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
+                <span className="font-semibold text-white">{t.footer.designer}</span>
                 <span>김태희</span>
               </div>
             </div>
@@ -809,14 +816,14 @@ const SignupPage = () => {
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            ← 이전
+            {t.signup.prev}
           </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
           <button
             onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            다음 →
+            {t.signup.next}
           </button>
         </div>
 
@@ -826,14 +833,14 @@ const SignupPage = () => {
             <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="text-white font-bold text-2xl">프로필 설정</span>
+            <span className="text-white font-bold text-2xl">{t.signup.profileSetup}</span>
           </div>
         </nav>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 -translate-y-2">
-          <h1 className="text-white text-xl font-bold mb-1">{formData.nickname}님의</h1>
-          <p className="text-white text-xl mb-8">생일은 언제인가요?</p>
+          <h1 className="text-white text-xl font-bold mb-1">{formData.nickname}{language === 'ko' ? '님의' : "'s"}</h1>
+          <p className="text-white text-xl mb-8">{t.signup.birthdayQuestion}</p>
 
           {/* 캐릭터 머리 */}
           <div className="relative w-full max-w-[280px] mb-4">
@@ -900,7 +907,7 @@ const SignupPage = () => {
                       {/* 헤더 */}
                       <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/20">
                         <span className="text-white font-bold text-lg">
-                          {openDropdown === 'year' ? '년도 선택' : openDropdown === 'month' ? '월 선택' : '일 선택'}
+                          {openDropdown === 'year' ? t.signup.selectYear : openDropdown === 'month' ? t.signup.selectMonth : t.signup.selectDay}
                         </span>
                         <button
                           onClick={() => setOpenDropdown(null)}
@@ -950,9 +957,9 @@ const SignupPage = () => {
 
               {/* 년/월/일 라벨 */}
               <div className="flex justify-center items-center mt-2 -translate-x-1">
-                <span className="text-white/60 text-sm w-24 text-center">년</span>
-                <span className="text-white/60 text-sm w-24 text-center">월</span>
-                <span className="text-white/60 text-sm w-16 text-center">일</span>
+                <span className="text-white/60 text-sm w-24 text-center">{t.signup.year}</span>
+                <span className="text-white/60 text-sm w-24 text-center">{t.signup.month}</span>
+                <span className="text-white/60 text-sm w-16 text-center">{t.signup.day}</span>
               </div>
             </div>
           </div>
@@ -963,14 +970,14 @@ const SignupPage = () => {
               onClick={() => setCurrentStep(3)}
               className="w-24 py-3 rounded-lg bg-[#9F9F9F] text-white font-medium hover:bg-[#8a8a8a] transition-colors"
             >
-              이전
+              {t.common.prev}
             </button>
             <button
               onClick={handleStep4Next}
               disabled={loading}
               className="w-44 py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
             >
-              {loading ? '가입 중...' : '다음'}
+              {loading ? t.signup.signingUp : t.common.next}
             </button>
           </div>
 
@@ -989,14 +996,14 @@ const SignupPage = () => {
             <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
             <div className="text-left space-y-1">
               <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
+                {t.footer.adInquiry}: 123456789@gmail.com <br />
+                {t.footer.copyright}
               </div>
               <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
+                <span className="font-semibold text-white">{t.footer.developer}</span>
                 <span>김기찬</span>
                 <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
+                <span className="font-semibold text-white">{t.footer.designer}</span>
                 <span>김태희</span>
               </div>
             </div>
@@ -1021,14 +1028,14 @@ const SignupPage = () => {
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            ← 이전
+            {t.signup.prev}
           </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}/5</span>
+          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
           <button
             onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
           >
-            다음 →
+            {t.signup.next}
           </button>
         </div>
 
@@ -1038,13 +1045,13 @@ const SignupPage = () => {
             <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="text-white font-bold text-2xl">프로필 설정</span>
+            <span className="text-white font-bold text-2xl">{t.signup.profileSetup}</span>
           </div>
         </nav>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <h1 className="text-white text-2xl font-bold mb-6">가입이 완료되었어요!</h1>
+          <h1 className="text-white text-2xl font-bold mb-6">{t.signup.signupComplete}</h1>
 
           {/* 파티모자 캐릭터 */}
           <img
@@ -1057,11 +1064,11 @@ const SignupPage = () => {
           <button
             onClick={() => {
               // TODO: SNS 연동 기능
-              alert('SNS 연동 기능은 추후 업데이트 예정입니다.');
+              alert(t.signup.snsComingSoon);
             }}
             className="w-full max-w-[280px] py-3 rounded-lg bg-transparent border-2 border-white/50 text-white/80 font-medium hover:bg-white/10 transition-colors mb-4"
           >
-            SNS 연동하기
+            {t.signup.linkSNS}
           </button>
 
           {/* 밤하늘 만들러가기 버튼 */}
@@ -1069,7 +1076,7 @@ const SignupPage = () => {
             onClick={() => navigate('/')}
             className="w-full max-w-[280px] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
           >
-            밤하늘 만들러가기
+            {t.signup.goToNightSky}
           </button>
 
           {/* 진행 단계 표시 */}
@@ -1083,14 +1090,14 @@ const SignupPage = () => {
             <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
             <div className="text-left space-y-1">
               <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
+                {t.footer.adInquiry}: 123456789@gmail.com <br />
+                {t.footer.copyright}
               </div>
               <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
+                <span className="font-semibold text-white">{t.footer.developer}</span>
                 <span>김기찬</span>
                 <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
+                <span className="font-semibold text-white">{t.footer.designer}</span>
                 <span>김태희</span>
               </div>
             </div>
