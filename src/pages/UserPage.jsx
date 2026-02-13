@@ -7,7 +7,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 
 function UserPage() {
-  const { user, nickname, setNickname } = useAuth();
+  const { user, setUser, nickname, setNickname } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
 
@@ -107,10 +107,11 @@ function UserPage() {
     try {
       const { error } = await supabase.auth.unlinkIdentity(googleIdentity);
       if (error) throw error;
+      // 서버에서 최신 유저 정보 강제 갱신
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      if (updatedUser) setUser(updatedUser);
       setSuccessMessage(t.user.googleUnlinked);
       setTimeout(() => setSuccessMessage(''), 2000);
-      // 페이지 새로고침하여 상태 업데이트
-      window.location.reload();
     } catch (error) {
       setError(error.message || t.user.googleUnlinkFailed);
     } finally {

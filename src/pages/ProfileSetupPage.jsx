@@ -47,15 +47,15 @@ const ProfileSetupPage = () => {
 
       const metadata = user.user_metadata || {};
 
-      // 간편 로그인 연동이 이미 완료된 경우 바로 /starry로 이동
-      if (metadata.social_linked) {
-        navigate('/starry');
+      // 간편 로그인 연동이 이미 완료된 경우 바로 /home으로 이동
+      if (metadata.social_linked || metadata.google_linked) {
+        navigate('/home');
         return;
       }
 
-      // 프로필이 이미 완성된 경우 (일반 가입 사용자) 바로 /starry로 이동
+      // 프로필이 이미 완성된 경우 (일반 가입 사용자) 바로 /home으로 이동
       if (metadata.nickname && metadata.birthdate && metadata.phone_verified) {
-        navigate('/starry');
+        navigate('/home');
         return;
       }
 
@@ -332,7 +332,7 @@ const ProfileSetupPage = () => {
 
       setSuccessMessage('프로필 설정이 완료되었습니다!');
       setTimeout(() => {
-        navigate('/starry');
+        navigate('/home');
       }, 1500);
     } catch (error) {
       setError(error.message || '프로필 설정에 실패했습니다.');

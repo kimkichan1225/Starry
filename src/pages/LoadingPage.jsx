@@ -41,7 +41,7 @@ const LoadingPage = () => {
         if (isAdminEmail(data.user.email)) {
           navigate('/admin');
         } else {
-          navigate('/starry');
+          navigate('/home');
         }
       }
     } catch (error) {
