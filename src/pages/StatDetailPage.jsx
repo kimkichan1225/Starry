@@ -166,12 +166,12 @@ function StatDetailPage() {
 
     const innerRatio = 0.4; // 안쪽 꼭짓점의 비율 (0.4 = 40%)
 
-    // 배경 원 가이드 라인 그리기
+    // 배경 원 가이드 라인 그리기 (25, 50, 75, 100, 125 단위 = 5개)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
       ctx.beginPath();
-      ctx.arc(cx, cy, (maxRadius / 4) * i, 0, Math.PI * 2);
+      ctx.arc(cx, cy, (maxRadius / 5) * i, 0, Math.PI * 2);
       ctx.stroke();
     }
 
@@ -188,8 +188,8 @@ function StatDetailPage() {
     ctx.beginPath();
     const points = [];
     for (let i = 0; i < 5; i++) {
-      // 바깥 꼭짓점 (데이터 기반)
-      const outerRadius = (percentages[i] / 100) * maxRadius;
+      // 바깥 꼭짓점 (데이터 기반, 최소 25 보장: 0%→25, 100%→125)
+      const outerRadius = ((percentages[i] + 25) / 125) * maxRadius;
       const outerX = cx + Math.cos(outerAngles[i]) * outerRadius;
       const outerY = cy + Math.sin(outerAngles[i]) * outerRadius;
 
