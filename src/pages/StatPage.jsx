@@ -246,7 +246,7 @@ function StatPage() {
             {/* 참여자 수 */}
             <p className="text-white/80 text-sm mb-8">
               {starCount}{t.stat.participants}<br />
-              {t.stat.makingStar}{nickname}{t.stat.makingStar2}
+              {nickname}{t.stat.makingStar}{t.stat.makingStar2}
             </p>
 
             {/* 질문별 통계보기 버튼 */}

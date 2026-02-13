@@ -208,19 +208,18 @@ const AdminPage = () => {
     }
 
     try {
-      // 별 연결 삭제
-      await supabase.from('star_connections').delete().eq('user_id', userId);
-      // 별 삭제
-      await supabase.from('stars').delete().eq('user_id', userId);
-      // 프로필 삭제
-      await supabase.from('profiles').delete().eq('id', userId);
+      const { error } = await supabase.rpc('admin_delete_user', {
+        target_user_id: userId
+      });
+
+      if (error) throw error;
 
       alert('회원이 삭제되었습니다.');
       fetchUsers();
       fetchStats();
     } catch (error) {
       console.error('회원 삭제 실패:', error);
-      alert('회원 삭제에 실패했습니다.');
+      alert('회원 삭제에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
     }
   };
 

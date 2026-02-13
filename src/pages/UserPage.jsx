@@ -87,7 +87,8 @@ function UserPage() {
 
   // 구글 연동 해제
   const handleUnlinkGoogle = async () => {
-    if (isGoogleSignup) {
+    // identity가 1개뿐이면 해제 불가 (로그인 방법이 없어짐)
+    if (isGoogleSignup || (user?.identities?.length || 0) <= 1) {
       setError(t.user.googleCannotUnlink);
       setTimeout(() => setError(''), 3000);
       return;
