@@ -113,6 +113,9 @@ function HomePage() {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
+  // 별자리 미니 캔버스 ref
+  const miniCanvasRef = useRef(null);
+
   // Context에서 가져온 데이터를 로컬 상태로 사용 (편집 모드용)
   const [stars, setStars] = useState([]);
   const [starPositions, setStarPositions] = useState([]);
@@ -247,6 +250,57 @@ function HomePage() {
   const [isDraggingLine, setIsDraggingLine] = useState(false);
   const [dragStartStarIndex, setDragStartStarIndex] = useState(null);
   const [dragCurrentPos, setDragCurrentPos] = useState(null);
+
+  // 미니 캔버스에 별자리 그리기 (바텀시트 원형 영역)
+  useEffect(() => {
+    if (!miniCanvasRef.current || !isConstellationExpanded || stars.length === 0 || starPositions.length === 0) return;
+
+    const canvas = miniCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const size = 192;
+
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.fillStyle = '#030025';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    const padding = 20;
+    const scaleX = (size - padding * 2) / 350;
+    const scaleY = (size - padding * 2) / 500;
+    const scale = Math.min(scaleX, scaleY);
+    const offsetX = (size - 350 * scale) / 2;
+    const offsetY = (size - 500 * scale) / 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.strokeStyle = 'rgba(255, 255, 227, 0.7)';
+    ctx.lineWidth = 1.5;
+    connections.forEach(conn => {
+      const fromPos = starPositions[conn.fromIndex];
+      const toPos = starPositions[conn.toIndex];
+      if (fromPos && toPos) {
+        ctx.beginPath();
+        ctx.moveTo(fromPos.x * scale + offsetX, fromPos.y * scale + offsetY);
+        ctx.lineTo(toPos.x * scale + offsetX, toPos.y * scale + offsetY);
+        ctx.stroke();
+      }
+    });
+
+    stars.forEach((star, index) => {
+      if (starPositions[index]) {
+        const x = starPositions[index].x * scale + offsetX;
+        const y = starPositions[index].y * scale + offsetY;
+        drawStarOnCanvas(ctx, star, x, y, scale * 0.5);
+      }
+    });
+
+    ctx.restore();
+  }, [isConstellationExpanded, stars, starPositions, connections]);
 
   // 별 이동 상태
   const [isMovingStar, setIsMovingStar] = useState(false);
@@ -871,9 +925,12 @@ function HomePage() {
 
                 {/* 중앙 원형 이미지 영역 */}
                 <div className="flex justify-center mb-4">
-                  <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>{t.home.constellationImage}</span>
-                  </div>
+                  <canvas
+                    ref={miniCanvasRef}
+                    width={192}
+                    height={192}
+                    className="w-48 h-48 rounded-full"
+                  />
                 </div>
 
                 {aiNamingMode === 'analyzing' ? (
@@ -929,9 +986,12 @@ function HomePage() {
               <>
                 {/* 중앙 원형 이미지 영역 */}
                 <div className="flex justify-center mb-4">
-                  <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>{t.home.constellationImage}</span>
-                  </div>
+                  <canvas
+                    ref={miniCanvasRef}
+                    width={192}
+                    height={192}
+                    className="w-48 h-48 rounded-full"
+                  />
                 </div>
 
                 {/* 카드 2개 */}
