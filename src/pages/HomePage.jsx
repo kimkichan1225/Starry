@@ -840,7 +840,17 @@ function HomePage() {
 
       {/* 튜토리얼 팝업 */}
       {showTutorial && (
-        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-6">
+        <div
+          className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-6 cursor-pointer"
+          onClick={() => {
+            if (tutorialStep < 4) {
+              setTutorialStep(tutorialStep + 1);
+            } else {
+              setShowTutorial(false);
+              setTutorialStep(1);
+            }
+          }}
+        >
           <div className="bg-white/90 rounded-3xl w-full max-w-[260px] p-2">
             {/* 닫기 버튼 */}
             <div className="flex justify-end">
