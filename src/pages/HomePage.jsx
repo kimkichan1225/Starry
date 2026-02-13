@@ -104,9 +104,14 @@ function HomePage() {
     refreshStars
   } = useStars();
 
-  const [selectedConstellation, setSelectedConstellation] = useState('ABCD만 EFG대서대');
+  const [selectedConstellation, setSelectedConstellation] = useState('');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
+
+  // AI 별자리 이름 짓기 상태
+  const [aiNamingMode, setAiNamingMode] = useState(null); // null | 'analyzing' | 'results'
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
   // Context에서 가져온 데이터를 로컬 상태로 사용 (편집 모드용)
   const [stars, setStars] = useState([]);
@@ -119,6 +124,109 @@ function HomePage() {
     setStarPositions(contextStarPositions);
     setConnections(contextConnections);
   }, [contextStars, contextStarPositions, contextConnections]);
+
+  // 별자리 이름 로드
+  useEffect(() => {
+    if (user?.user_metadata?.constellation_name) {
+      setSelectedConstellation(user.user_metadata.constellation_name);
+    }
+  }, [user]);
+
+  // AI 별자리 이름 분석 (비전)
+  const handleAnalyzeConstellation = async () => {
+    if (!canvasRef.current || starPositions.length === 0) return;
+
+    setAiNamingMode('analyzing');
+    setSuggestions([]);
+    setSelectedSuggestion(null);
+
+    try {
+      // 캔버스를 이미지로 캡처 (배경 포함)
+      const exportCanvas = document.createElement('canvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      exportCanvas.width = 350;
+      exportCanvas.height = 500;
+
+      // 어두운 배경
+      exportCtx.fillStyle = '#030025';
+      exportCtx.fillRect(0, 0, 350, 500);
+
+      // 연결선 그리기
+      exportCtx.strokeStyle = 'rgba(255, 255, 227, 0.7)';
+      exportCtx.lineWidth = 2;
+      connections.forEach(conn => {
+        const fromPos = starPositions[conn.fromIndex];
+        const toPos = starPositions[conn.toIndex];
+        if (fromPos && toPos) {
+          exportCtx.beginPath();
+          exportCtx.moveTo(fromPos.x, fromPos.y);
+          exportCtx.lineTo(toPos.x, toPos.y);
+          exportCtx.stroke();
+        }
+      });
+
+      // 별 그리기
+      stars.forEach((star, index) => {
+        if (starPositions[index]) {
+          const { x, y } = starPositions[index];
+          drawStarOnCanvas(exportCtx, star, x, y, 0.5);
+        }
+      });
+
+      // base64 추출 (data:image/png;base64, 접두사 제거)
+      const base64 = exportCanvas.toDataURL('image/png').split(',')[1];
+
+      const response = await fetch(
+        'https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/analyze-constellation',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ image: base64 }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
+      setSuggestions(data.suggestions);
+      setAiNamingMode('results');
+    } catch (error) {
+      console.error('별자리 분석 실패:', error);
+      setAiNamingMode(null);
+      setShareMessage('별자리 분석에 실패했습니다.');
+      setTimeout(() => setShareMessage(''), 2000);
+    }
+  };
+
+  // AI 별자리 이름 저장
+  const handleSaveConstellationName = async () => {
+    if (selectedSuggestion === null || !suggestions[selectedSuggestion]) return;
+
+    const newName = suggestions[selectedSuggestion];
+
+    try {
+      await supabase.auth.updateUser({
+        data: { constellation_name: newName },
+      });
+      setSelectedConstellation(newName);
+      setAiNamingMode(null);
+      setSuggestions([]);
+      setSelectedSuggestion(null);
+    } catch (error) {
+      console.error('별자리 이름 저장 실패:', error);
+    }
+  };
+
+  // AI 분석 취소
+  const handleCancelAnalysis = () => {
+    setAiNamingMode(null);
+    setSuggestions([]);
+    setSelectedSuggestion(null);
+  };
 
   // 밤하늘 제작 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
@@ -735,12 +843,12 @@ function HomePage() {
             className="w-full px-5 pt-2 pb-4 flex justify-center items-center"
           >
             <span className={`text-2xl ${isConstellationExpanded ? 'text-[#6155F5] font-bold' : 'text-black font-medium'}`}>
-              {t.home.constellationName}
+              {selectedConstellation || t.home.constellationName}
             </span>
           </button>
           {isConstellationExpanded && (
             <button
-              onClick={() => setIsConstellationExpanded(false)}
+              onClick={() => { setIsConstellationExpanded(false); handleCancelAnalysis(); }}
               className="absolute right-5 top-1/2 transform -translate-y-1/2"
             >
               <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -753,27 +861,98 @@ function HomePage() {
         {/* 확장된 내용 */}
         {isConstellationExpanded && (
           <div className="px-5 pb-5 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 24rem)' }}>
-            {/* 중앙 원형 이미지 영역 */}
-            <div className="flex justify-center mb-4">
-              <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>{t.home.constellationImage}</span>
-              </div>
-            </div>
+            {aiNamingMode ? (
+              <>
+                {/* 현재 별자리 이름 헤더 */}
+                <div className="text-center mb-3">
+                  <p className="text-[#6155F5] text-sm font-bold">현재 별자리 이름</p>
+                  <h2 className="text-black text-xl font-bold mt-1">{selectedConstellation || t.home.constellationName}</h2>
+                </div>
 
-            {/* 카드 2개 */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.goodMatch}</span> {t.home.constellation}</span>
-              </div>
-              <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.badMatch}</span> {t.home.constellation}</span>
-              </div>
-            </div>
+                {/* 중앙 원형 이미지 영역 */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>{t.home.constellationImage}</span>
+                  </div>
+                </div>
 
-            {/* AI 별자리 이름 바꾸기 버튼 */}
-            <button className="w-full py-3 bg-[#A6A6A6] text-white font-semibold rounded-full hover:bg-[#959595] transition">
-              {t.home.aiRename}
-            </button>
+                {aiNamingMode === 'analyzing' ? (
+                  <>
+                    {/* 로딩 스켈레톤 */}
+                    <div className="space-y-3 mb-4">
+                      <div className="h-11 bg-gray-200 rounded-full animate-pulse" />
+                      <div className="h-11 bg-purple-100 rounded-full animate-pulse" />
+                      <div className="h-11 bg-gray-200 rounded-full animate-pulse" />
+                    </div>
+                    <button disabled className="w-full py-3 bg-[#6155F5] text-white font-semibold rounded-full opacity-70 cursor-not-allowed">
+                      별자리 분석중...
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* 추천 결과 3개 */}
+                    <div className="space-y-3 mb-4">
+                      {suggestions.map((name, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedSuggestion(index)}
+                          className={`w-full py-2.5 px-4 rounded-full border-2 text-sm font-medium transition ${
+                            selectedSuggestion === index
+                              ? 'border-[#6155F5] text-[#6155F5] bg-white'
+                              : 'border-gray-200 text-gray-700 bg-white'
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                    {/* 취소/저장 버튼 */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleCancelAnalysis}
+                        className="flex-1 py-3 bg-[#C5C5C5] text-white font-semibold rounded-full hover:bg-[#B5B5B5] transition"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={handleSaveConstellationName}
+                        disabled={selectedSuggestion === null}
+                        className="flex-1 py-3 bg-[#6155F5] text-white font-semibold rounded-full hover:bg-[#5044d4] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        저장
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {/* 중앙 원형 이미지 영역 */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-48 h-48 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-2xl font-bold whitespace-nowrap" style={{ color: 'rgba(0, 0, 0, 0.52)' }}>{t.home.constellationImage}</span>
+                  </div>
+                </div>
+
+                {/* 카드 2개 */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
+                    <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.goodMatch}</span> {t.home.constellation}</span>
+                  </div>
+                  <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
+                    <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.badMatch}</span> {t.home.constellation}</span>
+                  </div>
+                </div>
+
+                {/* AI 별자리 이름 바꾸기 버튼 */}
+                <button
+                  onClick={handleAnalyzeConstellation}
+                  className="w-full py-3 bg-[#A6A6A6] text-white font-semibold rounded-full hover:bg-[#959595] transition"
+                >
+                  {t.home.aiRename}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
