@@ -231,6 +231,36 @@ function HomePage() {
     setSelectedSuggestion(null);
   };
 
+  // 페이지 튜토리얼 (첫 로그인 시 1회만)
+  const [showPageTutorial, setShowPageTutorial] = useState(false);
+  const [pageTutorialStep, setPageTutorialStep] = useState(1);
+
+  useEffect(() => {
+    if (!user) return;
+    // TODO: 개발 완료 후 아래 주석 해제하고 강제 표시 줄 삭제
+    // const key = `starry_page_tutorial_shown_${user.id}`;
+    // if (!localStorage.getItem(key)) {
+    setShowPageTutorial(true);
+    setPageTutorialStep(1);
+    // }
+  }, [user]);
+
+  const handleClosePageTutorial = () => {
+    setShowPageTutorial(false);
+    setPageTutorialStep(1);
+    if (user) {
+      localStorage.setItem(`starry_page_tutorial_shown_${user.id}`, 'true');
+    }
+  };
+
+  const handlePageTutorialNext = () => {
+    if (pageTutorialStep < 3) {
+      setPageTutorialStep(pageTutorialStep + 1);
+    } else {
+      handleClosePageTutorial();
+    }
+  };
+
   // 밤하늘 제작 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -1075,6 +1105,107 @@ function HomePage() {
             </button>
           </div>
         </>
+      )}
+
+      {/* 페이지 튜토리얼 (첫 로그인 시) */}
+      {showPageTutorial && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[70] flex flex-col items-center justify-center cursor-pointer"
+          onClick={handlePageTutorialNext}
+        >
+          {/* 상단 우측 카운터/닫기 */}
+          <div className="absolute top-28 right-6">
+            {pageTutorialStep < 3 ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); handlePageTutorialNext(); }}
+                className="flex items-center gap-1 text-white text-sm"
+              >
+                {t.common.next}({pageTutorialStep}/3)
+                <span className="text-xs">&gt;&gt;</span>
+              </button>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleClosePageTutorial(); }}
+                className="flex items-center gap-1 text-white text-sm"
+              >
+                {t.home.pageTutorial.close}(3/3)
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Step 내용 */}
+          <div className="flex flex-col items-center px-8">
+            {/* Step 라벨 */}
+            <div className="bg-white px-5 py-1.5 rounded-full mb-6">
+              <span className="text-[#6155F5] font-bold text-lg">Step.{pageTutorialStep}</span>
+            </div>
+
+            {/* 설명 텍스트 */}
+            <div className="text-center text-white text-lg leading-relaxed whitespace-pre-line">
+              {pageTutorialStep === 1 && (
+                <>{t.home.pageTutorial.step1}<span className="font-bold">{t.home.pageTutorial.step1Bold}</span></>
+              )}
+              {pageTutorialStep === 2 && (
+                <>{t.home.pageTutorial.step2}<span className="font-bold">{t.home.pageTutorial.step2Bold}</span></>
+              )}
+              {pageTutorialStep === 3 && (
+                <>{t.home.pageTutorial.step3}<span className="font-bold">{t.home.pageTutorial.step3Bold}</span></>
+              )}
+            </div>
+
+          </div>
+
+          {/* 해당 Step의 하이라이트 버튼 (오버레이 위에 실제 버튼 위치와 동일) */}
+          <div className="fixed left-1/2 bottom-44 pointer-events-none" style={{ marginLeft: 'calc(185px - 60px)' }}>
+            <div className="flex flex-col gap-3">
+              {/* 공유 버튼 자리 */}
+              {pageTutorialStep === 1 ? (
+                <div className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+              ) : <div className="w-12 h-12" />}
+              {/* 캡쳐 버튼 자리 */}
+              {pageTutorialStep === 3 ? (
+                <div className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" d="M2 9V4a1 1 0 011-1h4" />
+                    <path strokeLinecap="round" d="M17 3h4a1 1 0 011 1v5" />
+                    <path strokeLinecap="round" d="M2 16v5a1 1 0 001 1h4" />
+                    <path strokeLinecap="round" d="M17 22h4a1 1 0 001-1v-5" />
+                    <circle cx="12" cy="12" r="3" strokeWidth="2" />
+                  </svg>
+                </div>
+              ) : <div className="w-12 h-12" />}
+              {/* 편집 버튼 자리 */}
+              {pageTutorialStep === 2 ? (
+                <div className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+              ) : <div className="w-12 h-12" />}
+            </div>
+          </div>
+
+          {/* 하단 페이지네이션 */}
+          <div className="absolute bottom-24 flex items-center gap-3">
+            {[1, 2, 3].map(step => (
+              <div
+                key={step}
+                className={`rounded-full transition-all ${
+                  pageTutorialStep === step
+                    ? 'w-3 h-3 bg-white'
+                    : 'w-2 h-2 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
       {/* 튜토리얼 팝업 */}

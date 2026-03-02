@@ -214,6 +214,15 @@ export const translations = {
         step4Capture: '사진을 갤러리에 저장',
         step4Link: '내 밤하늘 링크 복사',
       },
+      pageTutorial: {
+        step1: '친구, 가족, 연인 등\n나를 아는 사람들에게\n',
+        step1Bold: '링크를 공유해요!',
+        step2: '선물받은 별들을 모아\n내 밤하늘에\n',
+        step2Bold: '별자리를 만들어요!',
+        step3: 'SNS에 별자리를 공유하고\n내 별자리 속\n',
+        step3Bold: '의미를 해석해요!',
+        close: '닫기',
+      },
     },
 
     // Stat 페이지 (통계)
@@ -526,6 +535,15 @@ export const translations = {
         step4SaveDesc: 'Save my night sky design',
         step4Capture: 'Save photo to gallery',
         step4Link: 'Copy my night sky link',
+      },
+      pageTutorial: {
+        step1: 'Share your link with\nfriends, family, and\nloved ones who know you!\n',
+        step1Bold: 'Share the link!',
+        step2: 'Collect the gifted stars\nand create\n',
+        step2Bold: 'constellations in your sky!',
+        step3: 'Share constellations on SNS\nand interpret the\n',
+        step3Bold: 'meaning of your stars!',
+        close: 'Close',
       },
     },
 
