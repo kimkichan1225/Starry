@@ -237,12 +237,11 @@ function HomePage() {
 
   useEffect(() => {
     if (!user) return;
-    // TODO: 개발 완료 후 아래 주석 해제하고 강제 표시 줄 삭제
-    // const key = `starry_page_tutorial_shown_${user.id}`;
-    // if (!localStorage.getItem(key)) {
-    setShowPageTutorial(true);
-    setPageTutorialStep(1);
-    // }
+    const key = `starry_page_tutorial_shown_${user.id}`;
+    if (!localStorage.getItem(key)) {
+      setShowPageTutorial(true);
+      setPageTutorialStep(1);
+    }
   }, [user]);
 
   const handleClosePageTutorial = () => {
