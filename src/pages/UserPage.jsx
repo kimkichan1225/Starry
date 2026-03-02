@@ -57,6 +57,7 @@ function UserPage() {
   const isGoogleSignup = user?.app_metadata?.provider === 'google'; // 구글로 가입했는지
   const googleIdentity = user?.identities?.find(i => i.provider === 'google'); // 구글 identity 존재 여부
   const socialLinked = user?.user_metadata?.social_linked; // 프로필 설정 완료 여부
+
   const googleLinkedFromUserPage = user?.user_metadata?.google_linked; // UserPage에서 연동 완료 여부
 
   // 구글 연동 여부:
