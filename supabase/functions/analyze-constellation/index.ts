@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
-const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY')!;
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,25 +15,22 @@ serve(async (req) => {
       throw new Error('별자리 이미지가 없습니다.');
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'gpt-4o-mini',
         max_tokens: 200,
         messages: [{
           role: 'user',
           content: [
             {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: 'image/png',
-                data: image,
+              type: 'image_url',
+              image_url: {
+                url: `data:image/png;base64,${image}`,
               },
             },
             {
@@ -59,7 +56,7 @@ serve(async (req) => {
       throw new Error(data.error.message);
     }
 
-    const text = data.content[0].text.trim();
+    const text = data.choices[0].message.content.trim();
     const match = text.match(/\[[\s\S]*\]/);
     if (!match) {
       throw new Error('AI 응답을 파싱할 수 없습니다.');
