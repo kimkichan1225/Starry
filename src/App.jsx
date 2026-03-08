@@ -29,6 +29,7 @@ function App() {
       <AuthProvider>
         <StarsProvider>
           <Router>
+        <div className="mx-auto max-w-[430px] min-h-screen relative" style={{ boxShadow: '0 0 30px rgba(0,0,0,0.3)' }}>
         <Routes>
           <Route path="/" element={<LoadingPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -61,6 +62,7 @@ function App() {
           {/* <Route path="/login" element={<LoginPage />} /> */}
           {/* <Route path="/u/:userId" element={<NightSkyPage />} /> */}
         </Routes>
+        </div>
           </Router>
         </StarsProvider>
       </AuthProvider>
