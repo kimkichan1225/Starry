@@ -329,7 +329,7 @@ function HomePage() {
     });
 
     ctx.restore();
-  }, [isConstellationExpanded, stars, starPositions, connections]);
+  }, [isConstellationExpanded, aiNamingMode, stars, starPositions, connections]);
 
   // 별 이동 상태
   const [isMovingStar, setIsMovingStar] = useState(false);
