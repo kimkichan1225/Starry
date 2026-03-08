@@ -15,6 +15,21 @@ const LoadingPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // 이미 로그인된 유저는 자동으로 홈으로 이동
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        if (isAdminEmail(session.user.email)) {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/home', { replace: true });
+        }
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);

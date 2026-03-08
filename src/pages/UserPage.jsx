@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -7,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 
 function UserPage() {
+  const navigate = useNavigate();
   const { user, setUser, nickname, setNickname } = useAuth();
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
@@ -468,6 +470,22 @@ function UserPage() {
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* 로그아웃 버튼 */}
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate('/', { replace: true });
+                }}
+                className="w-full max-w-[240px] py-3 rounded-full border border-red-400/40 text-red-400 text-sm font-medium hover:bg-red-400/10 active:bg-red-400/20 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                {t.common.logout}
+              </button>
             </div>
           </div>
 
