@@ -299,6 +299,8 @@ export const translations = {
       // Step 5 - 완료
       signupComplete: '가입이 완료되었어요!',
       linkSNS: 'SNS 연동하기',
+      linkGoogle: '구글 연동하기',
+      linkKakao: '카카오 연동하기 (준비중)',
       goToNightSky: '밤하늘 만들러가기',
 
       // Error messages
@@ -622,6 +624,8 @@ export const translations = {
       // Step 5 - Complete
       signupComplete: 'Sign up complete!',
       linkSNS: 'Link SNS Account',
+      linkGoogle: 'Link Google',
+      linkKakao: 'Link Kakao (Coming Soon)',
       goToNightSky: 'Create My Night Sky',
 
       // Error messages
