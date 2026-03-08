@@ -18,6 +18,14 @@
 
 @layer utilities {
   /* 커스텀 유틸리티는 여기에 추가 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .star-glow {
     animation: glow 2s ease-in-out infinite alternate;
   }

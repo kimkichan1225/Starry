@@ -49,6 +49,160 @@ const SignupPage = () => {
   // 커스텀 드롭다운 상태
   const [openDropdown, setOpenDropdown] = useState(null); // 'year', 'month', 'day', or null
 
+  // 드래그 휠 피커 컴포넌트 (인라인)
+  const WheelPicker = ({ items, selectedValue, onSelect }) => {
+    const containerRef = useRef(null);
+    const isDragging = useRef(false);
+    const isSettling = useRef(false);
+    const startY = useRef(0);
+    const scrollStart = useRef(0);
+    const lastSelectedRef = useRef(selectedValue);
+    const ITEM_HEIGHT = 40;
+    const VISIBLE_ITEMS = 5;
+
+    const selectedIndex = items.indexOf(selectedValue);
+
+    // 초기 마운트 시에만 스크롤 위치 세팅
+    useEffect(() => {
+      if (containerRef.current) {
+        isSettling.current = true;
+        containerRef.current.scrollTop = selectedIndex * ITEM_HEIGHT;
+        // scrollTop 직접 세팅은 smooth가 아니므로 바로 풀어줌
+        requestAnimationFrame(() => {
+          isSettling.current = false;
+        });
+      }
+    }, []); // 마운트 시에만 실행
+
+    const snapTo = (index) => {
+      if (!containerRef.current) return;
+      isSettling.current = true;
+      containerRef.current.scrollTo({ top: index * ITEM_HEIGHT, behavior: 'smooth' });
+      // smooth 스크롤이 끝날 때까지 대기
+      setTimeout(() => {
+        isSettling.current = false;
+      }, 300);
+    };
+
+    const handleScrollEnd = () => {
+      if (!containerRef.current || isSettling.current) return;
+      const scrollTop = containerRef.current.scrollTop;
+      const index = Math.round(scrollTop / ITEM_HEIGHT);
+      const clampedIndex = Math.max(0, Math.min(items.length - 1, index));
+      const newValue = items[clampedIndex];
+
+      snapTo(clampedIndex);
+
+      if (newValue !== lastSelectedRef.current) {
+        lastSelectedRef.current = newValue;
+        onSelect(newValue);
+      }
+    };
+
+    const scrollTimeout = useRef(null);
+    const handleScroll = () => {
+      if (isSettling.current) return;
+      clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = setTimeout(handleScrollEnd, 120);
+    };
+
+    const handleTouchStart = (e) => {
+      isDragging.current = true;
+      isSettling.current = false;
+      clearTimeout(scrollTimeout.current);
+      startY.current = e.touches[0].clientY;
+      scrollStart.current = containerRef.current.scrollTop;
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isDragging.current) return;
+      const diff = startY.current - e.touches[0].clientY;
+      containerRef.current.scrollTop = scrollStart.current + diff;
+    };
+
+    const handleTouchEnd = () => {
+      isDragging.current = false;
+      handleScrollEnd();
+    };
+
+    const handleMouseDown = (e) => {
+      isDragging.current = true;
+      isSettling.current = false;
+      clearTimeout(scrollTimeout.current);
+      startY.current = e.clientY;
+      scrollStart.current = containerRef.current.scrollTop;
+      e.preventDefault();
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging.current) return;
+      const diff = startY.current - e.clientY;
+      containerRef.current.scrollTop = scrollStart.current + diff;
+    };
+
+    const handleMouseUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      handleScrollEnd();
+    };
+
+    useEffect(() => {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }, []);
+
+    return (
+      <div
+        className="bg-[#2D2A4C] rounded-2xl border-2 border-[#6B5CFF] shadow-lg shadow-black/40"
+        style={{ width: 80, height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', position: 'relative' }}
+      >
+        {/* 선택 하이라이트 */}
+        <div
+          className="absolute left-1 right-1 pointer-events-none z-10 bg-[#6B5CFF]/30 rounded-lg"
+          style={{ top: ITEM_HEIGHT * 2, height: ITEM_HEIGHT }}
+        />
+        {/* 위 그라데이션 */}
+        <div
+          className="absolute top-0 left-0 right-0 pointer-events-none z-20"
+          style={{ height: ITEM_HEIGHT * 2, background: 'linear-gradient(to bottom, #2D2A4Cee, #2D2A4C00)' }}
+        />
+        {/* 아래 그라데이션 */}
+        <div
+          className="absolute bottom-0 left-0 right-0 pointer-events-none z-20"
+          style={{ height: ITEM_HEIGHT * 2, background: 'linear-gradient(to top, #2D2A4Cee, #2D2A4C00)' }}
+        />
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          className="h-full overflow-y-scroll scrollbar-hide cursor-grab active:cursor-grabbing"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
+          <div style={{ height: ITEM_HEIGHT * 2 }} />
+          {items.map((item) => (
+            <div
+              key={item}
+              className={`flex items-center justify-center select-none ${
+                item === selectedValue ? 'text-white text-lg font-bold' : 'text-white/40 text-base'
+              }`}
+              style={{ height: ITEM_HEIGHT }}
+            >
+              {item}
+            </div>
+          ))}
+          <div style={{ height: ITEM_HEIGHT * 2 }} />
+        </div>
+      </div>
+    );
+  };
+
   // 년/월/일 옵션 생성
   const years = Array.from({ length: 100 }, (_, i) => String(2025 - i));
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
@@ -862,7 +1016,7 @@ const SignupPage = () => {
 
                 {/* 흰색 테두리 외부 박스 */}
                 <div className="rounded-3xl px-3 py-3 border-2 border-white flex items-center gap-2">
-                  {/* 년 - 커스텀 드롭다운 */}
+                  {/* 년 - 인라인 스크롤 피커 */}
                   <div className="relative">
                     <div
                       onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
@@ -870,9 +1024,18 @@ const SignupPage = () => {
                     >
                       <span className="text-white text-2xl font-bold w-16 block text-center">{formData.birthYear}</span>
                     </div>
+                    {openDropdown === 'year' && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50">
+                        <WheelPicker
+                          items={years}
+                          selectedValue={formData.birthYear}
+                          onSelect={(val) => handleScrollSelect('Year', val)}
+                        />
+                      </div>
+                    )}
                   </div>
 
-                  {/* 월 - 커스텀 드롭다운 */}
+                  {/* 월 - 인라인 스크롤 피커 */}
                   <div className="relative">
                     <div
                       onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
@@ -880,9 +1043,18 @@ const SignupPage = () => {
                     >
                       <span className="text-white text-2xl font-bold w-10 block text-center">{formData.birthMonth}</span>
                     </div>
+                    {openDropdown === 'month' && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50">
+                        <WheelPicker
+                          items={months}
+                          selectedValue={formData.birthMonth}
+                          onSelect={(val) => handleScrollSelect('Month', val)}
+                        />
+                      </div>
+                    )}
                   </div>
 
-                  {/* 일 - 커스텀 드롭다운 */}
+                  {/* 일 - 인라인 스크롤 피커 */}
                   <div className="relative">
                     <div
                       onClick={() => setOpenDropdown(openDropdown === 'day' ? null : 'day')}
@@ -890,61 +1062,21 @@ const SignupPage = () => {
                     >
                       <span className="text-white text-2xl font-bold w-10 block text-center">{formData.birthDay}</span>
                     </div>
+                    {openDropdown === 'day' && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50">
+                        <WheelPicker
+                          items={days}
+                          selectedValue={formData.birthDay}
+                          onSelect={(val) => handleScrollSelect('Day', val)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* 커스텀 드롭다운 모달 (바텀 시트 스타일) */}
+                {/* 바깥 클릭 시 닫기 */}
                 {openDropdown && (
-                  <div className="fixed inset-0 z-50 flex items-end justify-center">
-                    {/* 배경 오버레이 */}
-                    <div
-                      className="absolute inset-0 bg-black/50"
-                      onClick={() => setOpenDropdown(null)}
-                    />
-
-                    {/* 드롭다운 컨텐츠 */}
-                    <div className="relative w-full max-w-md bg-[#2D2A4C] rounded-t-3xl p-4 pb-8 max-h-[50vh] flex flex-col">
-                      {/* 헤더 */}
-                      <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/20">
-                        <span className="text-white font-bold text-lg">
-                          {openDropdown === 'year' ? t.signup.selectYear : openDropdown === 'month' ? t.signup.selectMonth : t.signup.selectDay}
-                        </span>
-                        <button
-                          onClick={() => setOpenDropdown(null)}
-                          className="text-white/60 text-2xl leading-none"
-                        >
-                          ×
-                        </button>
-                      </div>
-
-                      {/* 옵션 목록 */}
-                      <div className="overflow-y-auto flex-1 -mx-2">
-                        <div className="grid grid-cols-4 gap-2 px-2">
-                          {(openDropdown === 'year' ? years : openDropdown === 'month' ? months : days).map(item => (
-                            <button
-                              key={item}
-                              onClick={() => {
-                                handleScrollSelect(
-                                  openDropdown === 'year' ? 'Year' : openDropdown === 'month' ? 'Month' : 'Day',
-                                  item
-                                );
-                                setOpenDropdown(null);
-                              }}
-                              className={`py-3 rounded-xl text-center text-lg font-medium transition-colors ${
-                                (openDropdown === 'year' && formData.birthYear === item) ||
-                                (openDropdown === 'month' && formData.birthMonth === item) ||
-                                (openDropdown === 'day' && formData.birthDay === item)
-                                  ? 'bg-[#6B5CFF] text-white'
-                                  : 'bg-[#3D3A5C] text-white/80 hover:bg-[#4D4A6C]'
-                              }`}
-                            >
-                              {item}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)} />
                 )}
 
                 {/* 오른쪽 손 */}
