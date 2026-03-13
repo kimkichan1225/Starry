@@ -70,6 +70,15 @@ function UserPage() {
     : (!!googleIdentity && (socialLinked === true || googleLinkedFromUserPage === true));
   const googleEmail = googleIdentity?.identity_data?.email || null;
 
+  // 카카오 연동 상태 확인
+  const isKakaoSignup = user?.app_metadata?.provider === 'kakao';
+  const kakaoIdentity = user?.identities?.find(i => i.provider === 'kakao');
+  const kakaoLinkedFromUserPage = user?.user_metadata?.kakao_linked;
+  const isKakaoLinked = isKakaoSignup
+    ? socialLinked === true
+    : (!!kakaoIdentity && (socialLinked === true || kakaoLinkedFromUserPage === true));
+  const kakaoEmail = kakaoIdentity?.identity_data?.email || null;
+
   // 구글 연동하기
   const handleLinkGoogle = async () => {
     setSocialLoading(true);
@@ -130,6 +139,67 @@ function UserPage() {
       handleUnlinkGoogle();
     } else {
       handleLinkGoogle();
+    }
+  };
+
+  // 카카오 연동하기
+  const handleLinkKakao = async () => {
+    setSocialLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.linkIdentity({
+        provider: 'kakao',
+        options: {
+          redirectTo: `${window.location.origin}/user`,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      setError(error.message || t.user.kakaoLinkFailed);
+      setSocialLoading(false);
+    }
+  };
+
+  // 카카오 연동 해제
+  const handleUnlinkKakao = async () => {
+    if (isKakaoSignup || (user?.identities?.length || 0) <= 1) {
+      setError(t.user.kakaoCannotUnlink);
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (!kakaoIdentity?.identity_id) {
+      setError(t.user.linkInfoNotFound);
+      return;
+    }
+
+    const confirmed = window.confirm(t.user.kakaoUnlinkConfirm);
+    if (!confirmed) return;
+
+    setSocialLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.unlinkIdentity(kakaoIdentity);
+      if (error) throw error;
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      if (updatedUser) setUser(updatedUser);
+      setSuccessMessage(t.user.kakaoUnlinked);
+      setTimeout(() => setSuccessMessage(''), 2000);
+    } catch (error) {
+      setError(error.message || t.user.kakaoUnlinkFailed);
+    } finally {
+      setSocialLoading(false);
+    }
+  };
+
+  // 카카오 토글 클릭 핸들러
+  const handleKakaoToggle = () => {
+    if (socialLoading) return;
+
+    if (isKakaoLinked) {
+      handleUnlinkKakao();
+    } else {
+      handleLinkKakao();
     }
   };
 
@@ -412,20 +482,34 @@ function UserPage() {
                   )}
                 </div>
 
-                {/* 카카오 (준비중) */}
-                <div className="flex items-center gap-3 opacity-50">
+                {/* 카카오 */}
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#FEE500] flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5" viewBox="0 0 48 48">
                       <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
                     </svg>
                   </div>
-                  <span className="flex-1 text-white text-sm">{t.user.preparing}</span>
-                  <button
-                    disabled
-                    className="w-12 h-6 rounded-full bg-gray-500 relative cursor-not-allowed"
-                  >
-                    <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white" />
-                  </button>
+                  <span className="flex-1 text-white text-sm">
+                    {isKakaoLinked ? (kakaoEmail || 'Kakao') : t.user.notLinked}
+                  </span>
+                  {socialLoading ? (
+                    <div className="w-12 h-6 flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleKakaoToggle}
+                      className={`w-12 h-6 rounded-full relative transition-colors ${
+                        isKakaoLinked ? 'bg-purple-500' : 'bg-gray-500'
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                          isKakaoLinked ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

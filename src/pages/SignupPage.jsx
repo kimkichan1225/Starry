@@ -1221,16 +1221,27 @@ const SignupPage = () => {
               </svg>
             </button>
 
-            {/* 카카오 연동 (준비중) */}
+            {/* 카카오 연동 */}
             <button
-              disabled
-              className="w-12 h-12 rounded-xl bg-[#FEE500] flex items-center justify-center cursor-not-allowed relative overflow-hidden"
+              onClick={async () => {
+                try {
+                  const { error } = await supabase.auth.linkIdentity({
+                    provider: 'kakao',
+                    options: {
+                      redirectTo: `${window.location.origin}/`,
+                    },
+                  });
+                  if (error) throw error;
+                } catch (err) {
+                  console.error('Kakao link error:', err);
+                }
+              }}
+              className="w-12 h-12 rounded-xl bg-[#FEE500] hover:bg-[#F5DC00] transition-colors flex items-center justify-center"
               title={t.signup.linkKakao}
             >
-              <svg className="w-6 h-6 opacity-30" viewBox="0 0 48 48">
+              <svg className="w-6 h-6" viewBox="0 0 48 48">
                 <path fill="#3C1E1E" d="M24,8C13.507,8,5,14.701,5,22.938c0,5.145,3.302,9.666,8.256,12.323l-2.116,7.728c-0.125,0.458,0.311,0.838,0.713,0.622l9.394-5.043C22.16,38.721,23.063,38.875,24,38.875c10.493,0,19-6.701,19-14.938S34.493,8,24,8z"/>
               </svg>
-              <span className="absolute text-[#3C1E1E] text-[10px] font-bold">{language === 'ko' ? '준비중' : 'Soon'}</span>
             </button>
 
           </div>
