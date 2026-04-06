@@ -910,7 +910,7 @@ function HomePage() {
 
       {/* 바텀시트 - 별자리 정보 */}
       <div
-        className={`fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-[340px] top-44 bottom-32 bg-white shadow-lg transition-all duration-500 ease-out z-30 ${
+        className={`fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-[340px] top-44 bottom-32 bg-white shadow-lg transition-all duration-500 ease-out z-30 overflow-visible ${
           isConstellationExpanded ? 'translate-y-0 rounded-3xl' : 'translate-y-[calc(100%-2rem)] rounded-t-3xl'
         } ${isEditMode ? 'opacity-0 pointer-events-none' : ''}`}
       >
@@ -940,6 +940,7 @@ function HomePage() {
             </button>
           )}
         </div>
+
 
         {/* 확장된 내용 */}
         {isConstellationExpanded && (
@@ -1013,25 +1014,32 @@ function HomePage() {
               </>
             ) : (
               <>
-                {/* 중앙 원형 이미지 영역 */}
+                {/* 중앙 캐릭터 + 별자리 영역 */}
                 <div className="flex justify-center mb-4">
-                  <canvas
-                    ref={miniCanvasRef}
-                    width={192}
-                    height={192}
-                    className="w-48 h-48 rounded-full"
-                  />
+                  <div className="relative" style={{ width: '300px', height: '300px' }}>
+                    {/* 캐릭터 이미지 (뒤쪽) */}
+                    <img
+                      src="/Starshape.png"
+                      alt="Star character"
+                      className="absolute inset-0 w-full h-full object-contain pointer-events-none z-10"
+                    />
+                    {/* 별자리 캔버스 (뒤쪽, 수정구슬 안) */}
+                    <canvas
+                      ref={miniCanvasRef}
+                      width={192}
+                      height={192}
+                      className="absolute left-1/2 w-60 h-60 rounded-full z-0" style={{ top: '57%', transform: 'translate(-50%, -50%)' }}
+                    />
+                  </div>
                 </div>
 
-                {/* 카드 2개 */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                    <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.goodMatch}</span> {t.home.constellation}</span>
-                  </div>
-                  <div className="aspect-[4/5] bg-white border border-gray-200 rounded-2xl p-4 flex items-start justify-center">
-                    <span className="text-[#6155F5] text-sm text-center"><span className="font-bold">{t.home.badMatch}</span> {t.home.constellation}</span>
-                  </div>
-                </div>
+                {/* 오늘의 운세 버튼 */}
+                <button
+                  onClick={() => {/* TODO: 오늘의 운세 기능 추가 예정 */}}
+                  className="w-full py-3 bg-[#6155F5] text-white font-semibold rounded-full hover:bg-[#5048D9] transition mb-3"
+                >
+                  오늘의 운세
+                </button>
 
                 {/* AI 별자리 이름 바꾸기 버튼 */}
                 <button
