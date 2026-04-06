@@ -295,12 +295,22 @@ function HomePage() {
     ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
     ctx.fill();
 
-    const padding = 20;
-    const scaleX = (size - padding * 2) / 350;
-    const scaleY = (size - padding * 2) / 500;
-    const scale = Math.min(scaleX, scaleY);
-    const offsetX = (size - 350 * scale) / 2;
-    const offsetY = (size - 500 * scale) / 2;
+    const padding = 35;
+    // 별자리 실제 바운딩 박스 계산
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    stars.forEach((_, index) => {
+      if (starPositions[index]) {
+        minX = Math.min(minX, starPositions[index].x);
+        maxX = Math.max(maxX, starPositions[index].x);
+        minY = Math.min(minY, starPositions[index].y);
+        maxY = Math.max(maxY, starPositions[index].y);
+      }
+    });
+    const starWidth = maxX - minX || 1;
+    const starHeight = maxY - minY || 1;
+    const scale = Math.min((size - padding * 2) / starWidth, (size - padding * 2) / starHeight);
+    const offsetX = (size - starWidth * scale) / 2 - minX * scale;
+    const offsetY = (size - starHeight * scale) / 2 - minY * scale;
 
     ctx.save();
     ctx.beginPath();
