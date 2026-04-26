@@ -935,7 +935,7 @@ function HomePage() {
             onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
             className="w-full px-5 pt-2 pb-4 flex justify-center items-center"
           >
-            <span className={`text-2xl ${isConstellationExpanded ? 'text-[#6155F5] font-bold' : 'text-black font-medium'}`}>
+            <span className="text-2xl text-[#6155F5] font-bold">
               {selectedConstellation || t.home.constellationName}
             </span>
           </button>
