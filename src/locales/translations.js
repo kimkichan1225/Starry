@@ -158,6 +158,19 @@ export const translations = {
       designer: '디자이너',
     },
 
+    // 오늘의 운세
+    fortune: {
+      title: '오늘의 운세',
+      love: '애정운',
+      health: '건강운',
+      wealth: '재물운',
+      luck: '행운 지수',
+      more: '더보기',
+      collapse: '접기',
+      basedOn: '생년월일 기반으로 생성된 오늘의 운세입니다.',
+      noBirthdate: '생년월일을 등록하면 오늘의 운세를 확인할 수 있어요.',
+    },
+
     // Starry 페이지 (소개)
     starry: {
       title: 'Starry의 이야기',
@@ -485,6 +498,19 @@ export const translations = {
       copyright: 'Copyright ©2025 123456789. All rights reserved.',
       developer: 'Developer',
       designer: 'Designer',
+    },
+
+    // Today's Fortune
+    fortune: {
+      title: "Today's Fortune",
+      love: 'Love',
+      health: 'Health',
+      wealth: 'Wealth',
+      luck: 'Luck',
+      more: 'More',
+      collapse: 'Collapse',
+      basedOn: "Today's fortune generated based on your birthdate.",
+      noBirthdate: 'Register your birthdate to see your daily fortune.',
     },
 
     // Starry Page (About)
