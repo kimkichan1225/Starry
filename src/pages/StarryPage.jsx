@@ -203,8 +203,8 @@ function StarryPage() {
                         <div className="flex justify-center gap-0.5">{renderStars(fortune.wealth)}</div>
                       </div>
                       <div className="bg-[#FFFFFF]/20 rounded-xl py-3 px-4 text-center">
-                        <p className="text-white text-sm font-semibold mb-1">{t.fortune.luck}</p>
-                        <div className="flex justify-center gap-0.5">{renderStars(fortune.luck)}</div>
+                        <p className="text-white text-sm font-semibold mb-1">{t.fortune.luckyItem}</p>
+                        <p className="text-white text-xs">{fortune.luckyItem}</p>
                       </div>
                     </div>
 
