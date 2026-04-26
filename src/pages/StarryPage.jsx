@@ -219,9 +219,9 @@ function StarryPage() {
                     {/* 확장 상세 내용 */}
                     {fortuneExpanded && (
                       <div className="mt-4 w-full bg-white/10 backdrop-blur-sm rounded-2xl p-5">
-                        <p className="text-white/90 text-sm leading-relaxed">
+                        <div className="text-white/90 text-sm leading-relaxed whitespace-pre-line">
                           {fortune.explanation}
-                        </p>
+                        </div>
                         <div className="mt-3 pt-3 border-t border-white/20">
                           <p className="text-white/60 text-xs text-center">
                             {t.fortune.basedOn}
