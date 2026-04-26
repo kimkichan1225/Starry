@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import { supabase } from '../lib/supabase';
@@ -15,18 +15,23 @@ function StarryPage() {
   const [fortune, setFortune] = useState(null);
   const [fortuneLoading, setFortuneLoading] = useState(true);
   const [fortuneExpanded, setFortuneExpanded] = useState(false);
+  const fortuneFetchedRef = useRef(false);
 
   useEffect(() => {
     fetchNotices();
   }, []);
 
-  // 오늘의 운세 로드
+  // 오늘의 운세 로드 (1회만 실행)
   useEffect(() => {
+    if (fortuneFetchedRef.current) return;
+
     const loadFortune = async () => {
       if (!user) {
         setFortuneLoading(false);
         return;
       }
+
+      fortuneFetchedRef.current = true;
 
       // 1차: user_metadata에서 birthdate 확인
       let birthdate = user.user_metadata?.birthdate;
@@ -93,8 +98,13 @@ function StarryPage() {
   // 별점 렌더링
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <svg key={i} className="w-5 h-5" viewBox="0 0 20 20" fill={i < rating ? '#6155F5' : '#4A4A6A'}>
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      <svg key={i} className="w-5 h-5" viewBox="0 0 20 20">
+        <path
+          d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+          fill={i < rating ? '#6155F5' : '#777777'}
+          stroke={i < rating ? '#8A86FF' : '#929292'}
+          strokeWidth="1"
+        />
       </svg>
     ));
   };
@@ -210,7 +220,7 @@ function StarryPage() {
                     {fortuneExpanded && (
                       <div className="mt-4 w-full bg-white/10 backdrop-blur-sm rounded-2xl p-5">
                         <p className="text-white/90 text-sm leading-relaxed">
-                          {fortune.message}
+                          {fortune.explanation}
                         </p>
                         <div className="mt-3 pt-3 border-t border-white/20">
                           <p className="text-white/60 text-xs text-center">
