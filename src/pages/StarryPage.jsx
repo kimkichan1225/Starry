@@ -220,7 +220,12 @@ function StarryPage() {
                     {fortuneExpanded && (
                       <div className="mt-4 w-full bg-white/10 backdrop-blur-sm rounded-2xl p-5">
                         <div className="text-white/90 text-sm leading-relaxed whitespace-pre-line">
-                          {fortune.explanation}
+                          {fortune.explanation?.split('\n').map((line, i) => {
+                            if (/^[❤️🧠💰🔥]/.test(line.trim())) {
+                              return <p key={i} className="text-lg font-bold text-white mt-4 mb-1">{line}</p>;
+                            }
+                            return <span key={i}>{line}{'\n'}</span>;
+                          })}
                         </div>
                         <div className="mt-3 pt-3 border-t border-white/20">
                           <p className="text-white/60 text-xs text-center">
