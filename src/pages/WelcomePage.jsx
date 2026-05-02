@@ -170,81 +170,46 @@ function WelcomePage() {
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
 
-  // 마케팅용 간단 운세 템플릿 (생일 + 오늘 날짜로 결정적 선택)
-  const fortunes = language === 'ko' ? [
-    {
-      titleLine1: '오늘은 잠깐',
-      titleLine2: '쉬어가는 하루에요!',
-      body: (y, m, d) =>
-        `오늘 ${y}년 ${m}월 ${d}일생은 오늘 토성의 기운이 강해서, 몸이 무거운 하루에요!\n그렇지만 금을 몸에 지니면 행운 지수가 올라갈거에요!`,
-    },
-    {
-      titleLine1: '오늘은 활기찬',
-      titleLine2: '하루가 될 거예요!',
-      body: (y, m, d) =>
-        `오늘 ${y}년 ${m}월 ${d}일생은 오늘 화성의 기운이 강해서, 에너지가 넘치는 하루에요!\n빨간색 소품을 지니면 행운 지수가 더 올라갈거에요!`,
-    },
-    {
-      titleLine1: '오늘은 새로운 만남이',
-      titleLine2: '기다리고 있어요!',
-      body: (y, m, d) =>
-        `오늘 ${y}년 ${m}월 ${d}일생은 오늘 금성의 기운이 강해서, 좋은 인연이 가까이에 있어요!\n분홍색 옷을 입으면 행운 지수가 더 올라갈거에요!`,
-    },
-    {
-      titleLine1: '오늘은 지혜가',
-      titleLine2: '빛나는 하루에요!',
-      body: (y, m, d) =>
-        `오늘 ${y}년 ${m}월 ${d}일생은 오늘 수성의 기운이 강해서, 머리가 맑아지는 하루에요!\n파란색 펜을 지니면 행운 지수가 더 올라갈거에요!`,
-    },
-    {
-      titleLine1: '오늘은 풍요로운',
-      titleLine2: '하루가 될 거예요!',
-      body: (y, m, d) =>
-        `오늘 ${y}년 ${m}월 ${d}일생은 오늘 목성의 기운이 강해서, 좋은 기회가 다가오는 하루에요!\n초록색 액세서리가 행운을 가져다줄 거에요!`,
-    },
-  ] : [
-    {
-      titleLine1: 'Take it easy',
-      titleLine2: 'and rest today!',
-      body: (y, m, d) =>
-        `Born on ${y}-${m}-${d}, today Saturn's energy weighs you down a bit!\nKeeping gold near you will boost your luck.`,
-    },
-    {
-      titleLine1: 'A lively',
-      titleLine2: 'day awaits you!',
-      body: (y, m, d) =>
-        `Born on ${y}-${m}-${d}, today Mars's energy fills you with vigor!\nA red accent will boost your luck even more.`,
-    },
-    {
-      titleLine1: 'A new connection',
-      titleLine2: 'is on the way!',
-      body: (y, m, d) =>
-        `Born on ${y}-${m}-${d}, Venus's energy brings someone special closer today!\nWearing pink will boost your luck even more.`,
-    },
-    {
-      titleLine1: 'Wisdom shines',
-      titleLine2: 'on you today!',
-      body: (y, m, d) =>
-        `Born on ${y}-${m}-${d}, Mercury's energy clears your mind today!\nA blue pen will boost your luck even more.`,
-    },
-    {
-      titleLine1: 'A bountiful day',
-      titleLine2: 'is on its way!',
-      body: (y, m, d) =>
-        `Born on ${y}-${m}-${d}, Jupiter's energy brings opportunity today!\nA green accessory will bring you luck.`,
-    },
-  ];
+  // 운세 결과 (daily-fortune Edge Function 응답)
+  const [fortune, setFortune] = useState(null);
 
-  const getFortuneIndex = () => {
-    const seed =
-      parseInt(formData.birthYear || '0', 10) * 10000 +
-      parseInt(formData.birthMonth || '0', 10) * 100 +
-      parseInt(formData.birthDay || '0', 10);
-    const today = new Date();
-    const dayOfYear = Math.floor(
-      (today - new Date(today.getFullYear(), 0, 0)) / 86400000
-    );
-    return (seed + dayOfYear) % fortunes.length;
+  const FALLBACK_FORTUNE = {
+    message: language === 'ko' ? '오늘은 평온한 하루에요!' : 'A peaceful day awaits!',
+    emotionImage: '/emotions/emotion-calm,zen,mindful.png',
+    luckyItem: language === 'ko' ? '따뜻한 차 한 잔' : 'a warm cup of tea',
+  };
+
+  const fetchFortune = async () => {
+    const birthdate = `${formData.birthYear}-${formData.birthMonth}-${formData.birthDay}`;
+    const today = new Date().toISOString().split('T')[0];
+    const cacheKey = `welcome_fortune_${birthdate}_${today}`;
+
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      setFortune(JSON.parse(cached));
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        'https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/daily-fortune',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ birthdate }),
+        }
+      );
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      setFortune(data);
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+    } catch (err) {
+      console.error('운세 로드 실패:', err);
+      setFortune(FALLBACK_FORTUNE);
+    }
   };
 
   // 같은 생일 인구 추산: 전세계 연간 출생 ~140M / 365 ≈ 383,000명/일
@@ -278,18 +243,38 @@ function WelcomePage() {
   };
 
   const handleNextFromStep2 = () => {
+    setFortune(null);
     setCurrentStep(3);
   };
 
-  // Step 3 로딩 후 자동으로 Step 4로 이동
+  // Step 3: 운세 fetch + 최소 2.5초 로딩 후 Step 4로 이동
   useEffect(() => {
-    if (currentStep === 3) {
-      const timer = setTimeout(() => setCurrentStep(4), 3000);
-      return () => clearTimeout(timer);
-    }
+    if (currentStep !== 3) return;
+
+    let cancelled = false;
+    const startTime = Date.now();
+    const MIN_LOADING_MS = 2500;
+
+    fetchFortune().finally(() => {
+      if (cancelled) return;
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, MIN_LOADING_MS - elapsed);
+      setTimeout(() => {
+        if (!cancelled) setCurrentStep(4);
+      }, remaining);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentStep]);
 
-  const fortune = fortunes[getFortuneIndex()];
+  // step 4 본문 템플릿
+  const fortuneBody = fortune
+    ? language === 'ko'
+      ? `오늘 ${formData.birthYear}년 ${formData.birthMonth}월 ${formData.birthDay}일생은 ${fortune.message}\n행운 아이템 '${fortune.luckyItem}'을(를) 가까이 두면 행운 지수가 올라갈 거예요!`
+      : `Born on ${formData.birthYear}-${formData.birthMonth}-${formData.birthDay}: ${fortune.message}\nKeep your lucky item '${fortune.luckyItem}' close to boost your luck today!`
+    : '';
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -544,20 +529,19 @@ function WelcomePage() {
         )}
 
         {/* Step 4: 운세 결과 1 */}
-        {currentStep === 4 && (
+        {currentStep === 4 && fortune && (
           <div className="flex-1 flex flex-col px-8 pt-2 pb-6">
             <h1 className="text-white text-3xl font-bold leading-tight mb-3">
-              {fortune.titleLine1}<br />
-              {fortune.titleLine2}
+              {fortune.message}
             </h1>
             <div className="h-px bg-white/40 mb-6" />
             <p className="text-white text-sm leading-relaxed whitespace-pre-line">
-              {fortune.body(formData.birthYear, formData.birthMonth, formData.birthDay)}
+              {fortuneBody}
             </p>
 
             <div className="flex-1 flex items-center justify-center my-4">
               <img
-                src="/StarryCharacter.png"
+                src={fortune.emotionImage}
                 alt="Starry"
                 className="w-48 h-auto"
               />
@@ -574,23 +558,21 @@ function WelcomePage() {
 
         {/* Step 5: 운세 결과 2 (CTA) */}
         {currentStep === 5 && (
-          <div className="flex-1 flex flex-col px-8 pt-2 pb-6">
-            <h1 className="text-white text-3xl font-bold leading-tight mb-3">
+          <div className="flex-1 flex flex-col px-8 pt-4 pb-6">
+            <h1 className="text-white text-3xl font-bold leading-tight mb-4">
               {formatNumber(getSameBirthdayCount())}{t.welcome.sameFortuneSuffix}<br />
               {t.welcome.sameFortuneTitle2}
             </h1>
-            <div className="h-px bg-white/40 mb-6" />
-            <div className="text-white text-sm leading-relaxed space-y-4">
+            <div className="h-px bg-white/60 mb-7" />
+            <div className="text-white text-[15px] leading-relaxed space-y-6">
               <p>{t.welcome.result2Body1(formData.name)}</p>
               <p>{t.welcome.result2Body2}</p>
               <p>{t.welcome.result2Body3}</p>
             </div>
 
-            <div className="flex-1" />
-
             <button
               onClick={() => navigate('/')}
-              className="w-full py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
+              className="w-full py-3 mt-auto rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors"
             >
               {t.welcome.findRealFortune}
             </button>
