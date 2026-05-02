@@ -90,6 +90,14 @@ export const translations = {
       enterName: '이름을 입력하세요.',
       pleaseEnterName: '이름을 입력해주세요.',
       nameHint: '* 이름 또는 닉네임을 입력해주세요.',
+      fortuneLoading: '오늘의 운세 읽는 중',
+      nextLabel: '다음으로',
+      sameFortuneSuffix: '명과',
+      sameFortuneTitle2: '같은 운세에요!',
+      result2Body1: (name) => `하지만 세상에 똑같은 사람이 없듯, ${name}님이 오늘을 대하는 마음도 남들과는 분명 다를 거예요.`,
+      result2Body2: '성격과 인간관계까지 종합한 진짜 운세를 확인하려면?',
+      result2Body3: 'STARRY에서 별자리와 성격 조합한 나만의 운세를 확인하세요.',
+      findRealFortune: '내 진짜 운세 알아보기',
     },
 
     // 설문 질문 페이지
@@ -440,6 +448,14 @@ export const translations = {
       enterName: 'Enter your name.',
       pleaseEnterName: 'Please enter your name.',
       nameHint: '* Please enter your name or nickname.',
+      fortuneLoading: "Reading today's fortune",
+      nextLabel: 'Next',
+      sameFortuneSuffix: 'people',
+      sameFortuneTitle2: 'share this fortune!',
+      result2Body1: (name) => `But just as no two people are alike, the way ${name} faces today will surely differ from others.`,
+      result2Body2: 'Want to see the real fortune that includes personality and relationships?',
+      result2Body3: 'Check your unique fortune combined with your constellation and personality at STARRY.',
+      findRealFortune: 'See my real fortune',
     },
 
     // Survey Questions Page
