@@ -209,7 +209,7 @@ function ConstellationLines({ points }) {
 }
 
 // 별자리 그룹 컴포넌트
-function Constellation3D({ constellation, onSelect, isSelected, isPreview = false }) {
+function Constellation3D({ constellation, onSelect, isSelected, isPreview = false, isOwner = false, onDelete }) {
   const groupRef = useRef();
 
   const centerPosition = useMemo(() =>
@@ -291,16 +291,49 @@ function Constellation3D({ constellation, onSelect, isSelected, isPreview = fals
 
       {isSelected && !isPreview && (
         <Html position={centerPosition} center>
-          <div className="bg-black/80 text-white px-4 py-3 rounded-xl min-w-[150px] text-center pointer-events-none">
-            <div className="font-bold text-lg">{constellation.name}</div>
-            <div className="text-gray-300 text-sm mt-1">by {constellation.creator}</div>
+          <div
+            className="bg-black/85 backdrop-blur-md text-white px-5 py-4 rounded-2xl text-center border border-white/10 animate-popup"
+            style={{
+              wordBreak: 'keep-all',
+              minWidth: 180,
+              maxWidth: 240,
+              boxShadow: '0 0 32px rgba(97, 85, 245, 0.35), 0 8px 24px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <div className="font-bold text-base text-white pointer-events-none leading-tight tracking-tight">
+              {constellation.name}
+            </div>
+            <div className="text-white/50 text-xs mt-1 pointer-events-none">
+              by {constellation.creator}
+            </div>
+            {isOwner && onDelete && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(constellation); }}
+                className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-full text-xs font-semibold transition-all active:scale-95 shadow-lg shadow-red-500/30"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                </svg>
+                삭제
+              </button>
+            )}
           </div>
         </Html>
       )}
 
       {isPreview && (
         <Html position={centerPosition} center>
-          <div className="bg-blue-500/80 text-white px-3 py-2 rounded-lg text-sm pointer-events-none animate-pulse">
+          <div
+            className="bg-[#6155F5]/85 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-semibold pointer-events-none animate-pulse border border-white/20 inline-flex items-center gap-1.5 whitespace-nowrap"
+            style={{
+              wordBreak: 'keep-all',
+              boxShadow: '0 0 24px rgba(97, 85, 245, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4)'
+            }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
             미리보기
           </div>
         </Html>
@@ -438,19 +471,20 @@ function GyroscopeControls({ enabled }) {
   return null;
 }
 
-// 클릭 감지 구체 (등록 모드용)
-function ClickableSphere({ onPositionSelect, isRegistrationMode }) {
+// 클릭 감지 구체 (등록 모드: 위치 선택, 일반 모드: 배경 클릭 시 선택 해제)
+function ClickableSphere({ onPositionSelect, onBackgroundClick, isRegistrationMode }) {
   const { camera, raycaster, pointer } = useThree();
 
   const handleClick = useCallback((event) => {
-    if (!isRegistrationMode) return;
-
-    raycaster.setFromCamera(pointer, camera);
-    const direction = raycaster.ray.direction.clone().normalize();
-    const position = direction.multiplyScalar(50);
-
-    onPositionSelect(position);
-  }, [isRegistrationMode, camera, raycaster, pointer, onPositionSelect]);
+    if (isRegistrationMode) {
+      raycaster.setFromCamera(pointer, camera);
+      const direction = raycaster.ray.direction.clone().normalize();
+      const position = direction.multiplyScalar(50);
+      onPositionSelect(position);
+    } else if (onBackgroundClick) {
+      onBackgroundClick();
+    }
+  }, [isRegistrationMode, camera, raycaster, pointer, onPositionSelect, onBackgroundClick]);
 
   return (
     <mesh onClick={handleClick}>
@@ -470,8 +504,28 @@ function Scene({
   previewPosition,
   onPositionSelect,
   isValidPosition,
-  isGyroEnabled
+  isGyroEnabled,
+  searchTarget,
+  currentUserId,
+  onDeleteConstellation
 }) {
+  const { camera } = useThree();
+  const controlsRef = useRef();
+
+  // 검색 매칭 별자리로 카메라 회전
+  useEffect(() => {
+    if (!searchTarget) return;
+    const targetPos = celestialToCartesian(searchTarget.ra, searchTarget.dec);
+    // 카메라는 원점 근처(거리 0.1)에 있고 원점을 바라봄.
+    // 별자리 방향(+d)을 바라보려면 카메라를 -d * 0.1 위치에 둠.
+    const direction = targetPos.clone().normalize().multiplyScalar(-0.1);
+    camera.position.copy(direction);
+    camera.lookAt(0, 0, 0);
+    if (controlsRef.current) {
+      controlsRef.current.update();
+    }
+  }, [searchTarget, camera]);
+
   return (
     <>
       <SkyDome />
@@ -482,6 +536,8 @@ function Scene({
           constellation={constellation}
           isSelected={selectedConstellation?.id === constellation.id}
           onSelect={setSelectedConstellation}
+          isOwner={!!currentUserId && constellation.userId === currentUserId}
+          onDelete={onDeleteConstellation}
         />
       ))}
 
@@ -506,6 +562,7 @@ function Scene({
 
       <ClickableSphere
         onPositionSelect={onPositionSelect}
+        onBackgroundClick={() => setSelectedConstellation(null)}
         isRegistrationMode={isRegistrationMode}
       />
 
@@ -514,6 +571,7 @@ function Scene({
         <GyroscopeControls enabled={true} />
       ) : (
         <OrbitControls
+          ref={controlsRef}
           enableZoom={false}
           enablePan={false}
           rotateSpeed={0.5}
@@ -550,12 +608,25 @@ export default function SkyPage() {
   const [isGyroEnabled, setIsGyroEnabled] = useState(false);
   const [isGyroAvailable, setIsGyroAvailable] = useState(false);
 
+  // 검색 상태
+  const [searchQuery, setSearchQuery] = useState('');
+
   // 자이로스코프 사용 가능 여부 확인
   useEffect(() => {
     if (window.DeviceOrientationEvent) {
       setIsGyroAvailable(true);
     }
   }, []);
+
+  // 검색어와 매칭되는 첫 번째 별자리 (카메라 이동 대상)
+  const searchTarget = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return null;
+    return constellations.find(c =>
+      (c.name && c.name.toLowerCase().includes(query)) ||
+      (c.creator && c.creator.toLowerCase().includes(query))
+    ) || null;
+  }, [constellations, searchQuery]);
 
   // 위치 유효성 검사
   const isValidPosition = useMemo(() => {
@@ -758,6 +829,29 @@ export default function SkyPage() {
     alert('빈 자리를 찾지 못했습니다. 직접 선택해주세요.');
   };
 
+  // 내 별자리 삭제
+  const handleDeleteConstellation = async (constellation) => {
+    if (!user || constellation.userId !== user.id) return;
+    if (!window.confirm('이 별자리를 삭제하시겠습니까?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('sky_constellations')
+        .delete()
+        .eq('id', constellation.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setConstellations(prev => prev.filter(c => c.id !== constellation.id));
+      setSelectedConstellation(null);
+      setHasRegistered(false);
+    } catch (err) {
+      console.error('Error deleting constellation:', err);
+      alert('삭제에 실패했습니다: ' + err.message);
+    }
+  };
+
   // 별자리 등록
   const registerConstellation = async () => {
     if (!previewPosition || !isValidPosition || !myConstellation) return;
@@ -813,7 +907,6 @@ export default function SkyPage() {
           near: 0.1,
           far: 1000
         }}
-        onClick={() => !isRegistrationMode && setSelectedConstellation(null)}
       >
         <Suspense fallback={null}>
           <Scene
@@ -826,56 +919,60 @@ export default function SkyPage() {
             onPositionSelect={handlePositionSelect}
             isValidPosition={isValidPosition}
             isGyroEnabled={isGyroEnabled}
+            searchTarget={searchTarget}
+            currentUserId={user?.id}
+            onDeleteConstellation={handleDeleteConstellation}
           />
         </Suspense>
       </Canvas>
 
-      {/* 상단 UI */}
-      <div className="absolute top-0 left-0 right-0 p-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => isRegistrationMode ? exitRegistrationMode() : navigate('/home')}
-            className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center"
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      {/* 상단 UI - 광고 배너 + 헤더 */}
+      <div className="absolute top-0 left-0 right-0 z-20">
+        {/* 광고 배너 영역 */}
+        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
+        </div>
+
+        {/* 상단 네비게이션 */}
+        <nav className="px-6 py-5">
+          <div className="max-w-[370px] mx-auto flex items-center">
+            <div className="flex items-center gap-1">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-white font-bold text-2xl">별자리 모아보기</span>
+            </div>
+          </div>
+        </nav>
+
+        {/* 검색바 */}
+        <div className="px-6">
+          <div className="max-w-[370px] mx-auto relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="닉네임 또는 아이디로 별자리 찾기"
+              className="w-full bg-white/10 backdrop-blur-sm text-white placeholder-white/50 px-4 py-3 pr-12 rounded-xl border border-white/20 focus:outline-none focus:border-white/40 text-sm"
+            />
+            <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-          </button>
+          </div>
+        </div>
 
-          <h1 className="text-white font-bold text-lg">
-            {isRegistrationMode ? '위치 선택' : '3D 밤하늘'}
-          </h1>
-
-          {/* 자이로스코프 토글 버튼 */}
-          {isGyroAvailable && !isRegistrationMode ? (
+        {/* 홈으로 나가기 버튼 */}
+        <div className="px-6 mt-4">
+          <div className="max-w-[370px] mx-auto">
             <button
-              onClick={async () => {
-                // iOS에서는 권한 요청 필요
-                if (typeof DeviceOrientationEvent !== 'undefined' &&
-                    typeof DeviceOrientationEvent.requestPermission === 'function') {
-                  try {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    if (permission === 'granted') {
-                      setIsGyroEnabled(!isGyroEnabled);
-                    }
-                  } catch (err) {
-                    console.error('자이로스코프 권한 오류:', err);
-                  }
-                } else {
-                  setIsGyroEnabled(!isGyroEnabled);
-                }
-              }}
-              className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                isGyroEnabled ? 'bg-blue-500' : 'bg-white/10'
-              }`}
+              onClick={() => navigate('/home')}
+              className="text-white hover:text-white/70 transition-colors"
+              aria-label="홈으로 나가기"
             >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>
-          ) : (
-            <div className="w-10" />
-          )}
+          </div>
         </div>
       </div>
 
