@@ -84,6 +84,14 @@ export const translations = {
       notice2: "* 신중하게 입력하고 '다음'으로 넘어가주세요.",
     },
 
+    // 웰컴(마케팅) 페이지
+    welcome: {
+      title: '오늘의 운세를 확인하세요!',
+      enterName: '이름을 입력하세요.',
+      pleaseEnterName: '이름을 입력해주세요.',
+      nameHint: '* 이름 또는 닉네임을 입력해주세요.',
+    },
+
     // 설문 질문 페이지
     survey: {
       questions: [
@@ -424,6 +432,14 @@ export const translations = {
       pleaseEnterName: 'Please enter your name.',
       notice1: '* Your name cannot be changed once entered.',
       notice2: "* Please enter carefully and click 'Next'.",
+    },
+
+    // Welcome (marketing) Page
+    welcome: {
+      title: "Check today's fortune!",
+      enterName: 'Enter your name.',
+      pleaseEnterName: 'Please enter your name.',
+      nameHint: '* Please enter your name or nickname.',
     },
 
     // Survey Questions Page

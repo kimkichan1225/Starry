@@ -929,7 +929,7 @@ export default function SkyPage() {
       {/* 상단 UI - 광고 배너 + 헤더 */}
       <div className="absolute top-0 left-0 right-0 z-20">
         {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
+        <div className="h-16 bg-[#949494] flex items-center justify-center">
         </div>
 
         {/* 상단 네비게이션 */}

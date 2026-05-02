@@ -501,7 +501,7 @@ const SignupPage = () => {
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
           <button
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
@@ -760,7 +760,7 @@ const SignupPage = () => {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
           <button
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
@@ -844,7 +844,7 @@ const SignupPage = () => {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
           <button
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
@@ -965,7 +965,7 @@ const SignupPage = () => {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
           <button
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
@@ -1155,7 +1155,7 @@ const SignupPage = () => {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center gap-4">
+        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
           <button
             onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
             className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"

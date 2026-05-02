@@ -138,7 +138,7 @@ const LoadingPage = () => {
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] mt-8 flex items-center justify-center">
+        <div className="h-16 bg-[#949494] flex items-center justify-center">
           <button
             onClick={handleDevLogin}
             className="px-4 py-2 text-sm rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-800 transition-colors"

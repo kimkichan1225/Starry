@@ -22,6 +22,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import SkyDemoPage from './pages/SkyDemoPage';
 import SkyPage from './pages/SkyPage';
 import WarehousePage from './pages/WarehousePage';
+import WelcomePage from './pages/WelcomePage';
 
 function App() {
   return (
@@ -49,6 +50,9 @@ function App() {
           <Route path="/user" element={<UserPage />} />
           <Route path="/notice" element={<NoticePage />} />
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
+
+          {/* 웰컴(마케팅) 페이지 */}
+          <Route path="/welcome" element={<WelcomePage />} />
 
           {/* 설문 페이지 */}
           <Route path="/survey/:userId" element={<SurveyStartPage />} />
