@@ -209,7 +209,7 @@ function ConstellationLines({ points }) {
 }
 
 // 별자리 그룹 컴포넌트
-function Constellation3D({ constellation, onSelect, isSelected, isPreview = false, isOwner = false, onDelete }) {
+function Constellation3D({ constellation, onSelect, isSelected, isPreview = false, isOwner = false, onEdit }) {
   const groupRef = useRef();
 
   const centerPosition = useMemo(() =>
@@ -306,15 +306,15 @@ function Constellation3D({ constellation, onSelect, isSelected, isPreview = fals
             <div className="text-white/50 text-xs mt-1 pointer-events-none">
               by {constellation.creator}
             </div>
-            {isOwner && onDelete && (
+            {isOwner && onEdit && (
               <button
-                onClick={(e) => { e.stopPropagation(); onDelete(constellation); }}
-                className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-full text-xs font-semibold transition-all active:scale-95 shadow-lg shadow-red-500/30"
+                onClick={(e) => { e.stopPropagation(); onEdit(constellation); }}
+                className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-[#6155F5]/90 hover:bg-[#6155F5] text-white rounded-full text-xs font-semibold transition-all active:scale-95 shadow-lg shadow-[#6155F5]/30"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                삭제
+                위치 수정
               </button>
             )}
           </div>
@@ -507,7 +507,7 @@ function Scene({
   isGyroEnabled,
   searchTarget,
   currentUserId,
-  onDeleteConstellation
+  onEditConstellation
 }) {
   const { camera } = useThree();
   const controlsRef = useRef();
@@ -530,16 +530,22 @@ function Scene({
     <>
       <SkyDome />
 
-      {constellations.map(constellation => (
-        <Constellation3D
-          key={constellation.id}
-          constellation={constellation}
-          isSelected={selectedConstellation?.id === constellation.id}
-          onSelect={setSelectedConstellation}
-          isOwner={!!currentUserId && constellation.userId === currentUserId}
-          onDelete={onDeleteConstellation}
-        />
-      ))}
+      {constellations.map(constellation => {
+        // 위치 수정 모드에서는 내 별자리를 숨기고 미리보기만 표시
+        if (isRegistrationMode && currentUserId && constellation.userId === currentUserId) {
+          return null;
+        }
+        return (
+          <Constellation3D
+            key={constellation.id}
+            constellation={constellation}
+            isSelected={selectedConstellation?.id === constellation.id}
+            onSelect={setSelectedConstellation}
+            isOwner={!!currentUserId && constellation.userId === currentUserId}
+            onEdit={onEditConstellation}
+          />
+        );
+      })}
 
       {isRegistrationMode && previewConstellation && previewPosition && (
         <>
@@ -589,7 +595,7 @@ function Scene({
 
 export default function SkyPage() {
   const navigate = useNavigate();
-  const { user, nickname } = useAuth();
+  const { user } = useAuth();
 
   // 상태
   const [constellations, setConstellations] = useState([]);
@@ -597,12 +603,11 @@ export default function SkyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 등록 모드 상태
-  const [isRegistrationMode, setIsRegistrationMode] = useState(false);
-  const [myConstellation, setMyConstellation] = useState(null);
+  // 위치 수정 모드 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [myConstellation, setMyConstellation] = useState(null); // 미리보기용 {name, creator, stars, connections}
   const [previewPosition, setPreviewPosition] = useState(null);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [hasRegistered, setHasRegistered] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // 자이로스코프 상태
   const [isGyroEnabled, setIsGyroEnabled] = useState(false);
@@ -628,11 +633,18 @@ export default function SkyPage() {
     ) || null;
   }, [constellations, searchQuery]);
 
-  // 위치 유효성 검사
+  // 내 별자리 (하늘에 등록된 것)
+  const myEntry = useMemo(
+    () => (user ? constellations.find(c => c.userId === user.id) || null : null),
+    [constellations, user]
+  );
+
+  // 위치 유효성 검사 (내 별자리는 충돌 검사에서 제외)
   const isValidPosition = useMemo(() => {
     if (!previewPosition) return false;
 
     for (const constellation of constellations) {
+      if (myEntry && constellation.id === myEntry.id) continue;
       const distance = angularDistance(
         previewPosition.ra, previewPosition.dec,
         constellation.ra, constellation.dec
@@ -642,9 +654,23 @@ export default function SkyPage() {
       }
     }
     return true;
-  }, [previewPosition, constellations]);
+  }, [previewPosition, constellations, myEntry]);
 
-  // Supabase에서 별자리 목록 로드
+  // 빈 자리 찾기 (순수 함수: occupied 목록 중 충돌 없는 좌표 반환)
+  const findEmptySpotPosition = useCallback((occupied) => {
+    for (let i = 0; i < 100; i++) {
+      const ra = Math.random() * 360;
+      const dec = Math.random() * 180 - 90;
+      let ok = true;
+      for (const o of occupied) {
+        if (angularDistance(ra, dec, o.ra, o.dec) < COLLISION_RADIUS) { ok = false; break; }
+      }
+      if (ok) return { ra, dec };
+    }
+    return null;
+  }, []);
+
+  // Supabase에서 별자리 목록 로드 (등록/동기화는 저장 시점에 처리됨)
   useEffect(() => {
     const fetchConstellations = async () => {
       try {
@@ -658,14 +684,15 @@ export default function SkyPage() {
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
+        const rows = data || [];
+
+        if (rows.length === 0) {
           setConstellations([]);
-          setIsLoading(false);
           return;
         }
 
         // user_id 목록 추출
-        const userIds = [...new Set(data.map(item => item.user_id))];
+        const userIds = [...new Set(rows.map(item => item.user_id))];
 
         // profiles에서 닉네임 조회
         const { data: profilesData } = await supabase
@@ -680,7 +707,7 @@ export default function SkyPage() {
         });
 
         // 데이터 변환
-        const formattedData = data.map(item => ({
+        const formattedData = rows.map(item => ({
           id: item.id,
           name: item.constellation_name || '이름 없는 별자리',
           creator: nicknameMap[item.user_id] || '익명',
@@ -692,15 +719,6 @@ export default function SkyPage() {
         }));
 
         setConstellations(formattedData);
-
-        // 내가 이미 등록했는지 확인
-        if (user) {
-          const myRegistered = formattedData.find(c => c.userId === user.id);
-          if (myRegistered) {
-            setHasRegistered(true);
-          }
-        }
-
       } catch (err) {
         console.error('Error fetching constellations:', err);
         setError('별자리를 불러오는데 실패했습니다.');
@@ -712,87 +730,22 @@ export default function SkyPage() {
     fetchConstellations();
   }, [user]);
 
-  // 내 별자리 데이터 로드 (등록 모드 진입 시)
-  const loadMyConstellation = async () => {
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      return false;
-    }
-
-    try {
-      // 별 데이터 가져오기
-      const { data: starsData, error: starsError } = await supabase
-        .from('stars')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
-
-      if (starsError) throw starsError;
-
-      if (!starsData || starsData.length === 0) {
-        alert('먼저 홈에서 별자리를 만들어주세요!');
-        return false;
-      }
-
-      // 연결 데이터 가져오기
-      const { data: connectionsData, error: connError } = await supabase
-        .from('star_connections')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (connError) throw connError;
-
-      // 별 위치 데이터 생성 (2D -> 상대 좌표) + 별 속성 포함
-      const stars = starsData.map(star => ({
-        x: (star.position_x || 175) - 175, // 중심 기준 상대 좌표
-        y: (star.position_y || 250) - 250,
-        // 별 속성 (HomePage와 동일하게 표시하기 위해)
-        star_color: star.star_color,
-        star_points: star.star_points,
-        star_size: star.star_size,
-        star_saturation: star.star_saturation,
-        star_sharpness: star.star_sharpness
-      }));
-
-      // 연결 데이터 변환
-      const connections = (connectionsData || []).map(conn => {
-        const fromIndex = starsData.findIndex(s => s.id === conn.from_star_id);
-        const toIndex = starsData.findIndex(s => s.id === conn.to_star_id);
-        return [fromIndex, toIndex];
-      }).filter(([from, to]) => from !== -1 && to !== -1);
-
-      setMyConstellation({
-        name: nickname ? `${nickname}의 별자리` : '나의 별자리',
-        creator: nickname || '나',
-        stars,
-        connections
-      });
-
-      return true;
-    } catch (err) {
-      console.error('Error loading my constellation:', err);
-      alert('별자리를 불러오는데 실패했습니다.');
-      return false;
-    }
+  // 위치 수정 모드 진입 (팝업의 "위치 수정" 버튼)
+  const enterEditMode = (constellation) => {
+    setMyConstellation({
+      name: constellation.name,
+      creator: constellation.creator,
+      stars: constellation.stars,
+      connections: constellation.connections
+    });
+    setPreviewPosition({ ra: constellation.ra, dec: constellation.dec });
+    setIsEditMode(true);
+    setSelectedConstellation(null);
   };
 
-  // 등록 모드 진입
-  const enterRegistrationMode = async () => {
-    if (hasRegistered) {
-      alert('이미 별자리를 등록했습니다. 한 사람당 하나의 별자리만 등록할 수 있습니다.');
-      return;
-    }
-
-    const loaded = await loadMyConstellation();
-    if (loaded) {
-      setIsRegistrationMode(true);
-      setSelectedConstellation(null);
-    }
-  };
-
-  // 등록 모드 종료
-  const exitRegistrationMode = () => {
-    setIsRegistrationMode(false);
+  // 위치 수정 모드 종료
+  const exitEditMode = () => {
+    setIsEditMode(false);
     setPreviewPosition(null);
     setMyConstellation(null);
   };
@@ -803,97 +756,47 @@ export default function SkyPage() {
     setPreviewPosition(celestial);
   };
 
-  // 빈 자리 자동 찾기
+  // 빈 자리 자동 찾기 (내 별자리는 제외)
   const findEmptySpot = () => {
-    const maxAttempts = 100;
-
-    for (let i = 0; i < maxAttempts; i++) {
-      const ra = Math.random() * 360;
-      const dec = (Math.random() * 180) - 90;
-
-      let isValid = true;
-      for (const constellation of constellations) {
-        const distance = angularDistance(ra, dec, constellation.ra, constellation.dec);
-        if (distance < COLLISION_RADIUS) {
-          isValid = false;
-          break;
-        }
-      }
-
-      if (isValid) {
-        setPreviewPosition({ ra, dec });
-        return;
-      }
+    const occupied = constellations
+      .filter(c => !myEntry || c.id !== myEntry.id)
+      .map(c => ({ ra: c.ra, dec: c.dec }));
+    const pos = findEmptySpotPosition(occupied);
+    if (pos) {
+      setPreviewPosition(pos);
+    } else {
+      alert('빈 자리를 찾지 못했습니다. 직접 선택해주세요.');
     }
-
-    alert('빈 자리를 찾지 못했습니다. 직접 선택해주세요.');
   };
 
-  // 내 별자리 삭제
-  const handleDeleteConstellation = async (constellation) => {
-    if (!user || constellation.userId !== user.id) return;
-    if (!window.confirm('이 별자리를 삭제하시겠습니까?')) return;
+  // 위치 변경 저장
+  const savePosition = async () => {
+    if (!previewPosition || !isValidPosition || !user) return;
 
     try {
+      setIsSaving(true);
+
       const { error } = await supabase
         .from('sky_constellations')
-        .delete()
-        .eq('id', constellation.id)
+        .update({
+          right_ascension: previewPosition.ra,
+          declination: previewPosition.dec
+        })
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      setConstellations(prev => prev.filter(c => c.id !== constellation.id));
-      setSelectedConstellation(null);
-      setHasRegistered(false);
+      setConstellations(prev => prev.map(c =>
+        (myEntry && c.id === myEntry.id)
+          ? { ...c, ra: previewPosition.ra, dec: previewPosition.dec }
+          : c
+      ));
+      exitEditMode();
     } catch (err) {
-      console.error('Error deleting constellation:', err);
-      alert('삭제에 실패했습니다: ' + err.message);
-    }
-  };
-
-  // 별자리 등록
-  const registerConstellation = async () => {
-    if (!previewPosition || !isValidPosition || !myConstellation) return;
-
-    try {
-      setIsRegistering(true);
-
-      const { error } = await supabase
-        .from('sky_constellations')
-        .insert({
-          user_id: user.id,
-          constellation_name: myConstellation.name,
-          stars_data: myConstellation.stars,
-          connections_data: myConstellation.connections,
-          right_ascension: previewPosition.ra,
-          declination: previewPosition.dec
-        });
-
-      if (error) throw error;
-
-      // 성공 - 목록에 추가
-      const newConstellation = {
-        id: Date.now().toString(),
-        name: myConstellation.name,
-        creator: nickname || '나',
-        ra: previewPosition.ra,
-        dec: previewPosition.dec,
-        stars: myConstellation.stars,
-        connections: myConstellation.connections,
-        userId: user.id
-      };
-
-      setConstellations(prev => [...prev, newConstellation]);
-      setHasRegistered(true);
-      exitRegistrationMode();
-      alert('별자리가 등록되었습니다!');
-
-    } catch (err) {
-      console.error('Error registering constellation:', err);
-      alert('등록에 실패했습니다: ' + err.message);
+      console.error('Error updating position:', err);
+      alert('위치 수정에 실패했습니다: ' + err.message);
     } finally {
-      setIsRegistering(false);
+      setIsSaving(false);
     }
   };
 
@@ -913,7 +816,7 @@ export default function SkyPage() {
             constellations={constellations}
             selectedConstellation={selectedConstellation}
             setSelectedConstellation={setSelectedConstellation}
-            isRegistrationMode={isRegistrationMode}
+            isRegistrationMode={isEditMode}
             previewConstellation={myConstellation}
             previewPosition={previewPosition}
             onPositionSelect={handlePositionSelect}
@@ -921,7 +824,7 @@ export default function SkyPage() {
             isGyroEnabled={isGyroEnabled}
             searchTarget={searchTarget}
             currentUserId={user?.id}
-            onDeleteConstellation={handleDeleteConstellation}
+            onEditConstellation={enterEditMode}
           />
         </Suspense>
       </Canvas>
@@ -991,7 +894,7 @@ export default function SkyPage() {
       )}
 
       {/* 일반 모드 하단 UI */}
-      {!isRegistrationMode && (
+      {!isEditMode && (
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
             <p className="text-white/80 text-sm text-center">
@@ -1007,32 +910,23 @@ export default function SkyPage() {
               </span>
             </div>
 
-            {user && !hasRegistered && (
-              <button
-                onClick={enterRegistrationMode}
-                className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-medium transition-colors"
-              >
-                내 별자리 등록하기
-              </button>
-            )}
-
-            {hasRegistered && (
-              <p className="text-center text-green-400 text-sm mt-4">
-                이미 별자리를 등록했습니다
+            {user && myEntry && (
+              <p className="text-center text-[#a99eff] text-sm mt-4">
+                내 별자리를 터치하면 위치를 수정할 수 있어요
               </p>
             )}
 
             {!user && (
               <p className="text-center text-white/50 text-sm mt-4">
-                로그인하면 별자리를 등록할 수 있습니다
+                로그인하면 내 별자리가 하늘에 등록됩니다
               </p>
             )}
           </div>
         </div>
       )}
 
-      {/* 등록 모드 UI */}
-      {isRegistrationMode && (
+      {/* 위치 수정 모드 UI */}
+      {isEditMode && (
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
             <p className="text-white/80 text-sm text-center mb-3">
@@ -1057,20 +951,20 @@ export default function SkyPage() {
               </button>
 
               <button
-                onClick={registerConstellation}
-                disabled={!previewPosition || !isValidPosition || isRegistering}
+                onClick={savePosition}
+                disabled={!previewPosition || !isValidPosition || isSaving}
                 className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
-                  previewPosition && isValidPosition && !isRegistering
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                  previewPosition && isValidPosition && !isSaving
+                    ? 'bg-[#6155F5] hover:bg-[#5046d8] text-white'
                     : 'bg-gray-500 text-gray-300 cursor-not-allowed'
                 }`}
               >
-                {isRegistering ? '등록 중...' : '여기에 등록'}
+                {isSaving ? '저장 중...' : '위치 변경'}
               </button>
             </div>
 
             <button
-              onClick={exitRegistrationMode}
+              onClick={exitEditMode}
               className="w-full mt-3 bg-white/10 hover:bg-white/20 text-white/70 py-2 rounded-xl text-sm transition-colors"
             >
               취소

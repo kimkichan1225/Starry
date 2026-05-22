@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
+import { syncSkyConstellation } from '../utils/syncSkyConstellation';
 import NavBar from '../components/NavBar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
@@ -426,6 +427,9 @@ function HomePage() {
 
       // Context 데이터 새로고침
       await refreshStars();
+
+      // 3D 밤하늘에 자동 등록/동기화 (위치는 유지, 내용만 갱신)
+      await syncSkyConstellation(user.id, nickname);
     } catch (error) {
       console.error('저장 실패:', error);
     } finally {
