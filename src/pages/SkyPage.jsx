@@ -506,16 +506,16 @@ function Scene({
   isValidPosition,
   isGyroEnabled,
   searchTarget,
+  focusTarget,
   currentUserId,
   onEditConstellation
 }) {
   const { camera } = useThree();
   const controlsRef = useRef();
 
-  // 검색 매칭 별자리로 카메라 회전
-  useEffect(() => {
-    if (!searchTarget) return;
-    const targetPos = celestialToCartesian(searchTarget.ra, searchTarget.dec);
+  // 카메라를 특정 별자리 방향으로 회전
+  const lookAtTarget = useCallback((target) => {
+    const targetPos = celestialToCartesian(target.ra, target.dec);
     // 카메라는 원점 근처(거리 0.1)에 있고 원점을 바라봄.
     // 별자리 방향(+d)을 바라보려면 카메라를 -d * 0.1 위치에 둠.
     const direction = targetPos.clone().normalize().multiplyScalar(-0.1);
@@ -524,7 +524,19 @@ function Scene({
     if (controlsRef.current) {
       controlsRef.current.update();
     }
-  }, [searchTarget, camera]);
+  }, [camera]);
+
+  // 검색 매칭 별자리로 카메라 회전
+  useEffect(() => {
+    if (!searchTarget) return;
+    lookAtTarget(searchTarget);
+  }, [searchTarget, lookAtTarget]);
+
+  // 내 별자리 위치 보기 버튼으로 카메라 회전
+  useEffect(() => {
+    if (!focusTarget) return;
+    lookAtTarget(focusTarget);
+  }, [focusTarget, lookAtTarget]);
 
   return (
     <>
@@ -615,6 +627,9 @@ export default function SkyPage() {
 
   // 검색 상태
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 내 별자리 위치 보기 (카메라 포커스 대상)
+  const [focusTarget, setFocusTarget] = useState(null);
 
   // 자이로스코프 사용 가능 여부 확인
   useEffect(() => {
@@ -823,6 +838,7 @@ export default function SkyPage() {
             isValidPosition={isValidPosition}
             isGyroEnabled={isGyroEnabled}
             searchTarget={searchTarget}
+            focusTarget={focusTarget}
             currentUserId={user?.id}
             onEditConstellation={enterEditMode}
           />
@@ -863,12 +879,30 @@ export default function SkyPage() {
           </div>
         </div>
 
-        {/* 홈으로 나가기 버튼 */}
+        {/* 내 별자리 위치 보기 + 홈으로 나가기 버튼 */}
         <div className="px-6 mt-4">
-          <div className="max-w-[370px] mx-auto">
+          <div className="max-w-[370px] mx-auto flex flex-col gap-4 items-start pl-2">
+            {/* 내 별자리 위치 보기 버튼 */}
+            {myEntry && (
+              <button
+                onClick={() => {
+                  setSelectedConstellation(myEntry);
+                  setFocusTarget({ ra: myEntry.ra, dec: myEntry.dec, nonce: Date.now() });
+                }}
+                className="w-7 h-7 flex items-center justify-center text-white hover:text-white/70 transition-colors"
+                aria-label="내 별자리 위치 보기"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="8" cy="12" r="6.5" strokeWidth={2} />
+                  <circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  <path strokeLinecap="round" strokeWidth={2} d="M8 2.5V4.5M8 19.5v2M16 12h-1.5M1.5 12H0" />
+                </svg>
+              </button>
+            )}
+            {/* 홈으로 나가기 버튼 */}
             <button
               onClick={() => navigate('/home')}
-              className="text-white hover:text-white/70 transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-white hover:text-white/70 transition-colors"
               aria-label="홈으로 나가기"
             >
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
