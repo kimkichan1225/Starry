@@ -2,7 +2,7 @@ import { useState, useRef, Suspense, useMemo, useEffect, useCallback } from 'rea
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -602,12 +602,96 @@ function Scene({
 }
 
 // ============================================
+// 밤하늘 리스트 아이템 (스와이프 → 나가기)
+// ============================================
+function SkyListItem({ sky, isActive, onSelect, onLeave }) {
+  const REVEAL = 88;
+  const [translateX, setTranslateX] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const startXRef = useRef(null);
+  const baseRef = useRef(0);
+  const draggingRef = useRef(false);
+
+  const handleTouchStart = (e) => {
+    startXRef.current = e.touches[0].clientX;
+    baseRef.current = isOpen ? REVEAL : 0;
+    draggingRef.current = false;
+  };
+
+  const handleTouchMove = (e) => {
+    if (startXRef.current === null) return;
+    const delta = e.touches[0].clientX - startXRef.current;
+    if (Math.abs(delta) > 4) draggingRef.current = true;
+    const next = Math.max(0, Math.min(REVEAL, baseRef.current + delta));
+    setTranslateX(next);
+  };
+
+  const handleTouchEnd = () => {
+    if (startXRef.current === null) return;
+    startXRef.current = null;
+    const shouldOpen = translateX > REVEAL / 2;
+    setIsOpen(shouldOpen);
+    setTranslateX(shouldOpen ? REVEAL : 0);
+    // 드래그가 발생한 경우 다음 click 이벤트 무시
+    if (draggingRef.current) {
+      setTimeout(() => { draggingRef.current = false; }, 50);
+    }
+  };
+
+  const handleClick = () => {
+    if (draggingRef.current) return;
+    if (isOpen) {
+      setIsOpen(false);
+      setTranslateX(0);
+      return;
+    }
+    onSelect(sky);
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-xl">
+      {/* 뒷쪽 나가기 버튼 */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onLeave(sky); setIsOpen(false); setTranslateX(0); }}
+        className="absolute left-0 top-0 bottom-0 w-[88px] bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl flex items-center justify-center"
+      >
+        나가기
+      </button>
+      {/* 앞쪽 메인 아이템 */}
+      <button
+        type="button"
+        onClick={handleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        style={{
+          transform: `translateX(${translateX}px)`,
+          transition: startXRef.current === null ? 'transform 0.2s ease-out' : 'none',
+          touchAction: 'pan-y',
+        }}
+        className={`relative w-full py-3 px-4 rounded-xl text-left text-sm transition-colors truncate ${
+          isActive
+            ? 'bg-[#6155F5]/30 text-white border border-[#6155F5]/50'
+            : 'bg-[#2a2a2a] hover:bg-[#333] text-white/90 border border-white/10'
+        }`}
+      >
+        {sky.name}
+      </button>
+    </div>
+  );
+}
+
+// ============================================
 // 메인 컴포넌트
 // ============================================
 
 export default function SkyPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const skyIdFromUrl = searchParams.get('sky') || null;
 
   // 상태
   const [constellations, setConstellations] = useState([]);
@@ -631,6 +715,20 @@ export default function SkyPage() {
   // 내 별자리 위치 보기 (카메라 포커스 대상)
   const [focusTarget, setFocusTarget] = useState(null);
 
+  // 개인 밤하늘 상태
+  const [activeSky, setActiveSky] = useState(null); // {id, name, invite_code, owner_id} | null (=전체)
+  const [mySkies, setMySkies] = useState([]); // 가입된 밤하늘 목록
+  const [skyMemberIds, setSkyMemberIds] = useState(null); // activeSky의 멤버 user_id 집합 (null=로딩중)
+  const [isSkyListExpanded, setIsSkyListExpanded] = useState(false);
+
+  // 팝업 상태: null | 'choice' | 'create' | 'enter-code' | 'invite-link'
+  const [popupMode, setPopupMode] = useState(null);
+  const [newSkyName, setNewSkyName] = useState('');
+  const [enterCodeInput, setEnterCodeInput] = useState('');
+  const [popupBusy, setPopupBusy] = useState(false);
+  const [popupError, setPopupError] = useState('');
+  const [copyToast, setCopyToast] = useState('');
+
   // 자이로스코프 사용 가능 여부 확인
   useEffect(() => {
     if (window.DeviceOrientationEvent) {
@@ -638,28 +736,97 @@ export default function SkyPage() {
     }
   }, []);
 
+  // 내 가입 밤하늘 목록 로드
+  const refreshMySkies = useCallback(async () => {
+    if (!user) {
+      setMySkies([]);
+      return [];
+    }
+    const { data, error: err } = await supabase
+      .from('sky_members')
+      .select('skies(id, name, invite_code, owner_id)')
+      .eq('user_id', user.id);
+    if (err) {
+      console.error('Error loading my skies:', err);
+      return [];
+    }
+    const skies = (data || []).map(d => d.skies).filter(Boolean);
+    setMySkies(skies);
+    return skies;
+  }, [user]);
+
+  useEffect(() => {
+    refreshMySkies();
+  }, [refreshMySkies]);
+
+  // URL ?sky= 동기화 (mySkies 로드 후 매칭)
+  useEffect(() => {
+    if (!skyIdFromUrl) {
+      setActiveSky(null);
+      return;
+    }
+    const found = mySkies.find(s => s.id === skyIdFromUrl);
+    if (found) {
+      setActiveSky(found);
+    } else if (mySkies.length > 0) {
+      // URL의 sky에 멤버가 아님 → 전체로 fallback
+      setActiveSky(null);
+      setSearchParams({}, { replace: true });
+    }
+  }, [skyIdFromUrl, mySkies, setSearchParams]);
+
+  // activeSky 변경 시 그 sky의 멤버 user_id 목록 로드
+  useEffect(() => {
+    if (!activeSky) {
+      setSkyMemberIds(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error: err } = await supabase
+        .from('sky_members')
+        .select('user_id')
+        .eq('sky_id', activeSky.id);
+      if (cancelled) return;
+      if (err) {
+        console.error('Error loading sky members:', err);
+        setSkyMemberIds(new Set());
+        return;
+      }
+      setSkyMemberIds(new Set((data || []).map(m => m.user_id)));
+    })();
+    return () => { cancelled = true; };
+  }, [activeSky]);
+
+  // 현재 보고 있는 sky에 따라 별자리 필터링
+  const visibleConstellations = useMemo(() => {
+    if (!activeSky) return constellations;
+    if (!skyMemberIds) return [];
+    return constellations.filter(c => skyMemberIds.has(c.userId));
+  }, [constellations, activeSky, skyMemberIds]);
+
   // 검색어와 매칭되는 첫 번째 별자리 (카메라 이동 대상)
   const searchTarget = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return null;
-    return constellations.find(c =>
+    return visibleConstellations.find(c =>
       (c.name && c.name.toLowerCase().includes(query)) ||
       (c.creator && c.creator.toLowerCase().includes(query))
     ) || null;
-  }, [constellations, searchQuery]);
+  }, [visibleConstellations, searchQuery]);
 
-  // 내 별자리 (하늘에 등록된 것)
+  // 내 별자리 (현재 보고 있는 밤하늘 기준)
   const myEntry = useMemo(
-    () => (user ? constellations.find(c => c.userId === user.id) || null : null),
-    [constellations, user]
+    () => (user ? visibleConstellations.find(c => c.userId === user.id) || null : null),
+    [visibleConstellations, user]
   );
 
-  // 위치 유효성 검사 (내 별자리는 충돌 검사에서 제외)
+  // 위치 유효성 검사 (전체 별자리 기준 / 내 별자리는 제외)
   const isValidPosition = useMemo(() => {
     if (!previewPosition) return false;
 
     for (const constellation of constellations) {
-      if (myEntry && constellation.id === myEntry.id) continue;
+      if (user && constellation.userId === user.id) continue;
       const distance = angularDistance(
         previewPosition.ra, previewPosition.dec,
         constellation.ra, constellation.dec
@@ -669,7 +836,7 @@ export default function SkyPage() {
       }
     }
     return true;
-  }, [previewPosition, constellations, myEntry]);
+  }, [previewPosition, constellations, user]);
 
   // 빈 자리 찾기 (순수 함수: occupied 목록 중 충돌 없는 좌표 반환)
   const findEmptySpotPosition = useCallback((occupied) => {
@@ -784,6 +951,177 @@ export default function SkyPage() {
     }
   };
 
+  // 밤하늘 나가기
+  const handleLeaveSky = async (sky) => {
+    if (!user) return;
+    if (!window.confirm(`'${sky.name}' 밤하늘에서 나가시겠어요?`)) return;
+    try {
+      const { error: delErr } = await supabase
+        .from('sky_members')
+        .delete()
+        .eq('sky_id', sky.id)
+        .eq('user_id', user.id);
+      if (delErr) throw delErr;
+
+      if (activeSky?.id === sky.id) {
+        setSearchParams({}, { replace: false });
+      }
+      await refreshMySkies();
+      setCopyToast(`'${sky.name}' 밤하늘에서 나왔어요`);
+      setTimeout(() => setCopyToast(''), 2000);
+    } catch (err) {
+      console.error('Error leaving sky:', err);
+      alert('나가기에 실패했습니다.');
+    }
+  };
+
+  // 밤하늘 전환
+  const switchToSky = useCallback((sky) => {
+    setSelectedConstellation(null);
+    setFocusTarget(null);
+    setIsSkyListExpanded(false);
+    if (sky) {
+      setSearchParams({ sky: sky.id }, { replace: false });
+    } else {
+      setSearchParams({}, { replace: false });
+    }
+  }, [setSearchParams]);
+
+  // + 버튼 → 만들기/입장 선택 팝업
+  const openChoicePopup = () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    setPopupError('');
+    setPopupMode('choice');
+  };
+
+  const closePopup = () => {
+    setPopupMode(null);
+    setNewSkyName('');
+    setEnterCodeInput('');
+    setPopupError('');
+  };
+
+  // skies INSERT를 SECURITY DEFINER RPC 로 호출 (RLS 우회, 인증 필수)
+  const createSkyViaRpc = async (name) => {
+    const { data, error: err } = await supabase.rpc('create_sky', { p_name: name });
+    if (err) throw err;
+    // RPC가 TABLE을 반환 → 배열로 옴
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) throw new Error('create_sky returned no row');
+    return row;
+  };
+
+  // 새 밤하늘 만들기 → 확인
+  const handleCreateSky = async () => {
+    const name = newSkyName.trim();
+    if (!name) {
+      setPopupError('밤하늘 이름을 입력해주세요.');
+      return;
+    }
+    if (!user) return;
+    try {
+      setPopupBusy(true);
+      setPopupError('');
+      const sky = await createSkyViaRpc(name);
+      await refreshMySkies();
+      switchToSky(sky);
+      closePopup();
+    } catch (err) {
+      console.error('Error creating sky:', err);
+      setPopupError('밤하늘을 만들지 못했습니다.');
+    } finally {
+      setPopupBusy(false);
+    }
+  };
+
+  // 새 밤하늘 만들기 → 초대 링크 (이름 입력 후 만들고 링크 복사)
+  const handleCreateSkyAndCopyLink = async () => {
+    const name = newSkyName.trim();
+    if (!name) {
+      setPopupError('밤하늘 이름을 입력해주세요.');
+      return;
+    }
+    if (!user) return;
+    try {
+      setPopupBusy(true);
+      setPopupError('');
+      const sky = await createSkyViaRpc(name);
+      await refreshMySkies();
+      const link = `${window.location.origin}/sky?code=${sky.invite_code}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        setCopyToast('초대 링크를 복사했습니다');
+      } catch {
+        setCopyToast(`초대 코드: ${sky.invite_code}`);
+      }
+      setTimeout(() => setCopyToast(''), 2500);
+      switchToSky(sky);
+      closePopup();
+    } catch (err) {
+      console.error('Error creating sky:', err);
+      setPopupError('밤하늘을 만들지 못했습니다.');
+    } finally {
+      setPopupBusy(false);
+    }
+  };
+
+  // 코드로 입장하기 → 확인
+  const handleJoinByCode = async () => {
+    const code = enterCodeInput.trim().toUpperCase();
+    if (!code) {
+      setPopupError('코드를 입력해주세요.');
+      return;
+    }
+    if (!user) return;
+    try {
+      setPopupBusy(true);
+      setPopupError('');
+      const { data: skyId, error: rpcErr } = await supabase.rpc('join_sky_by_code', { p_code: code });
+      if (rpcErr) throw rpcErr;
+      if (!skyId) {
+        setPopupError('유효하지 않은 코드입니다.');
+        return;
+      }
+      const skies = await refreshMySkies();
+      const joined = skies.find(s => s.id === skyId);
+      if (joined) {
+        switchToSky(joined);
+      }
+      closePopup();
+    } catch (err) {
+      console.error('Error joining sky:', err);
+      setPopupError('입장에 실패했습니다.');
+    } finally {
+      setPopupBusy(false);
+    }
+  };
+
+  // URL ?code= 자동 입장 처리
+  const codeFromUrl = searchParams.get('code');
+  useEffect(() => {
+    if (!codeFromUrl || !user) return;
+    let cancelled = false;
+    (async () => {
+      const { data: skyId } = await supabase.rpc('join_sky_by_code', { p_code: codeFromUrl });
+      if (cancelled) return;
+      const skies = await refreshMySkies();
+      if (skyId) {
+        const joined = skies.find(s => s.id === skyId);
+        if (joined) {
+          setSearchParams({ sky: joined.id }, { replace: true });
+          setCopyToast(`${joined.name} 밤하늘에 입장했습니다`);
+          setTimeout(() => setCopyToast(''), 2500);
+          return;
+        }
+      }
+      setSearchParams({}, { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [codeFromUrl, user, refreshMySkies, setSearchParams]);
+
   // 위치 변경 저장
   const savePosition = async () => {
     if (!previewPosition || !isValidPosition || !user) return;
@@ -828,7 +1166,7 @@ export default function SkyPage() {
       >
         <Suspense fallback={null}>
           <Scene
-            constellations={constellations}
+            constellations={visibleConstellations}
             selectedConstellation={selectedConstellation}
             setSelectedConstellation={setSelectedConstellation}
             isRegistrationMode={isEditMode}
@@ -858,7 +1196,9 @@ export default function SkyPage() {
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-              <span className="text-white font-bold text-2xl">별자리 모아보기</span>
+              <span className="text-white font-bold text-2xl">
+                {activeSky ? activeSky.name : '별자리 모아보기'}
+              </span>
             </div>
           </div>
         </nav>
@@ -879,26 +1219,48 @@ export default function SkyPage() {
           </div>
         </div>
 
-        {/* 내 별자리 위치 보기 + 홈으로 나가기 버튼 */}
+        {/* 내 별자리 위치 보기 + 홈으로 나가기 버튼 + 하늘 코드 */}
         <div className="px-6 mt-4">
           <div className="max-w-[370px] mx-auto flex flex-col gap-4 items-start pl-2">
-            {/* 내 별자리 위치 보기 버튼 */}
-            {myEntry && (
-              <button
-                onClick={() => {
-                  setSelectedConstellation(myEntry);
-                  setFocusTarget({ ra: myEntry.ra, dec: myEntry.dec, nonce: Date.now() });
-                }}
-                className="w-7 h-7 flex items-center justify-center text-white hover:text-white/70 transition-colors"
-                aria-label="내 별자리 위치 보기"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle cx="8" cy="12" r="6.5" strokeWidth={2} />
-                  <circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                  <path strokeLinecap="round" strokeWidth={2} d="M8 2.5V4.5M8 19.5v2M16 12h-1.5M1.5 12H0" />
-                </svg>
-              </button>
-            )}
+            {/* 내 별자리 위치 보기 버튼 + 하늘 코드 */}
+            <div className="w-full flex items-center justify-between">
+              {myEntry ? (
+                <button
+                  onClick={() => {
+                    setSelectedConstellation(myEntry);
+                    setFocusTarget({ ra: myEntry.ra, dec: myEntry.dec, nonce: Date.now() });
+                  }}
+                  className="w-7 h-7 flex items-center justify-center text-white hover:text-white/70 transition-colors"
+                  aria-label="내 별자리 위치 보기"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="8" cy="12" r="6.5" strokeWidth={2} />
+                    <circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                    <path strokeLinecap="round" strokeWidth={2} d="M8 2.5V4.5M8 19.5v2M16 12h-1.5M1.5 12H0" />
+                  </svg>
+                </button>
+              ) : (
+                <div className="w-7 h-7" />
+              )}
+              {activeSky?.invite_code && (
+                <button
+                  onClick={async () => {
+                    const link = `${window.location.origin}/sky?code=${activeSky.invite_code}`;
+                    try {
+                      await navigator.clipboard.writeText(link);
+                      setCopyToast('초대 링크를 복사했습니다');
+                    } catch {
+                      setCopyToast(`코드: ${activeSky.invite_code}`);
+                    }
+                    setTimeout(() => setCopyToast(''), 2000);
+                  }}
+                  className="text-white/80 text-sm hover:text-white transition-colors pr-2"
+                  title="초대 링크 복사"
+                >
+                  하늘 코드 : {activeSky.invite_code}
+                </button>
+              )}
+            </div>
             {/* 홈으로 나가기 버튼 */}
             <button
               onClick={() => navigate('/home')}
@@ -927,34 +1289,69 @@ export default function SkyPage() {
         </div>
       )}
 
-      {/* 일반 모드 하단 UI */}
+      {/* 일반 모드 하단 UI - 전체 밤하늘 펼침 패널 */}
       {!isEditMode && (
-        <div className="absolute bottom-0 left-0 right-0 p-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-            <p className="text-white/80 text-sm text-center">
-              화면을 드래그해서 하늘을 둘러보세요
-            </p>
-            <p className="text-white/60 text-xs text-center mt-1">
-              별자리를 터치하면 정보가 표시됩니다
-            </p>
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          {/* 펼침 패널 (목록 + 추가) */}
+          {isSkyListExpanded && (
+            <div className="px-6 pb-2">
+              <div className="max-w-[370px] mx-auto bg-[#1a1a1a]/95 backdrop-blur-sm rounded-t-2xl px-4 pt-4 pb-2 max-h-[60vh] overflow-y-auto">
+                {/* + 추가 버튼 */}
+                <button
+                  onClick={openChoicePopup}
+                  className="w-full py-3 mb-3 bg-white/5 hover:bg-white/10 text-white/80 text-2xl font-light rounded-xl border border-white/10 transition-colors flex items-center justify-center"
+                  aria-label="밤하늘 추가"
+                >
+                  +
+                </button>
 
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <span className="text-white/70 text-sm">
-                {constellations.length}개의 별자리
-              </span>
+                {/* 내 밤하늘 목록 */}
+                {mySkies.length === 0 ? (
+                  <p className="text-white/40 text-xs text-center py-4">
+                    아직 입장한 밤하늘이 없어요
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {mySkies.map(sky => (
+                      <SkyListItem
+                        key={sky.id}
+                        sky={sky}
+                        isActive={activeSky?.id === sky.id}
+                        onSelect={switchToSky}
+                        onLeave={handleLeaveSky}
+                      />
+                    ))}
+                    <p className="text-white/30 text-[10px] text-center pt-1">
+                      좌→우로 드래그하면 나가기 버튼이 보여요
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
 
-            {user && myEntry && (
-              <p className="text-center text-[#a99eff] text-sm mt-4">
-                내 별자리를 터치하면 위치를 수정할 수 있어요
-              </p>
-            )}
-
-            {!user && (
-              <p className="text-center text-white/50 text-sm mt-4">
-                로그인하면 내 별자리가 하늘에 등록됩니다
-              </p>
-            )}
+          {/* 하단 트리거 바 */}
+          <div className="px-6 pb-6">
+            <div className="max-w-[370px] mx-auto">
+              <button
+                onClick={() => setIsSkyListExpanded(prev => !prev)}
+                className={`w-full bg-[#2a2a2a]/95 backdrop-blur-sm text-white py-4 px-5 flex items-center justify-between transition-colors hover:bg-[#333]/95 ${
+                  isSkyListExpanded ? 'rounded-b-2xl' : 'rounded-2xl'
+                }`}
+              >
+                <span className="text-sm font-medium">
+                  {activeSky ? activeSky.name : '전체 밤하늘'}
+                </span>
+                <svg
+                  className={`w-5 h-5 text-white/70 transition-transform ${isSkyListExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1000,6 +1397,151 @@ export default function SkyPage() {
             <button
               onClick={exitEditMode}
               className="w-full mt-3 bg-white/10 hover:bg-white/20 text-white/70 py-2 rounded-xl text-sm transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 토스트 */}
+      {copyToast && (
+        <div className="absolute top-32 left-1/2 -translate-x-1/2 z-50 bg-black/80 text-white px-4 py-2 rounded-full text-sm">
+          {copyToast}
+        </div>
+      )}
+
+      {/* 선택 팝업 (새 밤하늘 만들기 / 코드로 입장하기) */}
+      {popupMode === 'choice' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={closePopup}
+          />
+          <div className="relative bg-white rounded-2xl px-6 py-5 w-full max-w-[320px] shadow-2xl">
+            <button
+              onClick={closePopup}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl leading-none"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+            <div className="flex items-stretch gap-4 mt-2">
+              <button
+                onClick={() => { setPopupError(''); setNewSkyName(''); setPopupMode('create'); }}
+                className="flex-1 flex flex-col items-center gap-2 py-2 hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                <img src="/making-sky.svg" alt="새 밤하늘 만들기" className="w-20 h-20 object-contain" />
+                <span className="text-sm font-medium text-gray-800 text-center leading-tight">
+                  새 밤하늘<br />만들기
+                </span>
+              </button>
+              <div className="w-px bg-gray-200" />
+              <button
+                onClick={() => { setPopupError(''); setEnterCodeInput(''); setPopupMode('enter-code'); }}
+                className="flex-1 flex flex-col items-center gap-2 py-2 hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                <img src="/into-sky.svg" alt="코드로 입장하기" className="w-20 h-20 object-contain" />
+                <span className="text-sm font-medium text-gray-800 text-center leading-tight">
+                  코드로<br />입장하기
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 새 밤하늘 만들기 팝업 */}
+      {popupMode === 'create' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={popupBusy ? undefined : closePopup}
+          />
+          <div className="relative bg-white rounded-2xl px-6 pt-6 pb-5 w-full max-w-[320px] shadow-2xl border-2 border-[#d8d3ff]">
+            <button
+              onClick={closePopup}
+              disabled={popupBusy}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl leading-none disabled:opacity-40"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+            <h2 className="text-center text-[#6155F5] font-bold text-lg mb-4">
+              새 밤하늘 만들기
+            </h2>
+            <input
+              type="text"
+              value={newSkyName}
+              onChange={(e) => setNewSkyName(e.target.value)}
+              placeholder="밤하늘 이름 입력"
+              maxLength={50}
+              disabled={popupBusy}
+              className="w-full bg-white border border-gray-300 rounded-full px-5 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#6155F5] mb-4"
+            />
+            {popupError && (
+              <p className="text-red-500 text-xs text-center mb-2">{popupError}</p>
+            )}
+            <button
+              onClick={handleCreateSky}
+              disabled={popupBusy || !newSkyName.trim()}
+              className="w-full bg-[#6155F5] hover:bg-[#5046d8] disabled:bg-gray-300 text-white font-semibold py-3 rounded-full transition-colors mb-2"
+            >
+              {popupBusy ? '만드는 중...' : '확인'}
+            </button>
+            <button
+              onClick={handleCreateSkyAndCopyLink}
+              disabled={popupBusy || !newSkyName.trim()}
+              className="w-full bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-semibold py-3 rounded-full transition-colors"
+            >
+              초대 링크
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 코드로 입장하기 팝업 */}
+      {popupMode === 'enter-code' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={popupBusy ? undefined : closePopup}
+          />
+          <div className="relative bg-white rounded-2xl px-6 pt-6 pb-5 w-full max-w-[320px] shadow-2xl border-2 border-[#d8d3ff]">
+            <button
+              onClick={closePopup}
+              disabled={popupBusy}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl leading-none disabled:opacity-40"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+            <h2 className="text-center text-[#6155F5] font-bold text-lg mb-4">
+              코드로 입장하기
+            </h2>
+            <input
+              type="text"
+              value={enterCodeInput}
+              onChange={(e) => setEnterCodeInput(e.target.value.toUpperCase())}
+              placeholder="코드 입력"
+              maxLength={16}
+              disabled={popupBusy}
+              className="w-full bg-white border border-gray-300 rounded-full px-5 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#6155F5] mb-4 tracking-widest text-center font-mono"
+            />
+            {popupError && (
+              <p className="text-red-500 text-xs text-center mb-2">{popupError}</p>
+            )}
+            <button
+              onClick={handleJoinByCode}
+              disabled={popupBusy || !enterCodeInput.trim()}
+              className="w-full bg-[#6155F5] hover:bg-[#5046d8] disabled:bg-gray-300 text-white font-semibold py-3 rounded-full transition-colors mb-2"
+            >
+              {popupBusy ? '입장 중...' : '확인'}
+            </button>
+            <button
+              onClick={closePopup}
+              disabled={popupBusy}
+              className="w-full bg-gray-400 hover:bg-gray-500 disabled:bg-gray-300 text-white font-semibold py-3 rounded-full transition-colors"
             >
               취소
             </button>
