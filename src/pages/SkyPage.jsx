@@ -878,7 +878,7 @@ export default function SkyPage() {
 
         // profiles에서 닉네임 조회
         const { data: profilesData } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('id, nickname')
           .in('id', userIds);
 

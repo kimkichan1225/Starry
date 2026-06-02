@@ -60,23 +60,21 @@ function UserPage() {
   const googleIdentity = user?.identities?.find(i => i.provider === 'google'); // 구글 identity 존재 여부
   const socialLinked = user?.user_metadata?.social_linked; // 프로필 설정 완료 여부
 
-  const googleLinkedFromUserPage = user?.user_metadata?.google_linked; // UserPage에서 연동 완료 여부
-
   // 구글 연동 여부:
-  // 1. 구글 가입: social_linked가 true여야 연동 완료
-  // 2. 이메일 가입 → 구글 연동: social_linked 또는 google_linked가 true여야 연동 완료
+  // - 구글 가입자: 프로필 설정 완료(social_linked) 기준
+  // - 이메일 가입 후 구글 연동: 실제 google identity 존재가 곧 연동 완료
+  //   (세팅 안 될 수 있는 user_metadata 플래그가 아니라 Supabase의 identities를 진실의 출처로 사용)
   const isGoogleLinked = isGoogleSignup
     ? socialLinked === true
-    : (!!googleIdentity && (socialLinked === true || googleLinkedFromUserPage === true));
+    : !!googleIdentity;
   const googleEmail = googleIdentity?.identity_data?.email || null;
 
   // 카카오 연동 상태 확인
   const isKakaoSignup = user?.app_metadata?.provider === 'kakao';
   const kakaoIdentity = user?.identities?.find(i => i.provider === 'kakao');
-  const kakaoLinkedFromUserPage = user?.user_metadata?.kakao_linked;
   const isKakaoLinked = isKakaoSignup
     ? socialLinked === true
-    : (!!kakaoIdentity && (socialLinked === true || kakaoLinkedFromUserPage === true));
+    : !!kakaoIdentity;
   const kakaoEmail = kakaoIdentity?.identity_data?.email || null;
 
   // 구글 연동하기

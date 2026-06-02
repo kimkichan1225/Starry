@@ -46,18 +46,15 @@ const FindEmailPage = () => {
     setError('');
 
     try {
-      // 전화번호로 가입된 사용자 확인
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('phone', phone)
-        .maybeSingle();
+      // 전화번호로 가입된 사용자 확인 (존재 여부만)
+      const { data: phoneTaken, error: checkError } = await supabase
+        .rpc('phone_exists', { p_phone: phone });
 
       if (checkError) {
         throw new Error('전화번호 확인 중 오류가 발생했습니다.');
       }
 
-      if (!existingUser) {
+      if (!phoneTaken) {
         setError('가입정보가 없는 번호입니다.');
         setLoading(false);
         return;
@@ -126,27 +123,24 @@ const FindEmailPage = () => {
 
       const verifyData = await response.json();
 
-      if (!verifyData.success || !verifyData.verified) {
+      if (!verifyData.success || !verifyData.verified || !verifyData.verificationId) {
         setError('인증번호가 일치하지 않습니다.');
         setLoading(false);
         return;
       }
 
-      // 인증 성공 시 이메일 조회
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('phone', phone)
-        .single();
+      // 인증 성공 시 이메일 조회 (방금 수행한 인증을 서버가 단회성 소비 후 반환)
+      const { data: foundEmailValue, error: userError } = await supabase
+        .rpc('find_email_by_phone', { p_verification_id: verifyData.verificationId });
 
-      if (userError || !userData) {
+      if (userError || !foundEmailValue) {
         setError('가입정보가 없는 번호입니다.');
         setLoading(false);
         return;
       }
 
       // 이메일 마스킹 후 표시
-      setFoundEmail(maskEmail(userData.email));
+      setFoundEmail(maskEmail(foundEmailValue));
       setIsVerified(true);
     } catch (err) {
       setError('알수 없는 오류가 있습니다.\n1:1 문의사항에 문의 바랍니다.');

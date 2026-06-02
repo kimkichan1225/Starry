@@ -28,7 +28,7 @@ function SurveyStartPage() {
     const fetchTargetUser = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('nickname')
           .eq('id', userId)
           .single();

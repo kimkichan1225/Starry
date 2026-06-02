@@ -103,30 +103,6 @@ const LoadingPage = () => {
     }
   };
 
-  // 개발자 테스트 로그인
-  const handleDevLogin = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'test@test.com',
-        password: 'test1234',
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // 관리자인 경우 관리자 페이지로 이동
-        if (isAdminEmail(data.user.email)) {
-          navigate('/admin');
-        } else {
-          navigate('/home');
-        }
-      }
-    } catch (error) {
-      console.error('개발자 로그인 실패:', error);
-      setError(error.message || '테스트 계정 로그인에 실패했습니다.');
-    }
-  };
-
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* 배경 이미지 */}
@@ -138,14 +114,7 @@ const LoadingPage = () => {
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center">
-          <button
-            onClick={handleDevLogin}
-            className="px-4 py-2 text-sm rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-800 transition-colors"
-          >
-            {t.loading.devLogin}
-          </button>
-        </div>
+        <div className="h-16 bg-[#949494] flex items-center justify-center"></div>
 
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center px-4 justify-center relative">

@@ -32,7 +32,7 @@ const ProfileSetupPage = () => {
     timer: 180,
     timerActive: false,
     error: '',
-    verificationToken: null
+    verificationId: null
   });
 
   // 프로필 완성 여부 체크 및 기존 데이터 불러오기
@@ -46,15 +46,18 @@ const ProfileSetupPage = () => {
       }
 
       const metadata = user.user_metadata || {};
+      // phone_verified는 서버가 확정한 app_metadata 값만 신뢰한다.
+      const appMetadata = user.app_metadata || {};
 
-      // 간편 로그인 연동이 이미 완료된 경우 바로 /home으로 이동
-      if (metadata.social_linked || metadata.google_linked) {
+      // 간편 로그인 연동이 완료되고 서버가 휴대전화 인증을 확정한 경우에만 /home으로 이동
+      // (social_linked는 클라이언트가 수정 가능하므로 단독으로 게이트를 통과시키지 않는다.)
+      if ((metadata.social_linked || metadata.google_linked) && appMetadata.phone_verified) {
         navigate('/home');
         return;
       }
 
       // 프로필이 이미 완성된 경우 (일반 가입 사용자) 바로 /home으로 이동
-      if (metadata.nickname && metadata.birthdate && metadata.phone_verified) {
+      if (metadata.nickname && metadata.birthdate && appMetadata.phone_verified) {
         navigate('/home');
         return;
       }
@@ -86,8 +89,8 @@ const ProfileSetupPage = () => {
         }));
       }
 
-      // 이미 전화번호 인증이 완료된 경우
-      if (metadata.phone_verified && metadata.phone) {
+      // 이미 전화번호 인증이 완료된 경우 (서버 확정값 기준)
+      if (appMetadata.phone_verified && (appMetadata.phone || metadata.phone)) {
         setSmsVerification(prev => ({
           ...prev,
           verified: true
@@ -166,17 +169,14 @@ const ProfileSetupPage = () => {
     try {
       // 신규 소셜 로그인 사용자일 경우 전화번호 중복 체크
       if (!isExistingUser) {
-        const { data: existingPhone, error: phoneError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('phone', formData.phone)
-          .maybeSingle();
+        const { data: phoneTaken, error: phoneError } = await supabase
+          .rpc('phone_exists', { p_phone: formData.phone });
 
         if (phoneError) {
           throw new Error('전화번호 확인 중 오류가 발생했습니다.');
         }
 
-        if (existingPhone) {
+        if (phoneTaken) {
           throw new Error('이미 가입된 전화번호입니다.');
         }
       }
@@ -253,7 +253,7 @@ const ProfileSetupPage = () => {
           verified: true,
           loading: false,
           timerActive: false,
-          verificationToken: data.verificationToken
+          verificationId: data.verificationId
         }));
         setSuccessMessage('휴대전화 인증이 완료되었습니다.');
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -296,19 +296,40 @@ const ProfileSetupPage = () => {
 
     try {
       // Supabase user_metadata 업데이트
+      // phone_verified는 여기서 쓰지 않는다. 아래 confirm-phone이 서버에서 app_metadata에 확정한다.
       const { error } = await supabase.auth.updateUser({
         data: {
           nickname: formData.nickname,
           birthdate: formData.birthdate,
           phone: formData.phone,
-          phone_verified: true,
-          verification_token: smsVerification.verificationToken,
           profile_completed: true,
           social_linked: true  // 간편 로그인 연동 완료 표시
         }
       });
 
       if (error) throw error;
+
+      // 이미 서버에서 같은 전화번호로 인증 확정된 사용자는 confirm-phone 재호출을 건너뛴다.
+      // (과거 인증 기록은 이미 소비되어 재확정이 실패하므로)
+      const appMeta = user?.app_metadata || {};
+      const alreadyVerified = appMeta.phone_verified && appMeta.phone === formData.phone;
+
+      if (!alreadyVerified) {
+        // 서버에서 휴대전화 인증을 확정한다 (app_metadata에 기록 → 클라이언트 위변조 방지).
+        const { data: confirmData, error: confirmError } = await supabase.functions.invoke(
+          'confirm-phone',
+          { body: { verificationId: smsVerification.verificationId } }
+        );
+
+        if (confirmError || !confirmData?.success) {
+          console.error('휴대전화 인증 확정 실패:', confirmError || confirmData);
+          throw new Error('휴대전화 인증 확정에 실패했습니다. 다시 시도해주세요.');
+        }
+
+        // 갱신된 app_metadata를 현재 세션에 반영
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) console.error('세션 갱신 실패:', refreshError);
+      }
 
       // 기존 회원인 경우 profiles 테이블에 social_linked 업데이트
       if (isExistingUser && existingProfileId) {

@@ -38,7 +38,7 @@ const SignupPage = () => {
     timer: 180,
     timerActive: false,
     error: '',
-    verificationToken: null
+    verificationId: null
   });
 
   // 스크롤 refs
@@ -267,17 +267,14 @@ const SignupPage = () => {
     if (!emailRegex.test(formData.email)) return;
 
     try {
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formData.email)
-        .maybeSingle();
+      const { data: exists, error: checkError } = await supabase
+        .rpc('email_exists', { p_email: formData.email });
 
       if (checkError) {
         console.error('이메일 확인 오류:', checkError);
         return;
       }
-      if (existingUser) {
+      if (exists) {
         setEmailError(t.signup.emailDuplicate);
       } else {
         setEmailError('');
@@ -298,14 +295,11 @@ const SignupPage = () => {
     setError('');
 
     try {
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('phone', formData.phone)
-        .maybeSingle();
+      const { data: phoneTaken, error: checkError } = await supabase
+        .rpc('phone_exists', { p_phone: formData.phone });
 
       if (checkError) throw new Error(t.signup.phoneCheckError);
-      if (existingUser) throw new Error(t.signup.phoneDuplicate);
+      if (phoneTaken) throw new Error(t.signup.phoneDuplicate);
 
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
@@ -379,7 +373,7 @@ const SignupPage = () => {
           verified: true,
           loading: false,
           timerActive: false,
-          verificationToken: data.verificationToken
+          verificationId: data.verificationId
         }));
         setSuccessMessage(t.signup.phoneVerificationComplete);
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -404,7 +398,7 @@ const SignupPage = () => {
       setError(t.signup.emailDuplicate);
       return;
     }
-    if (!smsVerification.verified) {
+    if (!smsVerification.verified || !smsVerification.verificationId) {
       setError(t.signup.phoneVerificationRequired);
       return;
     }
@@ -439,9 +433,8 @@ const SignupPage = () => {
           data: {
             nickname: formData.nickname,
             birthdate: birthdate,
-            phone: formData.phone,
-            phone_verified: true,
-            verification_token: smsVerification.verificationToken
+            phone: formData.phone
+            // phone_verified는 클라이언트가 쓰지 않는다. 아래 confirm-phone이 서버에서 app_metadata에 확정한다.
           }
         }
       });
@@ -449,6 +442,22 @@ const SignupPage = () => {
       if (error) throw error;
 
       if (data.user) {
+        // 서버에서 휴대전화 인증을 확정한다 (app_metadata에 기록 → 클라이언트 위변조 방지).
+        const { data: confirmData, error: confirmError } = await supabase.functions.invoke(
+          'confirm-phone',
+          { body: { verificationId: smsVerification.verificationId } }
+        );
+
+        if (confirmError || !confirmData?.success) {
+          // 인증 확정 실패 시 "가입 완료"로 진행하지 않는다(미인증 계정 방지).
+          console.error('휴대전화 인증 확정 실패:', confirmError || confirmData);
+          throw new Error('휴대전화 인증 확정에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        }
+
+        // 갱신된 app_metadata를 현재 세션에 반영
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) console.error('세션 갱신 실패:', refreshError);
+
         // profiles 테이블에도 저장 (upsert: 있으면 업데이트, 없으면 insert)
         const { error: profileError } = await supabase
           .from('profiles')

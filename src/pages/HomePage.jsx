@@ -180,21 +180,14 @@ function HomePage() {
       // base64 추출 (data:image/png;base64, 접두사 제거)
       const base64 = exportCanvas.toDataURL('image/png').split(',')[1];
 
-      const response = await fetch(
-        'https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/analyze-constellation',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ image: base64 }),
-        }
-      );
+      // analyze-constellation은 인증 필수 → 로그인 사용자의 세션 JWT로 호출
+      // (functions.invoke가 현재 세션 토큰을 Authorization 헤더로 자동 첨부)
+      const { data, error: fnError } = await supabase.functions.invoke('analyze-constellation', {
+        body: { image: base64 },
+      });
 
-      const data = await response.json();
-
-      if (data.error) throw new Error(data.error);
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
 
       setSuggestions(data.suggestions);
       setAiNamingMode('results');

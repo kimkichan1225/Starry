@@ -143,7 +143,7 @@ function SurveyQuestionPage() {
     const fetchTargetUser = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('nickname')
           .eq('id', userId)
           .single();
@@ -220,7 +220,7 @@ function SurveyQuestionPage() {
     try {
       // 사용자의 현재 밤하늘 별 개수와 max_sky_slots 확인
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('max_sky_slots')
         .eq('id', userId)
         .single();

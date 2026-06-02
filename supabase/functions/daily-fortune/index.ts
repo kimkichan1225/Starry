@@ -1,7 +1,19 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// 대시보드 단일 파일 배포를 위해 cors 헤더를 인라인한다(_shared import 미사용).
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
+};
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')!;
+
+// rate limit 설정 (IP 기준): cost-DoS 방지
+const RL_ENDPOINT = 'daily-fortune';
+const RL_PER_MINUTE = 10;
+const RL_PER_HOUR = 60;
 
 // 감정 이미지 파일 목록
 const emotionImages = [
@@ -36,16 +48,63 @@ const emotionImages = [
   'emotion-yawn,boring,sleepy',
 ];
 
+// 호출자 식별자(IP) 추출
+function getClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return req.headers.get('cf-connecting-ip') || 'unknown';
+}
+
+// rate limit 체크 + 기록 (원자적 RPC). 초과 시 retryAfter(초) 반환.
+async function checkRateLimit(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  identifier: string
+): Promise<{ allowed: boolean; retryAfter?: number }> {
+  const { data, error } = await admin.rpc('ai_rate_limit_hit', {
+    p_identifier: identifier,
+    p_endpoint: RL_ENDPOINT,
+    p_per_minute: RL_PER_MINUTE,
+    p_per_hour: RL_PER_HOUR,
+  });
+
+  if (error) {
+    // fail-closed: rate limit 처리 실패 시 보수적으로 차단
+    console.error('ai rate limit rpc error:', error);
+    return { allowed: false, retryAfter: 60 };
+  }
+
+  return { allowed: data?.allowed === true, retryAfter: data?.retry_after };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const admin = createClient(supabaseUrl, serviceKey);
+
+    // rate limit (IP 기준)
+    const identifier = getClientIp(req);
+    const rl = await checkRateLimit(admin, identifier);
+    if (!rl.allowed) {
+      return new Response(
+        JSON.stringify({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', retryAfter: rl.retryAfter }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { birthdate } = await req.json();
 
-    if (!birthdate) {
-      throw new Error('생년월일 정보가 없습니다.');
+    // 입력 검증: YYYY-MM-DD 형식만 허용 (prompt injection / 과대 입력 방지)
+    if (!birthdate || typeof birthdate !== 'string' || !/^\d{4}-\d{1,2}-\d{1,2}$/.test(birthdate)) {
+      return new Response(
+        JSON.stringify({ error: '올바른 생년월일 형식이 아닙니다.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const today = new Date().toISOString().split('T')[0];
@@ -118,13 +177,23 @@ explanation 작성 형식 (반드시 이 구조를 따르세요):
       }),
     });
 
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('OpenAI API error:', response.status, errText);
+      throw new Error('운세 생성에 실패했습니다.');
+    }
+
     const data = await response.json();
 
     if (data.error) {
       throw new Error(data.error.message);
     }
 
-    const text = data.choices[0].message.content.trim();
+    const text = data?.choices?.[0]?.message?.content?.trim();
+    if (!text) {
+      throw new Error('AI 응답이 비어 있습니다.');
+    }
+
     // JSON 파싱 (```json ... ``` 형태도 처리)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -142,7 +211,7 @@ explanation 작성 형식 (반드시 이 구조를 따르세요):
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : '운세 생성에 실패했습니다.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -13,10 +13,13 @@ export const useAuth = () => {
 };
 
 // 프로필 완성 여부 체크 함수
+// phone_verified는 서버(confirm-phone Edge Function)가 app_metadata에 확정한 값만 신뢰한다.
+// (user_metadata는 클라이언트가 수정 가능하므로 인증 통과 판정에 사용하지 않는다.)
 const checkProfileComplete = (userData) => {
   if (!userData) return false;
   const metadata = userData.user_metadata || {};
-  return !!(metadata.nickname && metadata.birthdate && metadata.phone_verified);
+  const appMetadata = userData.app_metadata || {};
+  return !!(metadata.nickname && metadata.birthdate && appMetadata.phone_verified);
 };
 
 export const AuthProvider = ({ children }) => {

@@ -27,17 +27,14 @@ const FindPasswordPage = () => {
 
     try {
       // 이메일로 사용자 존재 여부 확인
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
+      const { data: exists, error: userError } = await supabase
+        .rpc('email_exists', { p_email: email });
 
       if (userError) {
         throw new Error('이메일 확인 중 오류가 발생했습니다.');
       }
 
-      if (!userData) {
+      if (!exists) {
         setError('가입정보가 없는 이메일입니다.');
         setLoading(false);
         return;
