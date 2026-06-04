@@ -158,22 +158,31 @@ function seededRandom(seed) {
 // 3D 컴포넌트들
 // ============================================
 
-// 개별 별 컴포넌트
-function Star3D({ position, hue, saturation, points, sharpness, starSize, spriteScale = 1 }) {
-  const texture = useMemo(() =>
-    createStarTexture(hue, saturation, points, sharpness, starSize),
-    [hue, saturation, points, sharpness, starSize]
-  );
-
-  const material = useMemo(() =>
-    new THREE.SpriteMaterial({
+// 별 머티리얼 캐시 (동일 외형 조합 재사용 → 반복 생성/GPU 텍스처 누수 방지)
+// 외형 조합(색·채도·꼭지점·뾰족함·크기)이 제한적이라 캐시 크기는 자연히 bounded.
+const starMaterialCache = new Map();
+function getStarMaterial(hue, saturation, points, sharpness, starSize) {
+  const key = `${hue}-${saturation}-${points}-${sharpness}-${starSize}`;
+  let material = starMaterialCache.get(key);
+  if (!material) {
+    const texture = createStarTexture(hue, saturation, points, sharpness, starSize);
+    material = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
       opacity: 1,
       depthTest: false,
       depthWrite: false,
-    }),
-    [texture]
+    });
+    starMaterialCache.set(key, material);
+  }
+  return material;
+}
+
+// 개별 별 컴포넌트
+function Star3D({ position, hue, saturation, points, sharpness, starSize, spriteScale = 1 }) {
+  const material = useMemo(
+    () => getStarMaterial(hue, saturation, points, sharpness, starSize),
+    [hue, saturation, points, sharpness, starSize]
   );
 
   return (
@@ -188,11 +197,21 @@ function Star3D({ position, hue, saturation, points, sharpness, starSize, sprite
 // 별자리 연결선 컴포넌트
 const LINE_COLOR = new THREE.Color('rgb(255, 255, 227)');
 
-function ConstellationLines({ points }) {
-  const lineGeometry = useMemo(() => {
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    return geometry;
-  }, [points]);
+function ConstellationLines({ start, end }) {
+  // start/end는 부모(starsData)에서 메모된 안정적 Vector3 → 매 렌더 geometry 재생성 방지
+  const lineGeometry = useMemo(
+    () => new THREE.BufferGeometry().setFromPoints([start, end]),
+    [start, end]
+  );
+
+  // geometry가 실제로 바뀔 때만 이전 것을 해제 (StrictMode 이중 실행에도 안전)
+  const prevGeoRef = useRef(null);
+  useEffect(() => {
+    if (prevGeoRef.current && prevGeoRef.current !== lineGeometry) {
+      prevGeoRef.current.dispose();
+    }
+    prevGeoRef.current = lineGeometry;
+  }, [lineGeometry]);
 
   return (
     <line geometry={lineGeometry} renderOrder={1}>
@@ -278,7 +297,8 @@ function Constellation3D({ constellation, onSelect, isSelected, isPreview = fals
       {constellation.connections.map(([from, to], index) => (
         <ConstellationLines
           key={index}
-          points={[starsData[from].position, starsData[to].position]}
+          start={starsData[from].position}
+          end={starsData[to].position}
         />
       ))}
 
