@@ -55,15 +55,27 @@ export function StarsProvider({ children }) {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('stars')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+      // 서로 독립인 stars / 연결 / 프로필 조회를 병렬 실행
+      const [starsRes, connRes, profileRes] = await Promise.all([
+        supabase
+          .from('stars')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('star_connections')
+          .select('from_star_id, to_star_id')
+          .eq('user_id', user.id),
+        supabase
+          .from('profiles')
+          .select('max_sky_slots')
+          .eq('id', user.id)
+          .single(),
+      ]);
 
-      if (error) throw error;
+      if (starsRes.error) throw starsRes.error;
 
-      const allStars = data || [];
+      const allStars = starsRes.data || [];
       setStars(allStars);
 
       // 밤하늘 별과 창고 별 분리
@@ -75,13 +87,9 @@ export function StarsProvider({ children }) {
       // 밤하늘 별의 위치만 계산
       setStarPositions(calculatePositions(sky));
 
-      // 연결 데이터 가져오기
-      const { data: connectionsData, error: connError } = await supabase
-        .from('star_connections')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (connError) throw connError;
+      // 연결 데이터 처리
+      if (connRes.error) throw connRes.error;
+      const connectionsData = connRes.data;
 
       if (connectionsData && connectionsData.length > 0 && sky.length > 0) {
         const loadedConnections = connectionsData.map(conn => {
@@ -95,15 +103,9 @@ export function StarsProvider({ children }) {
         setConnections([]);
       }
 
-      // max_sky_slots 가져오기
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('max_sky_slots')
-        .eq('id', user.id)
-        .single();
-
-      if (!profileError && profileData?.max_sky_slots) {
-        setMaxSkySlots(profileData.max_sky_slots);
+      // max_sky_slots 적용
+      if (!profileRes.error && profileRes.data?.max_sky_slots) {
+        setMaxSkySlots(profileRes.data.max_sky_slots);
       }
     } catch (error) {
       console.error('Error fetching stars:', error);

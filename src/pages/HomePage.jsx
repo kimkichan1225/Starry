@@ -373,24 +373,20 @@ function HomePage() {
 
     setSaving(true);
     try {
-      // 1. 각 별의 위치 업데이트
-      for (let i = 0; i < stars.length; i++) {
-        const star = stars[i];
-        const position = starPositions[i];
-        if (position) {
-          const { error: updateError } = await supabase
+      // 1. 각 별의 위치 업데이트 (병렬 실행)
+      const positionUpdates = stars
+        .map((star, i) => ({ star, position: starPositions[i] }))
+        .filter(({ position }) => position)
+        .map(({ star, position }) =>
+          supabase
             .from('stars')
-            .update({
-              position_x: position.x,
-              position_y: position.y
+            .update({ position_x: position.x, position_y: position.y })
+            .eq('id', star.id)
+            .then(({ error: updateError }) => {
+              if (updateError) console.error('별 위치 업데이트 실패:', star.id, updateError);
             })
-            .eq('id', star.id);
-
-          if (updateError) {
-            console.error('별 위치 업데이트 실패:', star.id, updateError);
-          }
-        }
-      }
+        );
+      await Promise.all(positionUpdates);
 
       // 2. 기존 연결 삭제 후 새 연결 저장
       const { error: deleteError } = await supabase
