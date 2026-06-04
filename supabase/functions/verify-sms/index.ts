@@ -23,11 +23,17 @@ function isValidPhoneNumber(phone: string): boolean {
   return /^010-\d{4}-\d{4}$/.test(phone);
 }
 
-// 인증번호 SHA-256 해싱 (send-sms의 저장 방식과 반드시 동일해야 함)
-async function hashCode(code: string): Promise<string> {
-  const data = new TextEncoder().encode(code);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
+// 인증번호 HMAC-SHA256 해싱 (서버 pepper 사용 — send-sms의 저장 방식과 반드시 동일해야 함)
+async function hashCode(code: string, pepper: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pepper),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(code));
+  return Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 }
@@ -42,6 +48,11 @@ serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(supabaseUrl, serviceKey);
 
+    const otpPepper = Deno.env.get('OTP_HASH_PEPPER');
+    if (!otpPepper) {
+      throw new Error('OTP_HASH_PEPPER 환경 변수가 설정되지 않았습니다.');
+    }
+
     const { phone, code } = await req.json();
 
     if (!phone || !isValidPhoneNumber(phone)) {
@@ -51,7 +62,7 @@ serve(async (req) => {
       return json({ success: false, error: 'invalid_code_format', message: '인증번호는 6자리 숫자여야 합니다.' }, 400);
     }
 
-    const codeHash = await hashCode(code);
+    const codeHash = await hashCode(code, otpPepper);
 
     // 원자적 검증 (행 잠금으로 시도횟수 증가/검증 직렬화)
     const { data: result, error: rpcError } = await admin.rpc('verify_phone_attempt', {

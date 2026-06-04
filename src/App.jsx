@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { StarsProvider } from './contexts/StarsContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import LoadingPage from './pages/LoadingPage';
@@ -24,6 +24,23 @@ import SkyPage from './pages/SkyPage';
 import WarehousePage from './pages/WarehousePage';
 import WelcomePage from './pages/WelcomePage';
 
+// 로그인 필요 라우트 가드 (미인증 시 로그인 화면으로)
+function RequireAuth({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/" replace />;
+  return children;
+}
+
+// 관리자 전용 라우트 가드
+function RequireAdmin({ children }) {
+  const { user, loading, isAdmin } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/" replace />;
+  if (!isAdmin) return <Navigate to="/home" replace />;
+  return children;
+}
+
 function App() {
   return (
     <LanguageProvider>
@@ -38,18 +55,18 @@ function App() {
           <Route path="/find-password" element={<FindPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
 
-          {/* 네비게이션 바 페이지들 */}
-          <Route path="/starry" element={<StarryPage />} />
-          <Route path="/stars" element={<StarsPage />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/warehouse" element={<WarehousePage />} />
-          <Route path="/stat" element={<StatPage />} />
-          <Route path="/stat/detail" element={<StatDetailPage />} />
-          <Route path="/user" element={<UserPage />} />
-          <Route path="/notice" element={<NoticePage />} />
-          <Route path="/notice/:id" element={<NoticeDetailPage />} />
+          {/* 네비게이션 바 페이지들 (로그인 필요) */}
+          <Route path="/starry" element={<RequireAuth><StarryPage /></RequireAuth>} />
+          <Route path="/stars" element={<RequireAuth><StarsPage /></RequireAuth>} />
+          <Route path="/home" element={<RequireAuth><HomePage /></RequireAuth>} />
+          <Route path="/warehouse" element={<RequireAuth><WarehousePage /></RequireAuth>} />
+          <Route path="/stat" element={<RequireAuth><StatPage /></RequireAuth>} />
+          <Route path="/stat/detail" element={<RequireAuth><StatDetailPage /></RequireAuth>} />
+          <Route path="/user" element={<RequireAuth><UserPage /></RequireAuth>} />
+          <Route path="/notice" element={<RequireAuth><NoticePage /></RequireAuth>} />
+          <Route path="/notice/:id" element={<RequireAuth><NoticeDetailPage /></RequireAuth>} />
 
           {/* 웰컴(마케팅) 페이지 */}
           <Route path="/welcome" element={<WelcomePage />} />
@@ -59,7 +76,7 @@ function App() {
           <Route path="/survey/:userId/questions" element={<SurveyQuestionPage />} />
 
           {/* 3D 밤하늘 */}
-          <Route path="/sky" element={<SkyPage />} />
+          <Route path="/sky" element={<RequireAuth><SkyPage /></RequireAuth>} />
           <Route path="/sky-demo" element={<SkyDemoPage />} />
 
           {/* 추후 페이지 라우트 추가 예정 */}
