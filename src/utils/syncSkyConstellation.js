@@ -63,8 +63,8 @@ export async function syncSkyConstellation(userId, nickname) {
 
   // SkyPage가 기대하는 형식으로 변환 (중심 기준 상대 좌표 + 별 속성)
   const stars = starsData.map((star) => ({
-    x: (star.position_x || 175) - 175,
-    y: (star.position_y || 250) - 250,
+    x: (star.position_x ?? 175) - 175,
+    y: (star.position_y ?? 250) - 250,
     star_color: star.star_color,
     star_points: star.star_points,
     star_size: star.star_size,
