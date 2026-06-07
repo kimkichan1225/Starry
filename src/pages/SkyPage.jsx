@@ -693,7 +693,7 @@ function SkyListItem({ sky, isActive, onSelect, onLeave }) {
         }}
         className={`relative w-full py-3 px-4 rounded-xl text-left text-sm transition-colors truncate ${
           isActive
-            ? 'bg-[#6155F5]/30 text-white border border-[#6155F5]/50'
+            ? 'bg-[#2f2c5c] text-white border border-[#6155F5]/50'
             : 'bg-[#2a2a2a] hover:bg-[#333] text-white/90 border border-white/10'
         }`}
       >
@@ -1346,6 +1346,20 @@ export default function SkyPage() {
                     </p>
                   </div>
                 )}
+
+                {/* 전체 밤하늘로 이동 */}
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <button
+                    onClick={() => switchToSky(null)}
+                    className={`w-full py-3 px-4 rounded-xl text-left text-sm transition-colors ${
+                      !activeSky
+                        ? 'bg-[#2f2c5c] text-white border border-[#6155F5]/50'
+                        : 'bg-[#2a2a2a] hover:bg-[#333] text-white/90 border border-white/10'
+                    }`}
+                  >
+                    전체 밤하늘
+                  </button>
+                </div>
               </div>
             </div>
           )}
