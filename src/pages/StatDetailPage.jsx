@@ -138,12 +138,17 @@ function StatDetailPage() {
     // 현재 질문의 4개 옵션 % 계산
     const q = questions[currentQuestion];
     const qStats = stats[q.id];
+    const pct = (key) => (qStats && qStats.total > 0 ? (qStats[key] / qStats.total) * 100 : 0);
+    const pd = pct('d'); // 오른쪽 위 (마음/중재/개성/카페/해결)
+    const pc = pct('c'); // 오른쪽 아래 (지식/유연/균형/노력/활동)
+    const pb = pct('b'); // 왼쪽 아래 (실력/유지/내향/비밀/대화)
+    const pa = pct('a'); // 왼쪽 위 (도전/리더/외향/게임/음식)
     const percentages = [
-      50, // 위쪽 (Q 레이블) - 50% 고정
-      qStats && qStats.total > 0 ? (qStats.d / qStats.total) * 100 : 0, // 오른쪽 위 (d 옵션 - 마음/중재/개성/카페/해결)
-      qStats && qStats.total > 0 ? (qStats.c / qStats.total) * 100 : 0, // 오른쪽 아래 (c 옵션 - 지식/유연/균형/노력/활동)
-      qStats && qStats.total > 0 ? (qStats.b / qStats.total) * 100 : 0, // 왼쪽 아래 (b 옵션 - 실력/유지/내향/비밀/대화)
-      qStats && qStats.total > 0 ? (qStats.a / qStats.total) * 100 : 0, // 왼쪽 위 (a 옵션 - 도전/리더/외향/게임/음식)
+      (pa + pb + pc + pd) / 4, // 위쪽 (Q 레이블) - 4개 옵션 평균
+      pd,
+      pc,
+      pb,
+      pa,
     ];
 
     // 5개의 바깥 꼭짓점 각도 (위쪽부터 시계방향)
@@ -184,17 +189,20 @@ function StatDetailPage() {
       ctx.stroke();
     });
 
+    // 바깥 꼭짓점 반지름 미리 계산 (데이터 기반, 최소 25 보장: 0%→25, 100%→125)
+    const outerRadii = percentages.map((p) => ((p + 25) / 125) * maxRadius);
+
     // 데이터 영역 그리기 (별 모양)
     ctx.beginPath();
     const points = [];
     for (let i = 0; i < 5; i++) {
-      // 바깥 꼭짓점 (데이터 기반, 최소 25 보장: 0%→25, 100%→125)
-      const outerRadius = ((percentages[i] + 25) / 125) * maxRadius;
+      const outerRadius = outerRadii[i];
       const outerX = cx + Math.cos(outerAngles[i]) * outerRadius;
       const outerY = cy + Math.sin(outerAngles[i]) * outerRadius;
 
-      // 안쪽 꼭짓점 (바깥의 일정 비율)
-      const innerRadius = outerRadius * innerRatio;
+      // 안쪽 꼭짓점: 인접한 두 바깥 꼭짓점의 평균 기반(좌우 대칭 보장)
+      const innerBase = (outerRadii[i] + outerRadii[(i + 1) % 5]) / 2;
+      const innerRadius = innerBase * innerRatio;
       const innerX = cx + Math.cos(innerAngles[i]) * innerRadius;
       const innerY = cy + Math.sin(innerAngles[i]) * innerRadius;
 
