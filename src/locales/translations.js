@@ -219,6 +219,9 @@ export const translations = {
       shareAndGet: '링크 공유하고',
       getStar: '별 선물받기',
       nightSky: '님의 밤하늘',
+      shareTitle: 'STARRY',
+      shareText: '님에게 별을 선물해주세요! ⭐',
+      linkCopied: '링크가 복사되었습니다!',
     },
 
     // Home 페이지 (밤하늘)
@@ -577,6 +580,9 @@ export const translations = {
       shareAndGet: 'Share link and',
       getStar: 'receive stars',
       nightSky: "'s Night Sky",
+      shareTitle: 'STARRY',
+      shareText: ', gift me a star! ⭐',
+      linkCopied: 'Link copied!',
     },
 
     // Home Page (Night Sky)

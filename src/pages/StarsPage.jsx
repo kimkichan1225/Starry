@@ -485,7 +485,45 @@ function StarsPage() {
   const t = translations[language];
   const [selectedStar, setSelectedStar] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [shareMessage, setShareMessage] = useState('');
   const maxStars = 20;
+
+  // 설문 링크 공유 (모바일 네이티브 공유 시트 → 카톡 등 / 미지원 시 클립보드 복사)
+  const handleShare = async () => {
+    if (!user?.id) {
+      setShareMessage(t.home.loginRequired);
+      setTimeout(() => setShareMessage(''), 2000);
+      return;
+    }
+
+    const surveyLink = `${window.location.origin}/survey/${user.id}`;
+    const shareData = {
+      title: t.stars.shareTitle,
+      text: `${nickname || ''}${t.stars.shareText}`,
+      url: surveyLink,
+    };
+
+    // Web Share API 지원 시 네이티브 공유 시트 호출
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        // 사용자가 공유를 취소한 경우는 조용히 종료
+        if (err.name === 'AbortError') return;
+        // 그 외 오류는 클립보드 복사로 폴백
+      }
+    }
+
+    // 폴백: 링크 클립보드 복사
+    try {
+      await navigator.clipboard.writeText(surveyLink);
+      setShareMessage(t.stars.linkCopied);
+    } catch {
+      setShareMessage(surveyLink);
+    }
+    setTimeout(() => setShareMessage(''), 2000);
+  };
 
   // 별 카드 클릭 핸들러
   const handleStarClick = (star, index) => {
@@ -576,7 +614,10 @@ function StarsPage() {
             ))}
 
             {/* 추가 버튼 카드 */}
-            <div className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer hover:bg-white/10">
+            <div
+              onClick={handleShare}
+              className="aspect-[4/5] bg-white/5 border-2 border-white rounded-2xl flex flex-col items-center justify-center transition cursor-pointer hover:bg-white/10"
+            >
               <div className="text-white text-4xl mb-1">+</div>
               <div className="text-white text-xs text-center px-2">
                 {t.stars.shareAndGet}
@@ -618,6 +659,13 @@ function StarsPage() {
 
       {/* 네비게이션 바 */}
       <NavBar />
+
+      {/* 공유 결과 토스트 */}
+      {shareMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/80 text-white text-sm px-4 py-2 rounded-full whitespace-nowrap">
+          {shareMessage}
+        </div>
+      )}
 
       {/* 별 상세 모달 */}
       {selectedStar && (
