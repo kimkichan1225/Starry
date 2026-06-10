@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply m-0 min-h-screen bg-starry-dark text-white antialiased;
+    @apply m-0 min-h-screen bg-starry-dark text-white antialiased font-sans;
   }
 
   * {

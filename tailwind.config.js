@@ -14,7 +14,7 @@ export default {
         'star-yellow': '#ffd700',
       },
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'sans': ['Pretendard Variable', 'Pretendard', '-apple-system', 'system-ui', 'sans-serif'],
       },
     },
   },
