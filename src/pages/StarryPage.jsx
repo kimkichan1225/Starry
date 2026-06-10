@@ -276,9 +276,14 @@ function StarryPage() {
             </div>
 
             {/* 서비스 개발 히스토리 버튼 */}
-            <button className="w-full py-4 bg-[#6155F5] text-white font-bold rounded-full mb-8 hover:bg-[#5044d4] transition">
+            <a
+              href="https://tumblbug.com/starry"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-4 bg-[#6155F5] text-white font-bold rounded-full mb-8 hover:bg-[#5044d4] transition text-center"
+            >
               {t.starry.devHistory}
-            </button>
+            </a>
 
             {/* 공지사항 섹션 */}
             <div className="mb-8">
