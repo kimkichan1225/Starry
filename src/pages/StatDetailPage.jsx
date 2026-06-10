@@ -143,8 +143,11 @@ function StatDetailPage() {
     const pc = pct('c'); // 오른쪽 아래 (지식/유연/균형/노력/활동)
     const pb = pct('b'); // 왼쪽 아래 (실력/유지/내향/비밀/대화)
     const pa = pct('a'); // 왼쪽 위 (도전/리더/외향/게임/음식)
+    // 위쪽 Q 꼭짓점: 4개 옵션의 최댓값과 최솟값의 중간값
+    // (단일 선택이라 평균은 항상 25%로 고정되므로 분포에 반응하는 중앙값 사용)
+    const topVertex = (Math.max(pa, pb, pc, pd) + Math.min(pa, pb, pc, pd)) / 2;
     const percentages = [
-      (pa + pb + pc + pd) / 4, // 위쪽 (Q 레이블) - 4개 옵션 평균
+      topVertex, // 위쪽 (Q 레이블)
       pd,
       pc,
       pb,

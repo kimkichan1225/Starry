@@ -59,7 +59,7 @@ const questions = [
   {
     id: 1,
     questionLine1: (nickname) => `무인도에 떨어진 ${nickname} 님,`,
-    questionLine2: '가장 먼저 챙길 것은?',
+    questionLine2: () => '가장 먼저 챙길 것은?',
     options: [
       { id: 'a', emoji: '🔥', label: '탈출할 배를 만드는', description: '용기' },
       { id: 'b', emoji: '📐', label: '사냥을 성공시키는', description: '생존 기술' },
@@ -92,7 +92,7 @@ const questions = [
   {
     id: 4,
     questionLine1: (nickname) => `${nickname} 님의 심장박동수가`,
-    questionLine2: '가장 빨라지는 순간은?',
+    questionLine2: () => '가장 빨라지는 순간은?',
     options: [
       { id: 'a', emoji: '🎮', label: '연승 직전', description: '한타 싸움할 때' },
       { id: 'b', emoji: '🔒', label: '"너만 알아라"', description: '비밀 들었을 때' },

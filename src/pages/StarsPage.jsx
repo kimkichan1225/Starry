@@ -486,13 +486,27 @@ function StarsPage() {
   const [selectedStar, setSelectedStar] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [shareMessage, setShareMessage] = useState('');
+  const shareTimerRef = useRef(null);
   const maxStars = 20;
+
+  // 토스트 표시 (연속 호출 시 이전 타이머 정리)
+  const showToast = (msg) => {
+    setShareMessage(msg);
+    if (shareTimerRef.current) clearTimeout(shareTimerRef.current);
+    shareTimerRef.current = setTimeout(() => setShareMessage(''), 2000);
+  };
+
+  // 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (shareTimerRef.current) clearTimeout(shareTimerRef.current);
+    };
+  }, []);
 
   // 설문 링크 공유 (모바일 네이티브 공유 시트 → 카톡 등 / 미지원 시 클립보드 복사)
   const handleShare = async () => {
     if (!user?.id) {
-      setShareMessage(t.home.loginRequired);
-      setTimeout(() => setShareMessage(''), 2000);
+      showToast(t.home.loginRequired);
       return;
     }
 
@@ -518,11 +532,10 @@ function StarsPage() {
     // 폴백: 링크 클립보드 복사
     try {
       await navigator.clipboard.writeText(surveyLink);
-      setShareMessage(t.stars.linkCopied);
+      showToast(t.stars.linkCopied);
     } catch {
-      setShareMessage(surveyLink);
+      showToast(surveyLink);
     }
-    setTimeout(() => setShareMessage(''), 2000);
   };
 
   // 별 카드 클릭 핸들러
