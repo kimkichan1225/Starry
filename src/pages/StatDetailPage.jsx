@@ -7,57 +7,57 @@ import NavBar from '../components/NavBar';
 const questions = [
   {
     id: 1,
-    questionLine1: (nickname) => `${nickname} 님이`,
-    questionLine2: '가장 중요하게 생각하는 것은?',
+    questionLine1: (nickname) => `무인도에 떨어진 ${nickname} 님,`,
+    questionLine2: () => '가장 먼저 챙길 것은?',
     options: [
-      { id: 'a', emoji: '🔥', label: '도전!', shortLabel: '도전', description: '용감하게 밀고 나간다' },
-      { id: 'b', emoji: '📐', label: '실력!', shortLabel: '실력', description: '확실하게 해낸다' },
-      { id: 'c', emoji: '📚', label: '지식!', shortLabel: '지식', description: '새로운 것을 알아낸다' },
-      { id: 'd', emoji: '💖', label: '마음!', shortLabel: '마음', description: '사람들과 함께 해낸다' },
+      { id: 'a', emoji: '🔥', label: '탈출할 배를 만드는', shortLabel: '도전', description: '용기' },
+      { id: 'b', emoji: '📐', label: '사냥을 성공시키는', shortLabel: '실력', description: '생존 기술' },
+      { id: 'c', emoji: '🧠', label: '식물 독성을 구별하는', shortLabel: '지식', description: '지식' },
+      { id: 'd', emoji: '❤️', label: '동료들을 멘탈 케어하는', shortLabel: '마음', description: '마음' },
     ],
   },
   {
     id: 2,
-    questionLine1: (nickname) => `${nickname} 님의`,
-    questionLine2: '새로운 상황에서 행동 스타일은?',
+    questionLine1: () => '조별과제 팀장이 탈주했다!',
+    questionLine2: (nickname) => `이때 ${nickname} 님은?`,
     options: [
-      { id: 'a', emoji: '🧑‍🏫', label: '리더형!', shortLabel: '리더', description: '내가 이끌어간다' },
-      { id: 'b', emoji: '🗺️', label: '유지형!', shortLabel: '유지', description: '방식을 끝까지 유지한다' },
-      { id: 'c', emoji: '🧩', label: '유연형!', shortLabel: '유연', description: '상황에 따라 바뀐다' },
-      { id: 'd', emoji: '💬', label: '중재형!', shortLabel: '중재', description: '모두의 의견을 들어본다' },
+      { id: 'a', emoji: '👑', label: '"내가 할게"', shortLabel: '리더', description: '냅다 팀장 맡기' },
+      { id: 'b', emoji: '🗿', label: '팀장 없어도', shortLabel: '유지', description: '내 할 일만 하기' },
+      { id: 'c', emoji: '🌊', label: '"오히려 좋아"', shortLabel: '유연', description: '주제 갈아엎기' },
+      { id: 'd', emoji: '🤝', label: '싸우지 않게', shortLabel: '중재', description: '팀원들 달래기' },
     ],
   },
   {
     id: 3,
-    questionLine1: (nickname) => `${nickname} 님의`,
-    questionLine2: '첫인상은?',
+    questionLine1: () => '처음 만난 술자리에서',
+    questionLine2: (nickname) => `${nickname} 님의 포지션은?`,
     options: [
-      { id: 'a', emoji: '😀', label: '외향적!', shortLabel: '외향', description: '활발한 에너지' },
-      { id: 'b', emoji: '😳', label: '내향적!', shortLabel: '내향', description: '차분하고 신중함' },
-      { id: 'c', emoji: '😊', label: '균형적!', shortLabel: '균형', description: '친근하고 편함' },
-      { id: 'd', emoji: '😝', label: '개성!', shortLabel: '개성', description: '어디로 튈지 모름' },
+      { id: 'a', emoji: '⚡', label: '처음 본 사람과', shortLabel: '외향', description: '베프 먹기' },
+      { id: 'b', emoji: '❄️', label: '말 걸어줄 때까지', shortLabel: '내향', description: '폰 보기' },
+      { id: 'c', emoji: '☀️', label: '눈 마주치면', shortLabel: '균형', description: '어색하게 웃기' },
+      { id: 'd', emoji: '🌈', label: '세상 튀는 옷 입고', shortLabel: '개성', description: '존재감 뿜기' },
     ],
   },
   {
     id: 4,
-    questionLine1: (nickname) => `${nickname} 님이`,
-    questionLine2: '가장 행복한 상황은?',
+    questionLine1: (nickname) => `${nickname} 님의 심장박동수가`,
+    questionLine2: () => '가장 빨라지는 순간은?',
     options: [
-      { id: 'a', emoji: '🎮', label: '게임 레벨이', shortLabel: '게임', description: '올랐을 때' },
-      { id: 'b', emoji: '🔒', label: '재미있는 비밀을', shortLabel: '비밀', description: '알았을 때' },
-      { id: 'c', emoji: '🏆️', label: '노력한 일에', shortLabel: '노력', description: '칭찬을 받을 때' },
-      { id: 'd', emoji: '☕', label: '친구들과', shortLabel: '카페', description: '카페에 갈 때' },
+      { id: 'a', emoji: '🎮', label: '연승 직전', shortLabel: '게임', description: '한타 싸움할 때' },
+      { id: 'b', emoji: '🔒', label: '"너만 알아라"', shortLabel: '비밀', description: '비밀 들었을 때' },
+      { id: 'c', emoji: '🏆', label: '사람들 앞에서', shortLabel: '칭찬', description: '극찬받을 때' },
+      { id: 'd', emoji: '☕', label: '밤새 수다 떨며', shortLabel: '카페', description: '연애 썰 풀 때' },
     ],
   },
   {
     id: 5,
-    questionLine1: (nickname) => `${nickname} 님이`,
-    questionLine2: '스트레스를 푸는 방법은?',
+    questionLine1: () => '상사한테 영혼까지 털린 날,',
+    questionLine2: (nickname) => `${nickname} 님의 퇴근길은?`,
     options: [
-      { id: 'a', emoji: '🍰', label: '맛있는걸 먹거나', shortLabel: '음식', description: '푹 잔다' },
-      { id: 'b', emoji: '🗣', label: '친한 사람에게', shortLabel: '대화', description: '이야기한다' },
-      { id: 'c', emoji: '🏃‍♂️', label: '운동이나', shortLabel: '활동', description: '노래를 한다' },
-      { id: 'd', emoji: '🧮', label: '스트레스 받은', shortLabel: '해결', description: '이유를 따져본다' },
+      { id: 'a', emoji: '🛌', label: '엽떡 시키고', shortLabel: '음식', description: '침대로 직행' },
+      { id: 'b', emoji: '🗣️', label: '전화로 쌍욕 하며', shortLabel: '대화', description: '한풀이' },
+      { id: 'c', emoji: '🎤', label: '코노 가서', shortLabel: '노래', description: '고음 지르기' },
+      { id: 'd', emoji: '🧐', label: '"내가 왜 털렸지?"', shortLabel: '분석', description: '원인 분석' },
     ],
   },
 ];
@@ -351,7 +351,7 @@ function StatDetailPage() {
                 {question.questionLine1(nickname || 'User1')}
               </h1>
               <h2 className="text-white text-base font-bold">
-                {question.questionLine2}
+                {question.questionLine2(nickname || 'User1')}
               </h2>
             </div>
 
