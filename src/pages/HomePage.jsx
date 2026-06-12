@@ -1060,8 +1060,8 @@ function HomePage() {
       {/* 밤하늘 제작 모드 UI */}
       {isEditMode && (
         <>
-          {/* 상단 좌측 버튼들 (도움말, 새로고침) - 세로 배치 */}
-          <div className="fixed top-40 left-7 flex flex-col z-50">
+          {/* 상단 좌측 버튼들 (도움말, 새로고침) - 세로 배치 (밤하늘 프레임 안쪽) */}
+          <div className="fixed top-40 left-1/2 flex flex-col z-50" style={{ marginLeft: '-185px' }}>
             {/* 도움말 버튼 */}
             <button
               onClick={() => {
@@ -1085,8 +1085,8 @@ function HomePage() {
             </button>
           </div>
 
-          {/* 상단 우측 버튼 (별 보관함) */}
-          <div className="fixed top-40 right-7 z-50">
+          {/* 상단 우측 버튼 (별 보관함) - 밤하늘 프레임 안쪽 */}
+          <div className="fixed top-40 left-1/2 z-50" style={{ marginLeft: '145px' }}>
             <button
               onClick={() => navigate('/warehouse')}
               className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition"
@@ -1124,8 +1124,8 @@ function HomePage() {
           style={{ paddingTop: '35vh' }}
           onClick={handlePageTutorialNext}
         >
-          {/* 상단 우측 카운터/닫기 */}
-          <div className="absolute top-28 right-6">
+          {/* 상단 우측 카운터/닫기 - 밤하늘 프레임 안쪽 */}
+          <div className="absolute top-28" style={{ right: 'calc(50% - 175px)' }}>
             {pageTutorialStep < 3 ? (
               <button
                 onClick={(e) => { e.stopPropagation(); handlePageTutorialNext(); }}
