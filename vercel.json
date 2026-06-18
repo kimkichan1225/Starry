@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/survey/:userId",
+      "destination": "/api/survey/:userId"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
