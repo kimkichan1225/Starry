@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
+import { syncSkyConstellation } from '../utils/syncSkyConstellation';
 
 function UserPage() {
   const navigate = useNavigate();
@@ -236,13 +237,32 @@ function UserPage() {
     setError('');
 
     try {
+      const trimmed = newNickname.trim();
+
+      // 1. user_metadata 갱신 → useAuth().nickname을 쓰는 화면(홈/통계 등)에 반영
       const { error } = await supabase.auth.updateUser({
-        data: { nickname: newNickname.trim() }
+        data: { nickname: trimmed }
       });
 
       if (error) throw error;
 
-      setNickname(newNickname.trim());
+      // 2. profiles 테이블 갱신 → public_profiles를 읽는 화면(설문/3D 밤하늘 등)에 반영
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ nickname: trimmed })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // 3. 3D 밤하늘 별자리를 동기화 → Realtime이 트리거되어 by 닉네임이 즉시 반영됨
+      //    (별자리가 등록돼 있지 않으면 내부적으로 아무 것도 하지 않음)
+      try {
+        await syncSkyConstellation(user.id, trimmed, user.user_metadata?.constellation_name);
+      } catch (syncErr) {
+        console.error('밤하늘 닉네임 동기화 실패:', syncErr);
+      }
+
+      setNickname(trimmed);
       setIsEditingNickname(false);
       setSuccessMessage(t.user.nicknameChanged);
       setTimeout(() => setSuccessMessage(''), 2000);

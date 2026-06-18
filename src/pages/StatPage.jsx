@@ -8,10 +8,9 @@ import { translations } from '../locales/translations';
 
 function StatPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, nickname } = useAuth();
   const { language } = useLanguage();
   const t = translations[language];
-  const [nickname, setNickname] = useState('User1');
   const [starCount, setStarCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -24,17 +23,6 @@ function StatPage() {
       }
 
       try {
-        // 닉네임 가져오기
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('nickname')
-          .eq('id', user.id)
-          .single();
-
-        if (profileData?.nickname) {
-          setNickname(profileData.nickname);
-        }
-
         // 별 개수 가져오기
         const { count } = await supabase
           .from('stars')
