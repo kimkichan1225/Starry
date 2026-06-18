@@ -41,9 +41,10 @@ function findEmptySpot(occupied) {
  * - 아직 없으면 빈 자리를 찾아 새로 등록한다.
  *
  * @param {string} userId  - auth user id
- * @param {string} [nickname] - 별자리 이름 표시용 닉네임
+ * @param {string} [nickname] - 별자리 소유자 닉네임 (by 표시 / 기본 이름 fallback용)
+ * @param {string} [constellationName] - 사용자가 지은 별자리 이름 (3D에 표시될 이름)
  */
-export async function syncSkyConstellation(userId, nickname) {
+export async function syncSkyConstellation(userId, nickname, constellationName) {
   if (!userId) return;
 
   // 별 데이터
@@ -80,7 +81,10 @@ export async function syncSkyConstellation(userId, nickname) {
     })
     .filter(([from, to]) => from !== -1 && to !== -1);
 
-  const name = nickname ? `${nickname}의 별자리` : '나의 별자리';
+  // 사용자가 지은 별자리 이름을 우선 사용하고, 없으면 닉네임 기반 기본 이름을 쓴다.
+  const name = constellationName?.trim()
+    ? constellationName.trim()
+    : (nickname ? `${nickname}의 별자리` : '나의 별자리');
 
   // 이미 하늘에 등록되어 있는지 확인
   const { data: existing } = await supabase

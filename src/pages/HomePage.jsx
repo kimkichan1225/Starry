@@ -156,6 +156,29 @@ function HomePage() {
     }
   }, [user]);
 
+  // 별을 가진 사용자가 아직 3D 밤하늘에 등록되지 않았다면 최초 1회 자동 등록
+  // (저장 버튼을 누르지 않아도 별자리가 3D 밤하늘에 올라가도록)
+  const autoSyncedRef = useRef(false);
+  useEffect(() => {
+    if (!user || autoSyncedRef.current) return;
+    if (!contextStars || contextStars.length === 0) return;
+    autoSyncedRef.current = true;
+    (async () => {
+      try {
+        const { data: existing } = await supabase
+          .from('sky_constellations')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (!existing) {
+          await syncSkyConstellation(user.id, nickname, user.user_metadata?.constellation_name);
+        }
+      } catch (e) {
+        console.error('밤하늘 자동 등록 실패:', e);
+      }
+    })();
+  }, [user, contextStars, nickname]);
+
   // AI 별자리 이름 분석 (비전)
   const handleAnalyzeConstellation = async () => {
     if (!canvasRef.current || starPositions.length === 0) return;
@@ -240,6 +263,9 @@ function HomePage() {
       setAiNamingMode(null);
       setSuggestions([]);
       setSelectedSuggestion(null);
+
+      // 변경된 별자리 이름을 3D 밤하늘에도 반영
+      await syncSkyConstellation(user.id, nickname, newName);
     } catch (error) {
       console.error('별자리 이름 저장 실패:', error);
     }
@@ -403,58 +429,65 @@ function HomePage() {
     setConnections([]);
   };
 
-  // 저장
+  // 별자리 데이터를 DB에 저장하고 3D 밤하늘에 동기화 (편집 모드 상태는 변경하지 않음)
+  const persistConstellation = async () => {
+    if (!user) return;
+
+    // 1. 각 별의 위치 업데이트 (병렬 실행)
+    const positionUpdates = stars
+      .map((star, i) => ({ star, position: starPositions[i] }))
+      .filter(({ position }) => position)
+      .map(({ star, position }) =>
+        supabase
+          .from('stars')
+          .update({ position_x: position.x, position_y: position.y })
+          .eq('id', star.id)
+          .then(({ error: updateError }) => {
+            if (updateError) console.error('별 위치 업데이트 실패:', star.id, updateError);
+          })
+      );
+    await Promise.all(positionUpdates);
+
+    // 2. 기존 연결 삭제 후 새 연결 저장
+    const { error: deleteError } = await supabase
+      .from('star_connections')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (deleteError) {
+      console.error('연결 삭제 실패:', deleteError);
+    }
+
+    if (connections.length > 0) {
+      const connectionData = connections.map(conn => ({
+        user_id: user.id,
+        from_star_id: stars[conn.fromIndex].id,
+        to_star_id: stars[conn.toIndex].id
+      }));
+
+      const { error: insertError } = await supabase
+        .from('star_connections')
+        .insert(connectionData);
+
+      if (insertError) {
+        console.error('연결 저장 실패:', insertError);
+      }
+    }
+
+    // Context 데이터 새로고침
+    await refreshStars();
+
+    // 3D 밤하늘에 자동 등록/동기화 (위치는 유지, 내용만 갱신)
+    await syncSkyConstellation(user.id, nickname, selectedConstellation || user?.user_metadata?.constellation_name);
+  };
+
+  // 저장 (버튼)
   const handleSave = async () => {
     if (!user || saving) return;
 
     setSaving(true);
     try {
-      // 1. 각 별의 위치 업데이트 (병렬 실행)
-      const positionUpdates = stars
-        .map((star, i) => ({ star, position: starPositions[i] }))
-        .filter(({ position }) => position)
-        .map(({ star, position }) =>
-          supabase
-            .from('stars')
-            .update({ position_x: position.x, position_y: position.y })
-            .eq('id', star.id)
-            .then(({ error: updateError }) => {
-              if (updateError) console.error('별 위치 업데이트 실패:', star.id, updateError);
-            })
-        );
-      await Promise.all(positionUpdates);
-
-      // 2. 기존 연결 삭제 후 새 연결 저장
-      const { error: deleteError } = await supabase
-        .from('star_connections')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (deleteError) {
-        console.error('연결 삭제 실패:', deleteError);
-      }
-
-      if (connections.length > 0) {
-        const connectionData = connections.map(conn => ({
-          user_id: user.id,
-          from_star_id: stars[conn.fromIndex].id,
-          to_star_id: stars[conn.toIndex].id
-        }));
-
-        const { error: insertError } = await supabase
-          .from('star_connections')
-          .insert(connectionData);
-
-        if (insertError) {
-          console.error('연결 저장 실패:', insertError);
-        }
-      }
-
-      // Context 데이터 새로고침
-      await refreshStars();
-
-      // 3D 밤하늘에 자동 등록/동기화 (위치는 유지, 내용만 갱신)
-      await syncSkyConstellation(user.id, nickname);
+      await persistConstellation();
     } catch (error) {
       console.error('저장 실패:', error);
     } finally {
@@ -1129,7 +1162,11 @@ function HomePage() {
           {/* 상단 우측 버튼 (별 보관함) - 밤하늘 프레임 안쪽 */}
           <div className="fixed top-40 left-1/2 z-50" style={{ marginLeft: 'min(145px, calc(50vw - 56px))' }}>
             <button
-              onClick={() => navigate('/warehouse')}
+              onClick={async () => {
+                // 편집 모드를 이탈하기 전 현재 배치를 자동 저장·동기화
+                try { await persistConstellation(); } catch (e) { console.error('자동 저장 실패:', e); }
+                navigate('/warehouse');
+              }}
               className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition"
             >
               <img src="/staricon.png" alt="별 보관함" className="w-9 h-11" />

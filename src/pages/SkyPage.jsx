@@ -873,10 +873,9 @@ export default function SkyPage() {
   }, []);
 
   // Supabase에서 별자리 목록 로드 (등록/동기화는 저장 시점에 처리됨)
-  useEffect(() => {
-    const fetchConstellations = async () => {
+  const fetchConstellations = useCallback(async (showLoading = true) => {
       try {
-        setIsLoading(true);
+        if (showLoading) setIsLoading(true);
 
         // sky_constellations에서 모든 별자리 로드
         const { data, error } = await supabase
@@ -925,12 +924,27 @@ export default function SkyPage() {
         console.error('Error fetching constellations:', err);
         setError('별자리를 불러오는데 실패했습니다.');
       } finally {
-        setIsLoading(false);
+        if (showLoading) setIsLoading(false);
       }
-    };
-
-    fetchConstellations();
   }, [user]);
+
+  useEffect(() => {
+    fetchConstellations();
+  }, [fetchConstellations]);
+
+  // 3D 밤하늘 실시간 반영: sky_constellations 변경(추가/수정/삭제)을 구독해 자동 갱신
+  // (모양 수정, 이름 변경, 위치 이동 등 모든 변경이 떠 있는 화면에 즉시 반영됨)
+  useEffect(() => {
+    const channel = supabase
+      .channel('sky_constellations_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sky_constellations' },
+        () => { fetchConstellations(false); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchConstellations]);
 
   // 위치 수정 모드 진입 (팝업의 "위치 수정" 버튼)
   const enterEditMode = (constellation) => {
