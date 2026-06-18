@@ -59,13 +59,21 @@ function StarryPage() {
   const fetchFortune = async (birthdate) => {
     setFortuneLoading(true);
     try {
-      // 오늘 날짜 기반 캐시 확인
-      const today = new Date().toISOString().split('T')[0];
+      // 오늘 날짜 기반 캐시 확인 (한국시간 KST 자정 기준)
+      const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
       const cacheKey = `fortune_${user.id}_${today}`;
       const cached = localStorage.getItem(cacheKey);
 
       if (cached) {
         setFortune(JSON.parse(cached));
+        setFortuneLoading(false);
+        return;
+      }
+
+      // 서버에서 유저를 식별해 "아이디당 하루 1회"를 보장하므로 유저 access token을 전송한다.
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) {
         setFortuneLoading(false);
         return;
       }
@@ -76,7 +84,7 @@ function StarryPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({ birthdate }),
         }

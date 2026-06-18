@@ -1036,9 +1036,9 @@ function HomePage() {
                   </div>
                 </div>
 
-                {/* 오늘의 운세 버튼 */}
+                {/* 오늘의 운세 버튼 (스타리 페이지로 이동) */}
                 <button
-                  onClick={() => {/* TODO: 오늘의 운세 기능 추가 예정 */}}
+                  onClick={() => navigate('/starry')}
                   className="w-full py-3 bg-[#6155F5] text-white font-semibold rounded-full hover:bg-[#5048D9] transition mb-3"
                 >
                   오늘의 운세

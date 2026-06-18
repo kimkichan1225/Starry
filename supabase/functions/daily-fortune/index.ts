@@ -87,13 +87,15 @@ serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // rate limit (IP 기준)
-    const identifier = getClientIp(req);
-    const rl = await checkRateLimit(admin, identifier);
-    if (!rl.allowed) {
+    // 유저 식별 (로그인 필수): "아이디당 하루 1회" 제한의 기준이 된다.
+    const authHeader = req.headers.get('Authorization') || '';
+    const jwt = authHeader.replace('Bearer ', '').trim();
+    const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
+    const user = userData?.user;
+    if (userErr || !user) {
       return new Response(
-        JSON.stringify({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', retryAfter: rl.retryAfter }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: '로그인이 필요합니다.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -107,7 +109,32 @@ serve(async (req) => {
       );
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    // 한국시간(KST, UTC+9) 자정 기준의 "오늘" 날짜
+    const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    // 오늘 이미 생성된 운세가 있으면 OpenAI 재호출 없이 그대로 반환 (아이디당 하루 1회)
+    const { data: existing } = await admin
+      .from('daily_fortunes')
+      .select('fortune')
+      .eq('user_id', user.id)
+      .eq('fortune_date', today)
+      .maybeSingle();
+    if (existing?.fortune) {
+      return new Response(JSON.stringify(existing.fortune), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // 신규 생성 시에만 IP 기준 rate limit 적용 (cost-DoS 방어)
+    const identifier = getClientIp(req);
+    const rl = await checkRateLimit(admin, identifier);
+    if (!rl.allowed) {
+      return new Response(
+        JSON.stringify({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', retryAfter: rl.retryAfter }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const emotionList = emotionImages.map(e => e.replace('emotion-', '')).join(', ');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -206,6 +233,25 @@ explanation 작성 형식 (반드시 이 구조를 따르세요):
     const emotionKey = fortune.emotion || '';
     const matchedImage = emotionImages.find(img => img.includes(emotionKey)) || 'emotion-calm,zen,mindful';
     fortune.emotionImage = `/emotions/${matchedImage}.png`;
+
+    // DB에 저장 (PK (user_id, fortune_date) → 아이디당 하루 1행).
+    // 동시 요청이 먼저 저장한 경우 unique 충돌이 나므로, 그때는 저장된 값을 재조회해 반환한다.
+    const { error: insErr } = await admin
+      .from('daily_fortunes')
+      .insert({ user_id: user.id, fortune_date: today, fortune });
+    if (insErr) {
+      const { data: row } = await admin
+        .from('daily_fortunes')
+        .select('fortune')
+        .eq('user_id', user.id)
+        .eq('fortune_date', today)
+        .maybeSingle();
+      if (row?.fortune) {
+        return new Response(JSON.stringify(row.fortune), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     return new Response(JSON.stringify(fortune), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
