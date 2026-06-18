@@ -109,6 +109,26 @@ function HomePage() {
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
 
+  // 바텀시트 드래그(스와이프) 추적
+  const sheetDragStartY = useRef(null);
+  const handleSheetPointerDown = (e) => {
+    sheetDragStartY.current = e.clientY;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const handleSheetPointerUp = (e) => {
+    if (sheetDragStartY.current === null) return;
+    const deltaY = sheetDragStartY.current - e.clientY; // 위로 끌면 양수
+    sheetDragStartY.current = null;
+    const THRESHOLD = 30; // 이 이상 움직이면 스와이프, 미만이면 탭으로 간주
+    if (deltaY > THRESHOLD) {
+      setIsConstellationExpanded(true);    // 위로 스와이프 → 열기
+    } else if (deltaY < -THRESHOLD) {
+      setIsConstellationExpanded(false);   // 아래로 스와이프 → 닫기
+    } else {
+      setIsConstellationExpanded((prev) => !prev); // 탭 → 토글
+    }
+  };
+
   // AI 별자리 이름 짓기 상태
   const [aiNamingMode, setAiNamingMode] = useState(null); // null | 'analyzing' | 'results'
   const [suggestions, setSuggestions] = useState([]);
@@ -917,23 +937,28 @@ function HomePage() {
           isConstellationExpanded ? 'translate-y-0 rounded-3xl' : 'translate-y-[calc(100%-2rem)] rounded-t-3xl'
         } ${isEditMode ? 'opacity-0 pointer-events-none' : ''}`}
       >
-        {/* 드래그 핸들 */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-20 h-1 bg-gray-300 rounded-full"></div>
-        </div>
+        {/* 핸들 + 헤더: 탭으로 토글, 드래그(스와이프)로 열기/닫기 */}
+        <div
+          onPointerDown={handleSheetPointerDown}
+          onPointerUp={handleSheetPointerUp}
+          className="relative cursor-grab active:cursor-grabbing touch-none select-none"
+        >
+          {/* 드래그 핸들 */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-20 h-1 bg-gray-300 rounded-full"></div>
+          </div>
 
-        {/* 헤더 (클릭 가능) */}
-        <div className="relative">
-          <button
-            onClick={() => setIsConstellationExpanded(!isConstellationExpanded)}
-            className="w-full px-5 pt-2 pb-4 flex justify-center items-center"
-          >
+          {/* 헤더 */}
+          <div className="w-full px-5 pt-2 pb-4 flex justify-center items-center">
             <span className="text-2xl text-[#6155F5] font-bold">
               {selectedConstellation || t.home.constellationName}
             </span>
-          </button>
+          </div>
+
           {isConstellationExpanded && (
             <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
               onClick={() => { setIsConstellationExpanded(false); handleCancelAnalysis(); }}
               className="absolute right-5 top-1/2 transform -translate-y-1/2"
             >
