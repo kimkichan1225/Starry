@@ -5,6 +5,8 @@
 @layer base {
   body {
     @apply m-0 min-h-screen bg-starry-dark text-white antialiased font-sans;
+    /* 작은 화면에서 장식 요소가 살짝 넘쳐도 의도치 않은 가로 스크롤이 생기지 않도록 차단 */
+    overflow-x: hidden;
   }
 
   * {

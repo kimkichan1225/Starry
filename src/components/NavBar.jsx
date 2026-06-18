@@ -17,7 +17,7 @@ function NavBar() {
       {/* 상단 전체 선 - 6155F5 50% */}
       <div className="absolute top-0 left-0 right-0 h-[4px] bg-[#6155F5]/50"></div>
 
-      <div className="flex justify-center items-center gap-6 py-3 max-w-screen-xl mx-auto">
+      <div className="flex justify-around items-center py-3 max-w-screen-xl mx-auto px-1">
         {navItems.map((item) => {
           // /notice 경로일 때는 스타리 버튼을 활성화
           // /stat/detail 경로일 때는 응답 통계 버튼을 활성화

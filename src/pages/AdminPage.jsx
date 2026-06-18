@@ -557,7 +557,7 @@ const AdminPage = () => {
                             </div>
                             <div className="text-white/50 text-sm truncate">{u.email}</div>
                           </div>
-                          <div className="flex gap-2 ml-4">
+                          <div className="flex gap-2 ml-4 shrink-0">
                             <button
                               onClick={() => handleDeleteUser(u.id, u.email)}
                               className="px-3 py-1 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 text-sm"
@@ -566,7 +566,7 @@ const AdminPage = () => {
                             </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs">
+                        <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                           <span className="text-white/30">
                             가입일: {new Date(u.created_at).toLocaleDateString('ko-KR')}
                           </span>
@@ -661,7 +661,7 @@ const AdminPage = () => {
                       <div key={notice.id} className="p-4 hover:bg-white/5">
                         <div className="flex items-start justify-between">
                           {/* 순서 변경 버튼 */}
-                          <div className="flex flex-col gap-1 mr-3">
+                          <div className="flex flex-col gap-1 mr-3 shrink-0">
                             <button
                               onClick={() => handleMoveNotice(index, 'up')}
                               disabled={index === 0}
@@ -683,24 +683,24 @@ const AdminPage = () => {
                               </svg>
                             </button>
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white/40 text-xs w-6">{index + 1}</span>
-                              <span className={`px-2 py-0.5 rounded text-xs ${
+                              <span className="text-white/40 text-xs w-6 shrink-0">{index + 1}</span>
+                              <span className={`shrink-0 px-2 py-0.5 rounded text-xs ${
                                 notice.category === '중요' ? 'bg-red-500/20 text-red-300' :
                                 notice.category === '이벤트' ? 'bg-green-500/20 text-green-300' :
                                 'bg-gray-500/20 text-gray-300'
                               }`}>
                                 {notice.category || '일반'}
                               </span>
-                              <span className="text-white font-medium">{notice.title}</span>
+                              <span className="text-white font-medium truncate">{notice.title}</span>
                             </div>
                             <p className="text-white/60 text-sm line-clamp-2 ml-6">{notice.content}</p>
                             <div className="text-white/30 text-xs mt-1 ml-6">
                               {new Date(notice.created_at).toLocaleDateString('ko-KR')}
                             </div>
                           </div>
-                          <div className="flex gap-2 ml-4">
+                          <div className="flex gap-2 ml-4 shrink-0">
                             <button
                               onClick={() => handleEditNotice(notice)}
                               className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 text-sm"

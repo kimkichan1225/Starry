@@ -538,7 +538,7 @@ function SurveyQuestionPage() {
                 ref={nightSkyCanvasRef}
                 width={350}
                 height={500}
-                className="max-w-full"
+                className="max-w-full h-auto"
               />
             </div>
 
@@ -653,16 +653,16 @@ function SurveyQuestionPage() {
               </div>
 
               {/* 버튼들 */}
-              <div className="space-y-3 flex flex-col items-center">
+              <div className="space-y-3 flex flex-col items-center px-4 w-full">
                 <button
                   onClick={fetchNightSkyData}
-                  className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-white hover:bg-[#B5B5B5] transition-colors"
+                  className="w-full max-w-[300px] py-3 text-sm rounded-lg font-medium bg-[#C5C5C5] text-white hover:bg-[#B5B5B5] transition-colors"
                 >
                   {language === 'ko' ? `${targetUserNickname}님의 밤하늘 보기` : `View ${targetUserNickname}${t.survey.viewNightSky}`}
                 </button>
                 <button
                   onClick={() => window.location.href = '/'}
-                  className="w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
+                  className="w-full max-w-[300px] py-3 text-sm rounded-lg font-medium bg-[#9E4EFF] text-white hover:bg-[#8A3EE8] transition-colors"
                 >
                   {t.survey.createMyNightSky}
                 </button>
@@ -865,12 +865,12 @@ function SurveyQuestionPage() {
             <div className="text-9xl mb-8 text-white font-bold">?</div>
 
             {/* 선택지들 */}
-            <div className="space-y-3 mb-8 flex flex-col items-center">
+            <div className="space-y-3 mb-8 flex flex-col items-center px-4 w-full">
               {question.options.map((option, index) => (
                 <button
                   key={option.id}
                   onClick={() => handleOptionSelect(option.id)}
-                  className={`w-[300px] py-3 px-4 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
+                  className={`w-full max-w-[300px] py-3 px-4 rounded-lg border-2 transition-all duration-200 flex items-center justify-center ${
                     selectedOption === option.id
                       ? 'border-[#9E4EFF] bg-[#9E4EFF] text-white shadow-lg scale-[1.02]'
                       : 'border-[#9E4EFF] bg-white text-black hover:bg-gray-100'

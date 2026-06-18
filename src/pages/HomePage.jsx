@@ -849,7 +849,7 @@ function HomePage() {
 
         {/* 공유 성공 메시지 */}
         {shareMessage && (
-          <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/80 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 whitespace-nowrap">
+          <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/80 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 w-[calc(100%-40px)] max-w-[340px]">
             {/* 링크 아이콘 */}
             <svg className="w-6 h-6 text-[#6155F5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -1061,7 +1061,7 @@ function HomePage() {
       {isEditMode && (
         <>
           {/* 상단 좌측 버튼들 (도움말, 새로고침) - 세로 배치 (밤하늘 프레임 안쪽) */}
-          <div className="fixed top-40 left-1/2 flex flex-col z-50" style={{ marginLeft: '-185px' }}>
+          <div className="fixed top-40 left-1/2 flex flex-col z-50" style={{ marginLeft: 'max(-185px, calc(-50vw + 16px))' }}>
             {/* 도움말 버튼 */}
             <button
               onClick={() => {
@@ -1086,7 +1086,7 @@ function HomePage() {
           </div>
 
           {/* 상단 우측 버튼 (별 보관함) - 밤하늘 프레임 안쪽 */}
-          <div className="fixed top-40 left-1/2 z-50" style={{ marginLeft: '145px' }}>
+          <div className="fixed top-40 left-1/2 z-50" style={{ marginLeft: 'min(145px, calc(50vw - 56px))' }}>
             <button
               onClick={() => navigate('/warehouse')}
               className="relative w-10 h-10 flex items-center justify-center hover:opacity-70 transition"

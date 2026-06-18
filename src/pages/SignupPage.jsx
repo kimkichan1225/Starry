@@ -624,13 +624,13 @@ const SignupPage = () => {
                     required
                     maxLength="13"
                     disabled={smsVerification.verified}
-                    className="flex-1 px-2 py-[4px] text-center text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:bg-gray-200 disabled:cursor-not-allowed bg-white border-purple-500 focus:ring-purple-600"
+                    className="flex-1 min-w-0 px-2 py-[4px] text-center text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:bg-gray-200 disabled:cursor-not-allowed bg-white border-purple-500 focus:ring-purple-600"
                   />
                   <button
                     type="button"
                     onClick={handleSendSMS}
                     disabled={smsVerification.loading || smsVerification.timerActive || smsVerification.verified}
-                    className={`px-4 py-[4px] text-[13px] rounded-lg text-white font-medium transition-colors whitespace-nowrap ${
+                    className={`shrink-0 px-3 py-[4px] text-[13px] rounded-lg text-white font-medium transition-colors whitespace-nowrap ${
                       smsVerification.verified
                         ? 'bg-green-500 cursor-not-allowed'
                         : smsVerification.timerActive
@@ -657,7 +657,7 @@ const SignupPage = () => {
                     placeholder={t.signup.verificationCode}
                     maxLength="6"
                     disabled={!smsVerification.sent || smsVerification.verified}
-                    className={`flex-1 px-4 py-[6px] text-center text-xs rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:cursor-not-allowed ${
+                    className={`flex-1 min-w-0 px-4 py-[6px] text-center text-xs rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 disabled:cursor-not-allowed ${
                       smsVerification.verified
                         ? 'bg-green-100 border-green-500'
                         : 'bg-white border-purple-500 focus:ring-purple-600'
@@ -667,7 +667,7 @@ const SignupPage = () => {
                     type="button"
                     onClick={handleVerifySMS}
                     disabled={!smsVerification.sent || smsVerification.verified || smsVerification.loading || !formData.verificationCode}
-                    className="px-4 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="shrink-0 px-3 py-[4px] text-[13px] rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {smsVerification.verified ? t.signup.verified : smsVerification.loading ? t.signup.verifying : t.signup.verify}
                   </button>
@@ -1015,12 +1015,12 @@ const SignupPage = () => {
 
             {/* 날짜 선택 UI */}
             <div className="flex flex-col items-center">
-              <div className="relative flex items-center justify-center gap-2">
-                {/* 왼쪽 손 */}
+              <div className="relative flex items-center justify-center">
+                {/* 왼쪽 손 (absolute로 레이아웃 공간 차지 안 함) */}
                 <img
                   src="/Starry-hand.png"
                   alt="Left Hand"
-                  className="w-10 h-10 translate-x-7 translate-y-7"
+                  className="absolute left-0 top-1/2 w-10 h-10 -translate-x-3 translate-y-2 z-10 pointer-events-none"
                 />
 
                 {/* 흰색 테두리 외부 박스 */}
@@ -1029,7 +1029,7 @@ const SignupPage = () => {
                   <div className="relative">
                     <div
                       onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
-                      className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
+                      className="bg-[#3D3A5C] rounded-2xl px-3 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                     >
                       <span className="text-white text-2xl font-bold w-16 block text-center">{formData.birthYear}</span>
                     </div>
@@ -1048,7 +1048,7 @@ const SignupPage = () => {
                   <div className="relative">
                     <div
                       onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
-                      className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
+                      className="bg-[#3D3A5C] rounded-2xl px-3 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                     >
                       <span className="text-white text-2xl font-bold w-10 block text-center">{formData.birthMonth}</span>
                     </div>
@@ -1067,7 +1067,7 @@ const SignupPage = () => {
                   <div className="relative">
                     <div
                       onClick={() => setOpenDropdown(openDropdown === 'day' ? null : 'day')}
-                      className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
+                      className="bg-[#3D3A5C] rounded-2xl px-3 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                     >
                       <span className="text-white text-2xl font-bold w-10 block text-center">{formData.birthDay}</span>
                     </div>
@@ -1088,11 +1088,11 @@ const SignupPage = () => {
                   <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)} />
                 )}
 
-                {/* 오른쪽 손 */}
+                {/* 오른쪽 손 (absolute로 레이아웃 공간 차지 안 함) */}
                 <img
                   src="/Starry-hand.png"
                   alt="Right Hand"
-                  className="w-10 h-10 scale-x-[-1] -translate-x-7 translate-y-8"
+                  className="absolute right-0 top-1/2 w-10 h-10 scale-x-[-1] translate-x-3 translate-y-3 z-10 pointer-events-none"
                 />
               </div>
 
@@ -1106,17 +1106,17 @@ const SignupPage = () => {
           </div>
 
           {/* 이전/다음 버튼 */}
-          <div className="flex gap-3 mt-20">
+          <div className="flex gap-3 mt-20 w-full max-w-[280px] px-2">
             <button
               onClick={() => setCurrentStep(3)}
-              className="w-24 py-3 rounded-lg bg-[#9F9F9F] text-white font-medium hover:bg-[#8a8a8a] transition-colors"
+              className="flex-1 py-3 rounded-lg bg-[#9F9F9F] text-white font-medium hover:bg-[#8a8a8a] transition-colors"
             >
               {t.common.prev}
             </button>
             <button
               onClick={handleStep4Next}
               disabled={loading}
-              className="w-44 py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+              className="flex-[2] py-3 rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8a3ee6] transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
             >
               {loading ? t.signup.signingUp : t.common.next}
             </button>

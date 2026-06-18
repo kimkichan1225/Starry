@@ -228,12 +228,12 @@ const FindEmailPage = () => {
                   value={phone}
                   onChange={handlePhoneChange}
                   maxLength={13}
-                  className="flex-1 px-4 py-3 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="flex-1 min-w-0 px-4 py-3 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 border-purple-500 shadow-[inset_4px_4px_4px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-purple-600"
                 />
                 <button
                   onClick={handleSendCode}
                   disabled={loading || phone.replace(/-/g, '').length < 10}
-                  className="px-4 py-3 text-sm rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-colors disabled:bg-[#9E4EFF]/50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="shrink-0 px-3 py-3 text-sm rounded-lg bg-[#9E4EFF] text-white font-medium hover:bg-[#8A3EE6] transition-colors disabled:bg-[#9E4EFF]/50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   인증
                 </button>

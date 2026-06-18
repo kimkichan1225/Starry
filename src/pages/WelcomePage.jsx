@@ -381,12 +381,12 @@ function WelcomePage() {
               />
 
               <div className="flex flex-col items-center">
-                <div className="relative flex items-center justify-center gap-2">
-                  {/* 왼쪽 손 */}
+                <div className="relative flex items-center justify-center">
+                  {/* 왼쪽 손 (absolute로 레이아웃 공간 차지 안 함) */}
                   <img
                     src="/Starry-hand.png"
                     alt="Left Hand"
-                    className="w-10 h-10 translate-x-7 translate-y-7"
+                    className="absolute left-0 top-1/2 w-10 h-10 -translate-x-3 translate-y-2 z-10 pointer-events-none"
                   />
 
                   {/* 흰색 테두리 외부 박스 */}
@@ -395,7 +395,7 @@ function WelcomePage() {
                     <div className="relative">
                       <div
                         onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
-                        className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
+                        className="bg-[#3D3A5C] rounded-2xl px-3 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                       >
                         <span className="text-white text-2xl font-bold w-16 block text-center">
                           {formData.birthYear}
@@ -416,7 +416,7 @@ function WelcomePage() {
                     <div className="relative">
                       <div
                         onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
-                        className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
+                        className="bg-[#3D3A5C] rounded-2xl px-3 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                       >
                         <span className="text-white text-2xl font-bold w-10 block text-center">
                           {formData.birthMonth}
@@ -437,7 +437,7 @@ function WelcomePage() {
                     <div className="relative">
                       <div
                         onClick={() => setOpenDropdown(openDropdown === 'day' ? null : 'day')}
-                        className="bg-[#3D3A5C] rounded-2xl px-4 py-3 border-2 border-[#6B5CFF] cursor-pointer"
+                        className="bg-[#3D3A5C] rounded-2xl px-3 py-3 border-2 border-[#6B5CFF] cursor-pointer"
                       >
                         <span className="text-white text-2xl font-bold w-10 block text-center">
                           {formData.birthDay}
@@ -460,11 +460,11 @@ function WelcomePage() {
                     <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)} />
                   )}
 
-                  {/* 오른쪽 손 */}
+                  {/* 오른쪽 손 (absolute로 레이아웃 공간 차지 안 함) */}
                   <img
                     src="/Starry-hand.png"
                     alt="Right Hand"
-                    className="w-10 h-10 scale-x-[-1] -translate-x-7 translate-y-8"
+                    className="absolute right-0 top-1/2 w-10 h-10 scale-x-[-1] translate-x-3 translate-y-3 z-10 pointer-events-none"
                   />
                 </div>
 

@@ -379,11 +379,11 @@ function StatDetailPage() {
             </div>
 
             {/* 이전/다음 버튼 */}
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center gap-3 w-full max-w-[320px] mx-auto">
               <button
                 onClick={handlePrev}
                 disabled={currentQuestion === 0}
-                className={`w-[144px] py-3 text-base rounded-full font-semibold transition-colors ${
+                className={`flex-1 py-3 text-base rounded-full font-semibold transition-colors ${
                   currentQuestion === 0
                     ? 'bg-[#C5C5C5]/50 text-black/50 cursor-not-allowed'
                     : 'bg-[#C5C5C5] text-black hover:bg-[#B5B5B5]'
@@ -394,7 +394,7 @@ function StatDetailPage() {
               <button
                 onClick={handleNext}
                 disabled={currentQuestion === questions.length - 1}
-                className={`w-[144px] py-3 text-base rounded-full font-semibold transition-colors ${
+                className={`flex-1 py-3 text-base rounded-full font-semibold transition-colors ${
                   currentQuestion === questions.length - 1
                     ? 'bg-[#6155F5]/50 text-white/50 cursor-not-allowed'
                     : 'bg-[#6155F5] text-white hover:bg-[#5044d4]'

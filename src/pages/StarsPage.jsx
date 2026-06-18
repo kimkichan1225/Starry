@@ -288,20 +288,20 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
           </nav>
 
           {/* 보낸 사람 네비게이션 */}
-          <div className="flex items-center justify-center py-3">
-            <div className="bg-white rounded-full px-8 py-2 flex items-center gap-20">
+          <div className="flex items-center justify-center py-3 px-6">
+            <div className="bg-white rounded-full px-6 py-2 flex items-center justify-between gap-4 w-full max-w-[280px]">
               <button
                 onClick={handlePrevStar}
                 disabled={index === 0}
-                className={`text-black text-xl font-bold ${index === 0 ? 'opacity-30' : 'hover:opacity-50'}`}
+                className={`shrink-0 text-black text-xl font-bold ${index === 0 ? 'opacity-30' : 'hover:opacity-50'}`}
               >
                 &lt;
               </button>
-              <span className="text-black font-bold text-lg">{star.surveyor_name} 님</span>
+              <span className="text-black font-bold text-lg truncate">{star.surveyor_name} 님</span>
               <button
                 onClick={handleNextStar}
                 disabled={index === stars.length - 1}
-                className={`text-black text-xl font-bold ${index === stars.length - 1 ? 'opacity-30' : 'hover:opacity-50'}`}
+                className={`shrink-0 text-black text-xl font-bold ${index === stars.length - 1 ? 'opacity-30' : 'hover:opacity-50'}`}
               >
                 &gt;
               </button>
@@ -309,7 +309,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
           </div>
 
           {/* 별 이미지 영역 */}
-          <div className="flex items-center justify-center gap-14 py-4">
+          <div className="flex items-center justify-center gap-8 py-4">
             <button
               onClick={handlePrevStar}
               disabled={index === 0}
@@ -348,7 +348,7 @@ function StarDetailModal({ star, index, onClose, onDelete, stars, onNavigate, ni
                       {translatedQuestion.questionLine2(nickname)}
                     </p>
                     {selectedOption && translatedOption && (
-                      <div className="bg-white rounded-full px-4 py-2 inline-block">
+                      <div className="bg-white rounded-2xl px-4 py-2 inline-block max-w-full">
                         <span className="text-base mr-1">{selectedOption.emoji}</span>
                         <span className="text-[#6155F5] font-bold">{translatedOption.label}</span>
                         <span className="text-black ml-1">{translatedOption.description}</span>

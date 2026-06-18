@@ -478,7 +478,7 @@ const ProfileSetupPage = () => {
                     required
                     maxLength="13"
                     disabled={smsVerification.verified || isExistingUser}
-                    className={`flex-1 px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
+                    className={`flex-1 min-w-0 px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
                       smsVerification.verified || isExistingUser
                         ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
                         : 'bg-white border-purple-500 focus:ring-purple-600'
@@ -488,7 +488,7 @@ const ProfileSetupPage = () => {
                     type="button"
                     onClick={handleSendSMS}
                     disabled={smsVerification.loading || smsVerification.timerActive || smsVerification.verified}
-                    className={`px-4 py-3 text-sm rounded-lg text-white font-medium transition-colors whitespace-nowrap ${
+                    className={`shrink-0 px-3 py-3 text-sm rounded-lg text-white font-medium transition-colors whitespace-nowrap ${
                       smsVerification.verified
                         ? 'bg-green-500 cursor-not-allowed'
                         : smsVerification.timerActive
