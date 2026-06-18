@@ -160,6 +160,13 @@ function HomePage() {
   const handleAnalyzeConstellation = async () => {
     if (!canvasRef.current || starPositions.length === 0) return;
 
+    // 모양을 추론하려면 별 3개·연결선 1개 이상 필요 (점 하나로는 모양 분석이 불가능)
+    if (starPositions.length < 3 || connections.length < 1) {
+      setShareMessage('별 3개 이상을 선으로 이어주세요.');
+      setTimeout(() => setShareMessage(''), 2000);
+      return;
+    }
+
     setAiNamingMode('analyzing');
     setSuggestions([]);
     setSelectedSuggestion(null);
@@ -320,9 +327,18 @@ function HomePage() {
         maxY = Math.max(maxY, starPositions[index].y);
       }
     });
-    const starWidth = maxX - minX || 1;
-    const starHeight = maxY - minY || 1;
-    const scale = Math.min((size - padding * 2) / starWidth, (size - padding * 2) / starHeight);
+    const starWidth = maxX - minX;
+    const starHeight = maxY - minY;
+    // 별이 1개이거나 한 점에 가까우면 확대하지 않고 기본 비율로 중앙 표시한다.
+    // (그러지 않으면 scale이 폭주해 별 하나가 캔버스를 가득 채운다)
+    const isPoint = starWidth < 1 && starHeight < 1;
+    const scale = isPoint
+      ? 0.5
+      : Math.min(
+          (size - padding * 2) / (starWidth || 1),
+          (size - padding * 2) / (starHeight || 1),
+          2.5 // 소수의 별이 좁게 모인 경우 과도 확대 방지
+        );
     const offsetX = (size - starWidth * scale) / 2 - minX * scale;
     const offsetY = (size - starHeight * scale) / 2 - minY * scale;
 
