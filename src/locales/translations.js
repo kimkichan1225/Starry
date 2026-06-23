@@ -128,16 +128,16 @@ export const translations = {
           questionLine2: (nickname) => `${nickname} 님의 포지션은?`,
           options: [
             { label: '처음 본 사람과', description: '베프 먹기' },
-            { label: '말 걸어줄 때까지', description: '폰 보기' },
+            { label: '말 걸어줄 때까지', description: '기다리기' },
             { label: '눈 마주치면', description: '어색하게 웃기' },
-            { label: '세상 튀는 옷 입고', description: '존재감 뿜기' },
+            { label: '술자리 진행자', description: '등판하기' },
           ],
         },
         {
           questionLine1: (nickname) => `${nickname} 님의 심장박동수가`,
           questionLine2: () => '가장 빨라지는 순간은?',
           options: [
-            { label: '연승 직전', description: '한타 싸움할 때' },
+            { label: '온라인 게임', description: '연승 기록 세울 때' },
             { label: '"너만 알아라"', description: '비밀 들었을 때' },
             { label: '사람들 앞에서', description: '극찬받을 때' },
             { label: '밤새 수다 떨며', description: '연애 썰 풀 때' },
@@ -148,8 +148,8 @@ export const translations = {
           questionLine2: (nickname) => `${nickname} 님의 퇴근길은?`,
           options: [
             { label: '엽떡 시키고', description: '침대로 직행' },
-            { label: '전화로 쌍욕 하며', description: '한풀이' },
-            { label: '코노 가서', description: '고음 지르기' },
+            { label: '친구한테 전화로', description: '한풀이' },
+            { label: '노래 들으면서', description: '산책으로 털어내기' },
             { label: '"내가 왜 털렸지?"', description: '원인 분석' },
           ],
         },
@@ -489,16 +489,16 @@ export const translations = {
           questionLine2: (nickname) => `what's ${nickname}'s role?`,
           options: [
             { label: 'Instant besties', description: 'with strangers' },
-            { label: 'On my phone', description: 'till spoken to' },
+            { label: 'Wait quietly', description: 'till spoken to' },
             { label: 'Shy smile', description: 'when eyes meet' },
-            { label: 'Bold outfit', description: 'all eyes on me' },
+            { label: 'Party host', description: 'take the stage' },
           ],
         },
         {
           questionLine1: (nickname) => `When does ${nickname}'s heart`,
           questionLine2: () => 'beat the fastest?',
           options: [
-            { label: 'Clutch teamfight', description: 'before a win' },
+            { label: 'Online game', description: 'on a win streak' },
             { label: 'A secret', description: 'just for me' },
             { label: 'Praised', description: 'in the spotlight' },
             { label: 'Cafe talk', description: 'love stories' },
@@ -509,8 +509,8 @@ export const translations = {
           questionLine2: (nickname) => `what's ${nickname}'s way home?`,
           options: [
             { label: 'Eat & crash', description: 'straight to bed' },
-            { label: 'Vent it out', description: 'on the phone' },
-            { label: 'Karaoke', description: 'belt high notes' },
+            { label: 'Call a friend', description: 'to vent it out' },
+            { label: 'Music & a walk', description: 'shake it off' },
             { label: 'Why me?', description: 'analyze the cause' },
           ],
         },

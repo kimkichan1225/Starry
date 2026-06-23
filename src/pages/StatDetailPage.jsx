@@ -33,9 +33,9 @@ const questions = [
     questionLine2: (nickname) => `${nickname} 님의 포지션은?`,
     options: [
       { id: 'a', emoji: '⚡', label: '처음 본 사람과', shortLabel: '외향', description: '베프 먹기' },
-      { id: 'b', emoji: '❄️', label: '말 걸어줄 때까지', shortLabel: '내향', description: '폰 보기' },
+      { id: 'b', emoji: '❄️', label: '말 걸어줄 때까지', shortLabel: '내향', description: '기다리기' },
       { id: 'c', emoji: '☀️', label: '눈 마주치면', shortLabel: '균형', description: '어색하게 웃기' },
-      { id: 'd', emoji: '🌈', label: '세상 튀는 옷 입고', shortLabel: '개성', description: '존재감 뿜기' },
+      { id: 'd', emoji: '🌈', label: '술자리 진행자', shortLabel: '개성', description: '등판하기' },
     ],
   },
   {
@@ -43,7 +43,7 @@ const questions = [
     questionLine1: (nickname) => `${nickname} 님의 심장박동수가`,
     questionLine2: () => '가장 빨라지는 순간은?',
     options: [
-      { id: 'a', emoji: '🎮', label: '연승 직전', shortLabel: '게임', description: '한타 싸움할 때' },
+      { id: 'a', emoji: '🎮', label: '온라인 게임', shortLabel: '게임', description: '연승 기록 세울 때' },
       { id: 'b', emoji: '🔒', label: '"너만 알아라"', shortLabel: '비밀', description: '비밀 들었을 때' },
       { id: 'c', emoji: '🏆', label: '사람들 앞에서', shortLabel: '칭찬', description: '극찬받을 때' },
       { id: 'd', emoji: '☕', label: '밤새 수다 떨며', shortLabel: '카페', description: '연애 썰 풀 때' },
@@ -55,8 +55,8 @@ const questions = [
     questionLine2: (nickname) => `${nickname} 님의 퇴근길은?`,
     options: [
       { id: 'a', emoji: '🛌', label: '엽떡 시키고', shortLabel: '음식', description: '침대로 직행' },
-      { id: 'b', emoji: '🗣️', label: '전화로 쌍욕 하며', shortLabel: '대화', description: '한풀이' },
-      { id: 'c', emoji: '🎤', label: '코노 가서', shortLabel: '노래', description: '고음 지르기' },
+      { id: 'b', emoji: '🗣️', label: '친구한테 전화로', shortLabel: '대화', description: '한풀이' },
+      { id: 'c', emoji: '🎤', label: '노래 들으면서', shortLabel: '노래', description: '산책으로 털어내기' },
       { id: 'd', emoji: '🧐', label: '"내가 왜 털렸지?"', shortLabel: '분석', description: '원인 분석' },
     ],
   },
