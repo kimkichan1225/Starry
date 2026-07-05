@@ -363,9 +363,12 @@ function UserPage() {
               </div>
             )}
 
+            {/* 아이디 / 닉네임 / 전화번호 */}
+            <div className="max-w-[260px] mx-auto">
+
             {/* 아이디 */}
             <div className="flex items-center mt-4">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6">{t.user.userId}</label>
+              <label className="text-white text-base font-bold whitespace-nowrap">{t.user.userId}</label>
               <div className="flex-1 min-w-0 px-4 py-3 text-white text-base truncate">
                 {user?.email || 'User1'}
               </div>
@@ -373,7 +376,7 @@ function UserPage() {
 
             {/* 닉네임 */}
             <div className="flex items-center">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6">{t.user.nickname}</label>
+              <label className="text-white text-base font-bold whitespace-nowrap">{t.user.nickname}</label>
               <div className="flex-1 flex items-center gap-2">
                 {isEditingNickname ? (
                   <>
@@ -423,16 +426,18 @@ function UserPage() {
 
             {/* 전화번호 */}
             <div className="flex items-center mt-2">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6">{t.user.phone}</label>
+              <label className="text-white text-base font-bold whitespace-nowrap">{t.user.phone}</label>
               <div className="flex-1 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
                 {user?.user_metadata?.phone || '010-xxxx-xxxx'}
               </div>
             </div>
 
+            </div>{/* end 아이디/닉네임/전화번호 */}
+
             {/* 비밀번호 변경 */}
-            <div className="mt-4">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6 block mb-3">{t.user.password}</label>
-              <div className="ml-6 space-y-2 max-w-[240px]">
+            <div className="mt-4 max-w-[260px] mx-auto">
+              <label className="text-white text-base font-bold whitespace-nowrap block mb-3">{t.user.password}</label>
+              <div className="space-y-2">
                 <input
                   type="password"
                   placeholder={t.user.currentPassword}
@@ -467,9 +472,9 @@ function UserPage() {
             </div>
 
             {/* 소셜 계정 연동 관리 */}
-            <div className="mt-6">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6 block mb-3">{t.user.socialAccount}</label>
-              <div className="ml-6 space-y-3 max-w-[260px]">
+            <div className="mt-6 max-w-[260px] mx-auto">
+              <label className="text-white text-base font-bold whitespace-nowrap block mb-3">{t.user.socialAccount}</label>
+              <div className="space-y-3">
                 {/* 구글 */}
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
@@ -533,9 +538,9 @@ function UserPage() {
             </div>
 
             {/* 언어설정 */}
-            <div className="mt-6">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6 block mb-3">{t.user.languageSetting}</label>
-              <div className="ml-6 max-w-[240px]">
+            <div className="mt-6 max-w-[260px] mx-auto">
+              <label className="text-white text-base font-bold whitespace-nowrap block mb-3">{t.user.languageSetting}</label>
+              <div>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
@@ -548,9 +553,9 @@ function UserPage() {
             </div>
 
             {/* 내 밤하늘 QR코드 */}
-            <div className="mt-6">
-              <label className="text-white text-base font-bold whitespace-nowrap ml-6 block mb-3">{t.user.myQRCode}</label>
-              <div className="ml-6 max-w-[240px]">
+            <div className="mt-6 max-w-[260px] mx-auto">
+              <label className="text-white text-base font-bold whitespace-nowrap block mb-3">{t.user.myQRCode}</label>
+              <div>
                 <div className="bg-white rounded-2xl p-6 flex flex-col items-center">
                   <div className="w-40 h-40 flex items-center justify-center mb-4">
                     {user?.id ? (
