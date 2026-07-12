@@ -168,10 +168,11 @@ export const translations = {
     // 푸터
     footer: {
       adInquiry: '광고 문의',
-      otherInquiry: '기타 문의',
-      copyright: 'Copyright ©2025 123456789. All rights reserved.',
-      developer: '개발자',
-      designer: '디자이너',
+      instagram: '인스타그램',
+      copyright: 'Copyright ©Studio.Vec. All rights reserved.',
+      terms: '서비스 약관',
+      privacy: '개인정보처리방침',
+      notice: '공지사항',
     },
 
     // 오늘의 운세
@@ -529,10 +530,11 @@ export const translations = {
     // Footer
     footer: {
       adInquiry: 'Ad Inquiry',
-      otherInquiry: 'Other Inquiry',
-      copyright: 'Copyright ©2025 123456789. All rights reserved.',
-      developer: 'Developer',
-      designer: 'Designer',
+      instagram: 'Instagram',
+      copyright: 'Copyright ©Studio.Vec. All rights reserved.',
+      terms: 'Terms of Service',
+      privacy: 'Privacy Policy',
+      notice: 'Notice',
     },
 
     // Today's Fortune

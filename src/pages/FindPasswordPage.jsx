@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Footer from '../components/Footer';
 
 const FindPasswordPage = () => {
   const navigate = useNavigate();
@@ -157,27 +158,7 @@ const FindPasswordPage = () => {
 
         {/* 하단 정보 */}
         <div className="pb-8 px-6 text-center">
-          <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
-            <img
-              src="/Logo.png"
-              alt="STARRY"
-              className="h-3 -translate-y-[11px]"
-            />
-            <div className="h-6 w-px bg-white/40 -translate-y-[11px]"></div>
-            <div className="text-left space-y-1">
-              <div className="text-[9px] leading-snug">
-                광고 문의: 123456789@gmail.com <br />
-                Copyright ©2025 123456789. All rights reserved.
-              </div>
-              <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                <span className="font-semibold text-white">개발자</span>
-                <span>김기찬</span>
-                <span className="text-white/40">·</span>
-                <span className="font-semibold text-white">디자이너</span>
-                <span>김태희</span>
-              </div>
-            </div>
-          </div>
+          <Footer />
         </div>
       </div>
     </div>

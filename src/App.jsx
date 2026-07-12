@@ -23,6 +23,8 @@ import SkyDemoPage from './pages/SkyDemoPage';
 import SkyPage from './pages/SkyPage';
 import WarehousePage from './pages/WarehousePage';
 import WelcomePage from './pages/WelcomePage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 
 // 로그인 필요 라우트 가드 (미인증 시 로그인 화면으로)
 function RequireAuth({ children }) {
@@ -55,6 +57,8 @@ function App() {
           <Route path="/find-password" element={<FindPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
 
           {/* 네비게이션 바 페이지들 (로그인 필요) */}

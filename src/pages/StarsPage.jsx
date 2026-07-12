@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
+import Footer from '../components/Footer';
 
 // 별 생성을 위한 설정
 const palette = [
@@ -642,31 +643,7 @@ function StarsPage() {
           </div>
 
           {/* 푸터 */}
-          <footer className="pt-6 text-center">
-            <div className="flex items-center justify-center space-x-4 text-white/80 text-sm">
-              <img
-                src="/Logo.png"
-                alt="STARRY"
-                className="h-3 -translate-y-[18px]"
-              />
-              <div className="h-6 w-px bg-white/40 -translate-y-[18px]"></div>
-              <div className="text-left space-y-1">
-                <div className="text-[9px] leading-snug">
-                  {t.footer.adInquiry}: 123456789@gmail.com <br />
-                  {t.footer.otherInquiry}: 987654321@gmail.com <br />
-                  {t.footer.copyright}
-                </div>
-                {/* 개발자/디자이너 정보 */}
-                <div className="text-white/70 text-[9px] flex items-center space-x-1">
-                  <span className="font-semibold text-white">{t.footer.developer}</span>
-                  <span>김기찬</span>
-                  <span className="text-white/40">·</span>
-                  <span className="font-semibold text-white">{t.footer.designer}</span>
-                  <span>김태희</span>
-                </div>
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </div>
       </div>
 
