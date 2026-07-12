@@ -372,7 +372,7 @@ const AdminPage = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/BackGround.jpg)' }}
@@ -385,7 +385,7 @@ const AdminPage = () => {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a1a]">
+    <div className="fixed inset-0 overflow-y-auto bg-[#0a0a1a]">
       {/* 배경 */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] to-[#0a0a1a]"></div>
 
