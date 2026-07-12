@@ -69,8 +69,10 @@ function App() {
           <Route path="/stat" element={<RequireAuth><StatPage /></RequireAuth>} />
           <Route path="/stat/detail" element={<RequireAuth><StatDetailPage /></RequireAuth>} />
           <Route path="/user" element={<RequireAuth><UserPage /></RequireAuth>} />
-          <Route path="/notice" element={<RequireAuth><NoticePage /></RequireAuth>} />
-          <Route path="/notice/:id" element={<RequireAuth><NoticeDetailPage /></RequireAuth>} />
+
+          {/* 공지사항 (비로그인 접근 가능) */}
+          <Route path="/notice" element={<NoticePage />} />
+          <Route path="/notice/:id" element={<NoticeDetailPage />} />
 
           {/* 웰컴(마케팅) 페이지 */}
           <Route path="/welcome" element={<WelcomePage />} />
