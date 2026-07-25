@@ -18,7 +18,9 @@ function Footer() {
         </div>
       </div>
       <div className="text-white/70 text-[9px] leading-snug">
-        {t.footer.adInquiry}: design.studio.vec@gmail.com <br />
+        {t.footer.businessName} | {t.footer.ceoLabel}: {t.footer.ceoName} | {t.footer.businessNumberLabel}: {t.footer.businessNumber} <br />
+        {t.footer.addressLabel}: {t.footer.address} <br />
+        {t.footer.emailLabel}: design.studio.vec@gmail.com | {t.footer.adInquiry}: design.studio.vec@gmail.com <br />
         {t.footer.instagram} @starry_zodiac_s <br />
         {t.footer.copyright}
       </div>

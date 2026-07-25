@@ -169,10 +169,18 @@ export const translations = {
     footer: {
       adInquiry: '광고 문의',
       instagram: '인스타그램',
-      copyright: 'Copyright ©Studio.Vec. All rights reserved.',
+      copyright: '© 2026 Starry. All rights reserved.',
       terms: '서비스 약관',
       privacy: '개인정보처리방침',
       notice: '공지사항',
+      businessName: 'Starry',
+      ceoLabel: '대표자',
+      ceoName: '김태희',
+      businessNumberLabel: '사업자등록번호',
+      businessNumber: '102-02-96261',
+      addressLabel: '주소',
+      address: '서울특별시 중구 다산로 21길 23',
+      emailLabel: '이메일',
     },
 
     // 오늘의 운세
@@ -531,10 +539,18 @@ export const translations = {
     footer: {
       adInquiry: 'Ad Inquiry',
       instagram: 'Instagram',
-      copyright: 'Copyright ©Studio.Vec. All rights reserved.',
+      copyright: '© 2026 Starry. All rights reserved.',
       terms: 'Terms of Service',
       privacy: 'Privacy Policy',
       notice: 'Notice',
+      businessName: 'Starry',
+      ceoLabel: 'CEO',
+      ceoName: 'Kim Tae-hee',
+      businessNumberLabel: 'Business Reg. No.',
+      businessNumber: '102-02-96261',
+      addressLabel: 'Address',
+      address: '23, Dasan-ro 21-gil, Jung-gu, Seoul, Korea',
+      emailLabel: 'Email',
     },
 
     // Today's Fortune
