@@ -510,23 +510,6 @@ const SignupPage = () => {
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
-          <button
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.prev}
-          </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
-          <button
-            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.next}
-          </button>
-        </div>
-
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center px-4 py-8 relative">
           {/* 언어 선택 버튼 */}
@@ -753,23 +736,6 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
-          <button
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.prev}
-          </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
-          <button
-            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.next}
-          </button>
-        </div>
-
         {/* 상단 헤더 */}
         <nav className="px-6 py-5">
           <div className="flex items-center gap-1">
@@ -821,23 +787,6 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
-          <button
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.prev}
-          </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
-          <button
-            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.next}
-          </button>
-        </div>
-
         {/* 상단 헤더 */}
         <nav className="px-6 py-5">
           <div className="flex items-center gap-1">
@@ -926,23 +875,6 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
-          <button
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.prev}
-          </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
-          <button
-            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.next}
-          </button>
-        </div>
-
         {/* 상단 헤더 */}
         <nav className="px-6 py-5">
           <div className="flex items-center gap-1">
@@ -1100,23 +1032,6 @@ const SignupPage = () => {
       ></div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 + 테스트용 네비게이션 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center gap-4">
-          <button
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.prev}
-          </button>
-          <span className="text-white text-sm font-medium">Step {currentStep}{t.signup.stepOf}</span>
-          <button
-            onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
-            className="px-3 py-1 bg-white/30 text-white text-xs rounded hover:bg-white/50"
-          >
-            {t.signup.next}
-          </button>
-        </div>
-
         {/* 상단 헤더 */}
         <nav className="px-6 py-5">
           <div className="flex items-center gap-1">

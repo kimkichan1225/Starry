@@ -14,9 +14,6 @@ function PrivacyPage() {
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center"></div>
-
         {/* 상단 네비게이션 */}
         <nav className="px-6 py-5">
           <div className="max-w-[370px] mx-auto flex items-center justify-between">

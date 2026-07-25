@@ -114,9 +114,6 @@ const LoadingPage = () => {
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* 광고 배너 영역 */}
-        <div className="h-16 bg-[#949494] flex items-center justify-center"></div>
-
         {/* 중앙 콘텐츠 */}
         <div className="flex-1 flex flex-col items-center px-4 justify-center relative">
           {/* 언어 선택 버튼 */}
