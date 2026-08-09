@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import StatPage from './pages/StatPage';
 import StatDetailPage from './pages/StatDetailPage';
 import UserPage from './pages/UserPage';
+import StorePage from './pages/StorePage';
 import NoticePage from './pages/NoticePage';
 import NoticeDetailPage from './pages/NoticeDetailPage';
 import SurveyStartPage from './pages/SurveyStartPage';
@@ -69,6 +70,7 @@ function App() {
           <Route path="/stat" element={<RequireAuth><StatPage /></RequireAuth>} />
           <Route path="/stat/detail" element={<RequireAuth><StatDetailPage /></RequireAuth>} />
           <Route path="/user" element={<RequireAuth><UserPage /></RequireAuth>} />
+          <Route path="/store" element={<RequireAuth><StorePage /></RequireAuth>} />
 
           {/* 공지사항 (비로그인 접근 가능) */}
           <Route path="/notice" element={<NoticePage />} />

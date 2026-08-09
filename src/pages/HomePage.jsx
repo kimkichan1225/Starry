@@ -5,6 +5,7 @@ import { useStars } from '../contexts/StarsContext';
 import { supabase } from '../lib/supabase';
 import { syncSkyConstellation } from '../utils/syncSkyConstellation';
 import NavBar from '../components/NavBar';
+import SettingsSidebar from '../components/SettingsSidebar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 
@@ -108,6 +109,7 @@ function HomePage() {
   const [selectedConstellation, setSelectedConstellation] = useState('');
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // 바텀시트 드래그(스와이프) 추적
   const sheetDragStartY = useRef(null);
@@ -877,13 +879,24 @@ function HomePage() {
       <div className="relative z-10 flex flex-col min-h-screen pb-20">
         {/* 상단 네비게이션 */}
         <nav className="px-6 py-5">
-          <div className="max-w-[370px] mx-auto flex items-center">
+          <div className="max-w-[370px] mx-auto flex items-center justify-between">
             <div className="flex items-center gap-1">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
               {nickname && <span className="text-white font-bold text-2xl">{nickname}{t.home.title}</span>}
             </div>
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -mr-2 text-white hover:opacity-70 transition"
+              aria-label="메뉴 열기"
+            >
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
+            </button>
           </div>
         </nav>
 
@@ -1794,6 +1807,14 @@ function HomePage() {
 
       {/* 네비게이션 바 (편집 모드에서는 숨김) */}
       {!isEditMode && <NavBar />}
+
+      {/* 설정 사이드바 */}
+      <SettingsSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        user={user}
+        nickname={nickname}
+      />
     </div>
   );
 }
