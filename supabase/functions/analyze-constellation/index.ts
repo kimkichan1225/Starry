@@ -44,10 +44,17 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // catch 블록에서 환불 처리를 위해 try 밖에서 선언해둔다.
+  // deno-lint-ignore no-explicit-any
+  let admin: any;
+  let userId: string | undefined;
+  // deno-lint-ignore no-explicit-any
+  let credit: any;
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const admin = createClient(supabaseUrl, serviceKey);
+    admin = createClient(supabaseUrl, serviceKey);
 
     // 1. 인증 필수: 로그인 사용자만 호출 가능 (비싼 비전 모델 보호)
     const authHeader = req.headers.get('Authorization') || '';
@@ -67,6 +74,7 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    userId = userData.user.id;
 
     // 휴대전화 인증을 마친 사용자만 허용 (계정 대량생성 기반 비용 우회 방지)
     if (userData.user.app_metadata?.phone_verified !== true) {
@@ -101,6 +109,32 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: '올바른 이미지 형식이 아닙니다.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 4. 이용권 소비 (무료 N회 우선 사용, 소진 시 별가루 차감). 실제 생성 실패 시 환불한다.
+    const { data: creditData, error: creditError } = await admin.rpc('consume_ai_rename_credit', {
+      p_user_id: userId,
+    });
+    credit = creditData;
+
+    if (creditError) {
+      console.error('consume_ai_rename_credit error:', creditError);
+      return new Response(
+        JSON.stringify({ error: '이용권 확인에 실패했습니다.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!credit?.allowed) {
+      const status = credit?.error === 'insufficient_balance' ? 402 : 400;
+      return new Response(
+        JSON.stringify({
+          error: credit?.error === 'insufficient_balance' ? '별가루가 부족합니다.' : '이용할 수 없습니다.',
+          code: credit?.error,
+          price: credit?.price,
+        }),
+        { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -173,10 +207,24 @@ serve(async (req) => {
 
     const suggestions = JSON.parse(match[0]);
 
-    return new Response(JSON.stringify({ suggestions }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ suggestions, credit: { method: credit.method, remaining: credit.remaining, balance: credit.balance } }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
+    // 이용권을 소비한 뒤(=credit.allowed) 실패했다면 환불한다 (요청 검증 단계 실패는 애초에 소비 전이라 환불 불필요)
+    if (admin && credit?.allowed) {
+      try {
+        await admin.rpc('refund_ai_rename_credit', {
+          p_user_id: userId,
+          p_method: credit.method,
+          p_price: credit.method === 'star_dust' ? (credit.price ?? 0) : 0,
+        });
+      } catch (refundError) {
+        console.error('refund_ai_rename_credit error:', refundError);
+      }
+    }
+
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : '별자리 분석에 실패했습니다.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

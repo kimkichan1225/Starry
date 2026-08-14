@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useStars } from '../contexts/StarsContext';
@@ -9,6 +10,9 @@ const ERROR_MESSAGES = {
   sold_out: '품절된 상품입니다.',
   product_not_found: '구매할 수 없는 상품입니다.',
 };
+
+// 토스페이먼츠 결제창(SDK) 클라이언트 키 - 프론트에 노출돼도 되는 키
+const TOSS_CLIENT_KEY = 'test_ck_Z1aOwX7K8m716WMjb2YqVyQxzvNP';
 
 // 섹션 제목 아이콘들
 function StarPurchaseIcon() {
@@ -51,16 +55,20 @@ const formatDateTime = (dateString) => {
 };
 
 function StorePage() {
-  const { user } = useAuth();
-  const { skyStars, maxSkySlots } = useStars();
+  const { user, nickname } = useAuth();
+  const { skyStars, maxSkySlots, refreshStars } = useStars();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
+  const [payingId, setPayingId] = useState(null);
   const [message, setMessage] = useState(null);
   const [showAllStarItems, setShowAllStarItems] = useState(false);
+  const confirmingRef = useRef(false);
 
   const showMessage = (text) => {
     setMessage(text);
@@ -107,6 +115,43 @@ function StorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // 토스 결제창이 successUrl/failUrl로 되돌아왔을 때 처리
+  useEffect(() => {
+    if (!user) return;
+    const paymentKey = searchParams.get('paymentKey');
+    const orderId = searchParams.get('orderId');
+    const amount = searchParams.get('amount');
+    const failCode = searchParams.get('code');
+
+    if (!paymentKey && !failCode) return;
+    if (confirmingRef.current) return;
+    confirmingRef.current = true;
+
+    (async () => {
+      if (failCode) {
+        showMessage(searchParams.get('message') || '결제가 취소되었습니다.');
+        navigate('/store', { replace: true });
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('confirm-store-payment', {
+          body: { paymentKey, orderId, amount: Number(amount) },
+        });
+        if (error || data?.error) throw new Error(data?.error || error?.message);
+
+        showMessage('결제가 완료되었습니다!');
+        await Promise.all([fetchBalance(), fetchTransactions(), refreshStars()]);
+      } catch (error) {
+        console.error('결제 승인 실패:', error);
+        showMessage(error.message || '결제 처리 중 오류가 발생했습니다.');
+      } finally {
+        navigate('/store', { replace: true });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, searchParams]);
+
   const handlePurchaseStarItem = async (product) => {
     if (purchasingId) return;
     if (product.stock !== null && product.stock <= 0) return;
@@ -132,8 +177,61 @@ function StorePage() {
     }
   };
 
-  const handleComingSoon = () => {
-    showMessage('결제 기능은 준비 중입니다.');
+  // 별 보관소 확장 - 별가루로 즉시 구매
+  const handlePurchaseExpansion = async (product) => {
+    if (purchasingId) return;
+
+    setPurchasingId(product.id);
+    try {
+      const { data, error } = await supabase.rpc('purchase_storage_expansion', { p_product_id: product.id });
+      if (error) throw error;
+
+      if (!data.success) {
+        showMessage(ERROR_MESSAGES[data.error] || '구매에 실패했습니다.');
+      } else {
+        setBalance(data.balance);
+        showMessage(`보관소가 +${product.slot_count}칸 확장됐어요!`);
+        fetchTransactions();
+        await refreshStars();
+      }
+    } catch (error) {
+      console.error('보관소 확장 실패:', error);
+      showMessage('구매 중 오류가 발생했습니다.');
+    } finally {
+      setPurchasingId(null);
+    }
+  };
+
+  // 원화 결제 상품(별가루 충전권) 구매 - 토스 결제창 호출
+  const handlePayment = async (product) => {
+    if (payingId) return;
+    if (!window.TossPayments) {
+      showMessage('결제 모듈을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
+      return;
+    }
+
+    setPayingId(product.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-store-payment', {
+        body: { productId: product.id },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+
+      const tossPayments = window.TossPayments(TOSS_CLIENT_KEY);
+      await tossPayments.requestPayment('카드', {
+        amount: data.amount,
+        orderId: data.orderId,
+        orderName: data.orderName,
+        customerName: nickname || '스타리 유저',
+        successUrl: `${window.location.origin}/store`,
+        failUrl: `${window.location.origin}/store`,
+      });
+    } catch (error) {
+      // 사용자가 결제창을 닫은 경우도 여기로 들어오므로 콘솔에만 남긴다
+      console.error('결제 요청 실패:', error);
+    } finally {
+      setPayingId(null);
+    }
   };
 
   const starItems = products.filter((p) => p.product_type === 'star_item');
@@ -276,8 +374,9 @@ function StorePage() {
                     {expansionOptions.map((p) => (
                       <button
                         key={p.id}
-                        onClick={handleComingSoon}
-                        className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:bg-white/10 transition"
+                        onClick={() => handlePurchaseExpansion(p)}
+                        disabled={purchasingId === p.id}
+                        className="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3 hover:bg-white/10 transition disabled:opacity-50"
                       >
                         <span className="text-white text-sm font-bold flex items-center gap-2">
                           +{p.slot_count}칸 확장
@@ -287,7 +386,16 @@ function StorePage() {
                             </span>
                           )}
                         </span>
-                        <span className="text-white/70 text-sm">₩{p.price_krw?.toLocaleString()}</span>
+                        <span className="text-white/70 text-sm flex items-center gap-1">
+                          {purchasingId === p.id ? (
+                            '구매 중...'
+                          ) : (
+                            <>
+                              <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
+                              {p.price_star_dust}개
+                            </>
+                          )}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -305,8 +413,9 @@ function StorePage() {
                     {starDustPackages.map((p) => (
                       <button
                         key={p.id}
-                        onClick={handleComingSoon}
-                        className="relative rounded-2xl overflow-hidden border border-white/10 hover:brightness-110 transition"
+                        onClick={() => handlePayment(p)}
+                        disabled={payingId === p.id}
+                        className="relative rounded-2xl overflow-hidden border border-white/10 hover:brightness-110 transition disabled:opacity-50"
                       >
                         {p.tag && (
                           <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold bg-white text-[#6155F5] px-2 py-0.5 rounded-full shadow">

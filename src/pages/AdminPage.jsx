@@ -33,7 +33,9 @@ const AdminPage = () => {
   // 설정
   const [settings, setSettings] = useState({
     maintenanceMode: false,
-    allowSignup: true
+    allowSignup: true,
+    ai_rename_free_count: 3,
+    ai_rename_price: 5
   });
 
   // 상점 상품 관리
@@ -112,10 +114,10 @@ const AdminPage = () => {
       const { data, error } = await supabase
         .from('settings')
         .select('key, value')
-        .in('key', ['maintenanceMode', 'allowSignup']);
+        .in('key', ['maintenanceMode', 'allowSignup', 'ai_rename_free_count', 'ai_rename_price']);
 
       if (!error && data) {
-        const settingsObj = { maintenanceMode: false, allowSignup: true };
+        const settingsObj = { maintenanceMode: false, allowSignup: true, ai_rename_free_count: 3, ai_rename_price: 5 };
         data.forEach(item => {
           settingsObj[item.key] = item.value;
         });
@@ -144,6 +146,24 @@ const AdminPage = () => {
         .upsert({
           key: 'allowSignup',
           value: settings.allowSignup,
+          updated_at: new Date().toISOString()
+        });
+
+      // AI 별자리 이름 바꾸기 무료 횟수 저장
+      await supabase
+        .from('settings')
+        .upsert({
+          key: 'ai_rename_free_count',
+          value: Number(settings.ai_rename_free_count),
+          updated_at: new Date().toISOString()
+        });
+
+      // AI 별자리 이름 바꾸기 가격(별가루) 저장
+      await supabase
+        .from('settings')
+        .upsert({
+          key: 'ai_rename_price',
+          value: Number(settings.ai_rename_price),
           updated_at: new Date().toISOString()
         });
 
@@ -450,7 +470,7 @@ const AdminPage = () => {
       payload.star_dust_amount = Number(form.star_dust_amount);
       payload.bonus_star_dust = form.bonus_star_dust === '' ? 0 : Number(form.bonus_star_dust);
     } else if (form.product_type === 'storage_expansion') {
-      payload.price_krw = Number(form.price_krw);
+      payload.price_star_dust = Number(form.price_star_dust);
       payload.slot_count = Number(form.slot_count);
     }
 
@@ -481,8 +501,8 @@ const AdminPage = () => {
       alert('원화 가격과 지급 별가루 개수를 올바르게 입력해주세요.');
       return;
     }
-    if (payload.product_type === 'storage_expansion' && !(payload.price_krw > 0 && payload.slot_count > 0)) {
-      alert('원화 가격과 확장 칸수를 올바르게 입력해주세요.');
+    if (payload.product_type === 'storage_expansion' && !(payload.price_star_dust > 0 && payload.slot_count > 0)) {
+      alert('별가루 가격과 확장 칸수를 올바르게 입력해주세요.');
       return;
     }
 
@@ -1076,14 +1096,14 @@ const AdminPage = () => {
                   </div>
                 )}
 
-                {/* 별 보관소 확장: 원화 가격 + 확장 칸수 */}
+                {/* 별 보관소 확장: 별가루 가격 + 확장 칸수 */}
                 {storeProductForm.product_type === 'storage_expansion' && (
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"
-                      value={storeProductForm.price_krw}
-                      onChange={(e) => setStoreProductForm({ ...storeProductForm, price_krw: e.target.value })}
-                      placeholder="가격 (원)"
+                      value={storeProductForm.price_star_dust}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, price_star_dust: e.target.value })}
+                      placeholder="별가루 가격"
                       className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
                     />
                     <input
@@ -1199,7 +1219,7 @@ const AdminPage = () => {
                                   <div className="text-white/60 text-sm">
                                     {type === 'star_item' && `${product.price_star_dust}개 별가루`}
                                     {type === 'star_dust_package' && `${product.price_krw?.toLocaleString()}원 → ${product.star_dust_amount}개${product.bonus_star_dust ? ` (+${product.bonus_star_dust})` : ''}`}
-                                    {type === 'storage_expansion' && `${product.price_krw?.toLocaleString()}원 → +${product.slot_count}칸`}
+                                    {type === 'storage_expansion' && `${product.price_star_dust}개 별가루 → +${product.slot_count}칸`}
                                     {product.stock !== null && ` · 재고 ${product.stock}`}
                                   </div>
                                 </div>
@@ -1276,6 +1296,39 @@ const AdminPage = () => {
                       settings.allowSignup ? 'translate-x-8' : 'translate-x-1'
                     }`}></div>
                   </button>
+                </div>
+              </div>
+
+              {/* AI 별자리 이름 바꾸기 유료화 설정 */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 space-y-4">
+                <h3 className="text-white font-medium">AI 별자리 이름 바꾸기</h3>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-white font-medium">무료 이용 횟수</div>
+                    <div className="text-white/50 text-sm">계정당 무료로 제공할 횟수</div>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={settings.ai_rename_free_count}
+                    onChange={(e) => setSettings({ ...settings, ai_rename_free_count: e.target.value })}
+                    className="w-20 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm text-center focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-white font-medium">무료 소진 후 가격</div>
+                    <div className="text-white/50 text-sm">1회당 차감할 별가루 개수</div>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={settings.ai_rename_price}
+                    onChange={(e) => setSettings({ ...settings, ai_rename_price: e.target.value })}
+                    className="w-20 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm text-center focus:outline-none focus:border-purple-500"
+                  />
                 </div>
               </div>
 

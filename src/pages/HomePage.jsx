@@ -173,6 +173,28 @@ function HomePage() {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
+  // AI 별자리 이름 찾기 이용권 (무료 N회 이후 별가루 차감) - 버튼 라벨 표시용
+  const [aiRenameCredit, setAiRenameCredit] = useState({ usedCount: 0, freeCount: 3, price: 5 });
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [{ data: profile }, { data: settingsRows }] = await Promise.all([
+        supabase.from('profiles').select('ai_rename_used_count').eq('id', user.id).single(),
+        supabase.from('settings').select('key, value').in('key', ['ai_rename_free_count', 'ai_rename_price']),
+      ]);
+
+      const settingsMap = {};
+      (settingsRows || []).forEach((row) => { settingsMap[row.key] = row.value; });
+
+      setAiRenameCredit({
+        usedCount: profile?.ai_rename_used_count ?? 0,
+        freeCount: settingsMap.ai_rename_free_count ?? 3,
+        price: settingsMap.ai_rename_price ?? 5,
+      });
+    })();
+  }, [user]);
+
   // 별자리 미니 캔버스 ref
   const miniCanvasRef = useRef(null);
 
@@ -276,15 +298,32 @@ function HomePage() {
       });
 
       if (fnError) throw fnError;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) {
+        if (data.code === 'insufficient_balance') {
+          setAiNamingMode(null);
+          setShareMessage(`별가루가 부족합니다. (${data.price}개 필요)`);
+          setTimeout(() => setShareMessage(''), 2500);
+          return;
+        }
+        throw new Error(data.error);
+      }
 
       setSuggestions(data.suggestions);
       setAiNamingMode('results');
+
+      if (data.credit?.method === 'free') {
+        setAiRenameCredit((prev) => ({ ...prev, usedCount: prev.usedCount + 1 }));
+        setShareMessage(`무료 이용권으로 분석했어요! (남은 무료 횟수: ${data.credit.remaining}회)`);
+        setTimeout(() => setShareMessage(''), 2500);
+      } else if (data.credit?.method === 'star_dust') {
+        setShareMessage(`별가루를 사용했어요. (남은 별가루: ${data.credit.balance}개)`);
+        setTimeout(() => setShareMessage(''), 2500);
+      }
     } catch (error) {
       console.error('별자리 분석 실패:', error);
       setAiNamingMode(null);
-      setShareMessage('별자리 분석에 실패했습니다.');
-      setTimeout(() => setShareMessage(''), 2000);
+      setShareMessage(error.message || '별자리 분석에 실패했습니다.');
+      setTimeout(() => setShareMessage(''), 2500);
     }
   };
 
@@ -1164,12 +1203,20 @@ function HomePage() {
                   오늘의 운세
                 </button>
 
-                {/* AI 별자리 이름 바꾸기 버튼 */}
+                {/* 별자리 이름 찾기 버튼 - 무료 소진 전엔 (n/총횟수), 소진 후엔 별가루 가격 표시 */}
                 <button
                   onClick={handleAnalyzeConstellation}
-                  className="w-full py-3 bg-[#A6A6A6] text-white font-semibold rounded-full hover:bg-[#959595] transition"
+                  className="w-full py-3 bg-[#A6A6A6] text-white font-semibold rounded-full hover:bg-[#959595] transition flex items-center justify-center gap-1.5"
                 >
-                  {t.home.aiRename}
+                  {aiRenameCredit.usedCount < aiRenameCredit.freeCount ? (
+                    <span>별자리 이름 찾기({aiRenameCredit.freeCount - aiRenameCredit.usedCount}/{aiRenameCredit.freeCount})</span>
+                  ) : (
+                    <>
+                      <span>별자리 이름 찾기</span>
+                      <span className="text-yellow-300">★</span>
+                      <span>{aiRenameCredit.price}</span>
+                    </>
+                  )}
                 </button>
               </>
             )}

@@ -13,6 +13,9 @@ export function getStarImage(url) {
   if (cached) return null; // 로딩 중
 
   const img = new Image();
+  // CORS 허용 없이 그리면 캔버스가 "오염"되어 toDataURL/getImageData가 막힌다
+  // (AI 별자리 이름 찾기 캡처, 별자리 이미지 캡쳐 등에서 SecurityError 발생 원인).
+  img.crossOrigin = 'anonymous';
   img.onload = () => {
     window.dispatchEvent(new CustomEvent('star-image-loaded', { detail: { url } }));
   };
