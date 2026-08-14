@@ -10,7 +10,45 @@ const ERROR_MESSAGES = {
   product_not_found: '구매할 수 없는 상품입니다.',
 };
 
+// 섹션 제목 아이콘들
+function StarPurchaseIcon() {
+  return (
+    <svg width="14" height="13" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.657 0L8.303 4.735L13.314 4.837L9.32 7.865L10.773 12.663L6.657 9.8L2.541 12.663L3.994 7.865L0 4.837L5.011 4.735L6.657 0Z" fill="#8B5CF6" />
+    </svg>
+  );
+}
+
+function StorageExpandIcon() {
+  return (
+    <svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 0H6.07143L7.89286 2.94737H17V14H0V0Z" fill="#8B5CF6" />
+      <path d="M12 6H11V11H12V6Z" fill="#F9F7FD" />
+      <path d="M14 8H9V9H14V8Z" fill="#F9F7FD" />
+    </svg>
+  );
+}
+
+function StoreCircleIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="7" cy="7" r="7" fill="#8B5CF6" />
+      <circle cx="7" cy="7" r="4" fill="#F9F7FD" />
+    </svg>
+  );
+}
+
 const INITIAL_STAR_ITEM_COUNT = 4;
+
+const formatDateTime = (dateString) => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${year}.${month}.${day} ${hour}:${minute}`;
+};
 
 function StorePage() {
   const { user } = useAuth();
@@ -147,7 +185,7 @@ function StorePage() {
                 {/* 스타리 별 구매 */}
                 <section>
                   <h2 className="text-white font-bold text-lg flex items-center gap-1.5">
-                    <span className="text-yellow-300">★</span> 스타리 별 구매
+                    <StarPurchaseIcon /> 스타리 별 구매
                   </h2>
                   <p className="text-white/50 text-xs mt-1">별자리에 특별함을 더해줄 커스텀 별!</p>
 
@@ -163,7 +201,7 @@ function StorePage() {
                               key={product.id}
                               onClick={() => handlePurchaseStarItem(product)}
                               disabled={isSoldOut || purchasingId === product.id}
-                              className="relative aspect-square bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 disabled:cursor-not-allowed hover:bg-white/10 transition"
+                              className="relative aspect-square bg-white/5 border border-white/10 rounded-2xl p-2 flex flex-col items-center justify-center gap-1 disabled:cursor-not-allowed hover:bg-white/10 transition"
                             >
                               {product.tag && (
                                 <span className="absolute top-2 left-2 w-6 h-6 rounded-full bg-[#6155F5]/40 text-white text-[10px] font-bold flex items-center justify-center">
@@ -179,10 +217,10 @@ function StorePage() {
                                 <img
                                   src={product.image_url}
                                   alt={product.name}
-                                  className="w-16 h-16 object-contain mt-3"
+                                  className="w-[64%] aspect-square object-contain mt-3"
                                 />
                               )}
-                              <span className="text-white text-sm font-bold">{product.name}</span>
+                              <span className="text-white text-base font-bold">{product.name}</span>
 
                               {isSoldOut && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-2xl overflow-hidden">
@@ -218,7 +256,7 @@ function StorePage() {
                 {/* 별 보관소 확장 */}
                 <section>
                   <h2 className="text-white font-bold text-lg flex items-center gap-1.5">
-                    <span className="text-[#A199FF]">■</span> 별 보관소 확장
+                    <StorageExpandIcon /> 별 보관소 확장
                   </h2>
 
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mt-4">
@@ -260,7 +298,7 @@ function StorePage() {
                 {/* 별가루 충전 */}
                 <section>
                   <h2 className="text-white font-bold text-lg flex items-center gap-1.5">
-                    <span className="text-yellow-300">●</span> 별가루 충전
+                    <StoreCircleIcon /> 별가루 충전
                   </h2>
 
                   <div className="grid grid-cols-2 gap-3 mt-4">
@@ -290,27 +328,29 @@ function StorePage() {
                 {/* 별가루 이용내역 */}
                 <section>
                   <h2 className="text-white font-bold text-lg flex items-center gap-1.5">
-                    <span className="text-yellow-300">●</span> 별가루 이용내역
+                    <StoreCircleIcon /> 별가루 이용내역
                   </h2>
 
                   {transactions.length === 0 ? (
                     <p className="text-white/40 text-sm mt-4">이용 내역이 없습니다.</p>
                   ) : (
                     <div className="mt-3">
-                      {transactions.map((tx) => (
+                      {transactions.map((tx, index) => (
                         <div
                           key={tx.id}
-                          className="flex justify-between items-center py-3 border-b border-white/10 last:border-0"
+                          className={`flex justify-between items-center gap-4 max-w-[260px] mx-auto py-2.5 ${
+                            index !== transactions.length - 1 ? 'border-b border-white/15' : ''
+                          }`}
                         >
-                          <div className="text-white/70 text-sm">
-                            {tx.type === 'charge' ? '충전' : '구매'}
-                            <span className="text-white/40 text-xs ml-2">
-                              {new Date(tx.created_at).toLocaleString('ko-KR', {
-                                year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-                              })}
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-white font-bold text-base">
+                              {tx.type === 'charge' ? '충전' : '구매'}
+                            </span>
+                            <span className="text-white/40 text-xs">
+                              {formatDateTime(tx.created_at)}
                             </span>
                           </div>
-                          <span className={`text-sm font-bold ${tx.amount > 0 ? 'text-green-400' : 'text-red-300'}`}>
+                          <span className="text-white font-bold text-lg">
                             {tx.amount > 0 ? '+' : ''}{tx.amount}개
                           </span>
                         </div>
