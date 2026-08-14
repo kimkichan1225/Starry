@@ -8,6 +8,7 @@ import NavBar from '../components/NavBar';
 import SettingsSidebar from '../components/SettingsSidebar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
+import { getStarImage } from '../utils/starImageCache';
 
 // 별 생성을 위한 설정 (StarsPage와 동일)
 const palette = [
@@ -55,18 +56,46 @@ const drawStar = (ctx, x, y, outerR, innerR, points, fillStyle) => {
 
 // 개별 별 그리기 함수
 const drawStarOnCanvas = (ctx, star, x, y, scale = 1) => {
+  // 상점에서 구매한 이미지 기반 별
+  if (star.image_url) {
+    const size = 30 * scale * 1.7;
+
+    // 은은한 발광 효과 (절차적 별과 톤을 맞춘 별빛 색)
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glowR = size * 0.65;
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+    glow.addColorStop(0, 'rgba(255, 255, 227, 0.45)');
+    glow.addColorStop(0.5, 'rgba(255, 255, 227, 0.15)');
+    glow.addColorStop(1, 'rgba(255, 255, 227, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const img = getStarImage(star.image_url);
+    if (img) {
+      ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+    }
+    return;
+  }
+
   const colorIdx = star.star_color - 1;
   const pointsIdx = star.star_points - 1;
   const sizeIdx = star.star_size - 1;
   const satIdx = star.star_saturation;
   const sharpIdx = star.star_sharpness;
 
+  // 이미지도 절차적 속성도 없는 손상된 별 데이터는 조용히 건너뛴다 (전체 캔버스가 죽는 것 방지)
+  const colorData = palette[colorIdx];
+  if (!colorData || !pointsMap[pointsIdx] || !sizeMap[sizeIdx]) return;
+
   const starPoints = pointsMap[pointsIdx];
   const baseSize = 30 * scale;
   const starOuter = baseSize * sizeMap[sizeIdx] * 2;
   const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
   const starInner = starOuter * innerRatio;
-  const colorData = palette[colorIdx];
   const saturation = mapRange(satIdx, 1, 4, 80, 20);
   const lightness = 50;
   const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
@@ -110,6 +139,14 @@ function HomePage() {
   const [isConstellationExpanded, setIsConstellationExpanded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // 이미지 기반 별(상점 구매)의 비동기 로드가 끝나면 캔버스를 다시 그리기 위한 트리거
+  const [imageLoadTick, setImageLoadTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setImageLoadTick((t) => t + 1);
+    window.addEventListener('star-image-loaded', handler);
+    return () => window.removeEventListener('star-image-loaded', handler);
+  }, []);
 
   // 바텀시트 드래그(스와이프) 추적
   const sheetDragStartY = useRef(null);
@@ -397,7 +434,7 @@ function HomePage() {
     });
 
     ctx.restore();
-  }, [isConstellationExpanded, aiNamingMode, stars, starPositions, connections]);
+  }, [isConstellationExpanded, aiNamingMode, stars, starPositions, connections, imageLoadTick]);
 
   // 별 이동 상태
   const [isMovingStar, setIsMovingStar] = useState(false);
@@ -845,7 +882,7 @@ function HomePage() {
         ctx.stroke();
       }
     }
-  }, [stars, starPositions, connections, isDraggingLine, dragStartStarIndex, dragCurrentPos, isMovingStar, movingStarIndex]);
+  }, [stars, starPositions, connections, isDraggingLine, dragStartStarIndex, dragCurrentPos, isMovingStar, movingStarIndex, imageLoadTick]);
 
   // 터치 이벤트 passive: false로 등록 (preventDefault 사용을 위해)
   useEffect(() => {

@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import NavBar from '../components/NavBar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
+import { getStarImage } from '../utils/starImageCache';
 
 // 별 생성을 위한 설정
 const palette = [
@@ -61,22 +62,50 @@ const drawStarOnCanvas = (canvas, star) => {
   const cx = W / 2;
   const cy = H / 2;
 
+  ctx.clearRect(0, 0, W, H);
+
+  // 상점에서 구매한 이미지 기반 별
+  if (star.image_url) {
+    const size = Math.min(W, H) * 0.65;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glowR = size * 0.65;
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    glow.addColorStop(0, 'rgba(255, 255, 227, 0.45)');
+    glow.addColorStop(0.5, 'rgba(255, 255, 227, 0.15)');
+    glow.addColorStop(1, 'rgba(255, 255, 227, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const img = getStarImage(star.image_url);
+    if (img) {
+      ctx.drawImage(img, cx - size / 2, cy - size / 2, size, size);
+    }
+    return;
+  }
+
   const colorIdx = star.star_color - 1;
   const pointsIdx = star.star_points - 1;
   const sizeIdx = star.star_size - 1;
   const satIdx = star.star_saturation;
   const sharpIdx = star.star_sharpness;
 
+  // 이미지도 절차적 속성도 없는 손상된 별 데이터는 조용히 건너뛴다
+  const colorData = palette[colorIdx];
+  if (!colorData || !pointsMap[pointsIdx] || !sizeMap[sizeIdx]) return;
+
   const starPoints = pointsMap[pointsIdx];
   const starOuter = Math.min(W, H) * sizeMap[sizeIdx];
   const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
   const starInner = starOuter * innerRatio;
-  const colorData = palette[colorIdx];
   const saturation = mapRange(satIdx, 1, 4, 80, 20);
   const lightness = 50;
   const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
 
-  ctx.clearRect(0, 0, W, H);
   drawStar(ctx, cx, cy, starOuter, starInner, starPoints, starFill);
 
   ctx.save();
@@ -104,6 +133,18 @@ function SkySlot({ star }) {
     }
   }, [star]);
 
+  // 이미지 기반 별의 비동기 로드가 끝나면 다시 그리기
+  useEffect(() => {
+    if (!star?.image_url) return;
+    const handler = (e) => {
+      if (e.detail?.url === star.image_url && canvasRef.current) {
+        drawStarOnCanvas(canvasRef.current, star);
+      }
+    };
+    window.addEventListener('star-image-loaded', handler);
+    return () => window.removeEventListener('star-image-loaded', handler);
+  }, [star]);
+
   if (!star) {
     return (
       <div className="w-10 h-10 rounded-full bg-[#3a3a5c] flex-shrink-0" />
@@ -125,6 +166,18 @@ function StarCard({ star, index, isSelected, onClick, t }) {
     if (canvasRef.current && star) {
       drawStarOnCanvas(canvasRef.current, star);
     }
+  }, [star]);
+
+  // 이미지 기반 별의 비동기 로드가 끝나면 다시 그리기
+  useEffect(() => {
+    if (!star?.image_url) return;
+    const handler = (e) => {
+      if (e.detail?.url === star.image_url && canvasRef.current) {
+        drawStarOnCanvas(canvasRef.current, star);
+      }
+    };
+    window.addEventListener('star-image-loaded', handler);
+    return () => window.removeEventListener('star-image-loaded', handler);
   }, [star]);
 
   return (

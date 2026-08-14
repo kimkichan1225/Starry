@@ -178,11 +178,61 @@ function getStarMaterial(hue, saturation, points, sharpness, starSize) {
   return material;
 }
 
+// 상점에서 구매한 이미지 기반 별의 머티리얼 캐시 (url 단위)
+// 이미지 로드 후 절차적 별과 톤을 맞춘 은은한 발광을 캔버스에 합성해 텍스처로 만든다.
+const imageStarMaterialCache = new Map();
+function getImageStarMaterial(imageUrl) {
+  const cached = imageStarMaterialCache.get(imageUrl);
+  if (cached) return cached;
+
+  const material = new THREE.SpriteMaterial({
+    transparent: true,
+    opacity: 1,
+    depthTest: false,
+    depthWrite: false,
+  });
+  imageStarMaterialCache.set(imageUrl, material);
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const cx = size / 2;
+    const cy = size / 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glowR = size * 0.28;
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    glow.addColorStop(0, 'rgba(255, 255, 227, 0.5)');
+    glow.addColorStop(0.5, 'rgba(255, 255, 227, 0.18)');
+    glow.addColorStop(1, 'rgba(255, 255, 227, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const imgSize = size * 0.5;
+    ctx.drawImage(img, cx - imgSize / 2, cy - imgSize / 2, imgSize, imgSize);
+
+    material.map = new THREE.CanvasTexture(canvas);
+    material.needsUpdate = true;
+  };
+  img.src = imageUrl;
+
+  return material;
+}
+
 // 개별 별 컴포넌트
-function Star3D({ position, hue, saturation, points, sharpness, starSize, spriteScale = 1 }) {
+function Star3D({ position, hue, saturation, points, sharpness, starSize, spriteScale = 1, imageUrl }) {
   const material = useMemo(
-    () => getStarMaterial(hue, saturation, points, sharpness, starSize),
-    [hue, saturation, points, sharpness, starSize]
+    () => (imageUrl ? getImageStarMaterial(imageUrl) : getStarMaterial(hue, saturation, points, sharpness, starSize)),
+    [imageUrl, hue, saturation, points, sharpness, starSize]
   );
 
   return (
@@ -254,6 +304,11 @@ function Constellation3D({ constellation, onSelect, isSelected, isPreview = fals
 
       const position = centerPosition.clone().add(offset);
 
+      // 상점에서 구매한 이미지 기반 별
+      if (star.image_url) {
+        return { position, imageUrl: star.image_url };
+      }
+
       // 별 속성이 있으면 사용 (HomePage와 동일하게), 없으면 랜덤
       let hue, saturation, points, sharpness, starSize;
 
@@ -285,6 +340,7 @@ function Constellation3D({ constellation, onSelect, isSelected, isPreview = fals
         <Star3D
           key={index}
           position={star.position}
+          imageUrl={star.imageUrl}
           hue={star.hue}
           saturation={star.saturation}
           points={star.points}

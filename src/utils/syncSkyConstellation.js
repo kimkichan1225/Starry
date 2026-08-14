@@ -71,6 +71,7 @@ export async function syncSkyConstellation(userId, nickname, constellationName) 
     star_size: star.star_size,
     star_saturation: star.star_saturation,
     star_sharpness: star.star_sharpness,
+    image_url: star.image_url,
   }));
 
   const connections = (connectionsData || [])

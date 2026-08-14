@@ -36,6 +36,57 @@ const AdminPage = () => {
     allowSignup: true
   });
 
+  // 상점 상품 관리
+  const emptyStoreProductForm = {
+    product_type: 'star_item',
+    name: '',
+    tag: '',
+    price_krw: '',
+    price_star_dust: '',
+    star_dust_amount: '',
+    bonus_star_dust: '',
+    slot_count: '',
+    image_url: '',
+    stock: '',
+    is_active: true,
+  };
+  const [storeProducts, setStoreProducts] = useState([]);
+  const [storeProductForm, setStoreProductForm] = useState(emptyStoreProductForm);
+  const [editingStoreProduct, setEditingStoreProduct] = useState(null);
+  const [storeProductsLoading, setStoreProductsLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+
+  const STORE_PRODUCT_TYPE_LABELS = {
+    star_item: '스타리 별 구매',
+    star_dust_package: '별가루 충전권',
+    storage_expansion: '별 보관소 확장',
+  };
+
+  // 별 이미지 업로드 (star-images 버킷, 관리자만 쓰기 가능)
+  const handleUploadStarImage = async (file) => {
+    if (!file) return;
+
+    setImageUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('star-images')
+        .upload(path, file, { cacheControl: '31536000', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('star-images').getPublicUrl(path);
+      setStoreProductForm((prev) => ({ ...prev, image_url: data.publicUrl }));
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      alert('이미지 업로드에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   // 관리자 권한 체크
   useEffect(() => {
     if (authLoading) return;
@@ -355,12 +406,204 @@ const AdminPage = () => {
     }
   };
 
+  // 상점 상품 목록 가져오기
+  const fetchStoreProducts = async () => {
+    setStoreProductsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('store_products')
+        .select('*')
+        .order('product_type', { ascending: true })
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setStoreProducts(data || []);
+    } catch (error) {
+      console.error('상점 상품 조회 실패:', error);
+      setStoreProducts([]);
+    } finally {
+      setStoreProductsLoading(false);
+    }
+  };
+
+  // 폼 값을 product_type에 맞는 컬럼만 채운 payload로 변환
+  const buildStoreProductPayload = (form) => {
+    const payload = {
+      product_type: form.product_type,
+      name: form.name.trim(),
+      tag: form.tag.trim() || null,
+      is_active: form.is_active,
+      stock: form.stock === '' ? null : Number(form.stock),
+      price_krw: null,
+      price_star_dust: null,
+      star_dust_amount: null,
+      bonus_star_dust: null,
+      slot_count: null,
+      image_url: null,
+    };
+
+    if (form.product_type === 'star_item') {
+      payload.price_star_dust = Number(form.price_star_dust);
+      payload.image_url = form.image_url || null;
+    } else if (form.product_type === 'star_dust_package') {
+      payload.price_krw = Number(form.price_krw);
+      payload.star_dust_amount = Number(form.star_dust_amount);
+      payload.bonus_star_dust = form.bonus_star_dust === '' ? 0 : Number(form.bonus_star_dust);
+    } else if (form.product_type === 'storage_expansion') {
+      payload.price_krw = Number(form.price_krw);
+      payload.slot_count = Number(form.slot_count);
+    }
+
+    return payload;
+  };
+
+  // 상점 상품 저장 (신규/수정)
+  const handleSaveStoreProduct = async (e) => {
+    e.preventDefault();
+
+    if (!storeProductForm.name.trim()) {
+      alert('상품명을 입력해주세요.');
+      return;
+    }
+
+    const payload = buildStoreProductPayload(storeProductForm);
+
+    // 타입별 필수 값 검증 (DB CHECK 제약과 동일한 조건)
+    if (payload.product_type === 'star_item' && !(payload.price_star_dust > 0)) {
+      alert('별가루 가격을 올바르게 입력해주세요.');
+      return;
+    }
+    if (payload.product_type === 'star_item' && !payload.image_url) {
+      alert('별 이미지를 업로드해주세요.');
+      return;
+    }
+    if (payload.product_type === 'star_dust_package' && !(payload.price_krw > 0 && payload.star_dust_amount > 0)) {
+      alert('원화 가격과 지급 별가루 개수를 올바르게 입력해주세요.');
+      return;
+    }
+    if (payload.product_type === 'storage_expansion' && !(payload.price_krw > 0 && payload.slot_count > 0)) {
+      alert('원화 가격과 확장 칸수를 올바르게 입력해주세요.');
+      return;
+    }
+
+    try {
+      if (editingStoreProduct) {
+        const { error } = await supabase
+          .from('store_products')
+          .update(payload)
+          .eq('id', editingStoreProduct.id);
+
+        if (error) throw error;
+        alert('상품이 수정되었습니다.');
+      } else {
+        const sameType = storeProducts.filter(p => p.product_type === payload.product_type);
+        const maxOrder = sameType.length > 0 ? Math.max(...sameType.map(p => p.sort_order ?? 0)) : -1;
+
+        const { error } = await supabase
+          .from('store_products')
+          .insert({ ...payload, sort_order: maxOrder + 1 });
+
+        if (error) throw error;
+        alert('상품이 등록되었습니다.');
+      }
+
+      setStoreProductForm(emptyStoreProductForm);
+      setEditingStoreProduct(null);
+      fetchStoreProducts();
+    } catch (error) {
+      console.error('상점 상품 저장 실패:', error);
+      alert('상점 상품 저장에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+    }
+  };
+
+  // 상점 상품 수정 모드
+  const handleEditStoreProduct = (product) => {
+    setEditingStoreProduct(product);
+    setStoreProductForm({
+      product_type: product.product_type,
+      name: product.name,
+      tag: product.tag || '',
+      price_krw: product.price_krw ?? '',
+      price_star_dust: product.price_star_dust ?? '',
+      star_dust_amount: product.star_dust_amount ?? '',
+      bonus_star_dust: product.bonus_star_dust ?? '',
+      slot_count: product.slot_count ?? '',
+      image_url: product.image_url || '',
+      stock: product.stock ?? '',
+      is_active: product.is_active,
+    });
+  };
+
+  // 상점 상품 삭제
+  const handleDeleteStoreProduct = async (productId) => {
+    if (!confirm('이 상품을 삭제하시겠습니까?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('store_products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+      fetchStoreProducts();
+    } catch (error) {
+      console.error('상점 상품 삭제 실패:', error);
+      alert('상점 상품 삭제에 실패했습니다.');
+    }
+  };
+
+  // 상점 상품 노출 on/off
+  const handleToggleStoreProductActive = async (product) => {
+    try {
+      const { error } = await supabase
+        .from('store_products')
+        .update({ is_active: !product.is_active })
+        .eq('id', product.id);
+
+      if (error) throw error;
+      fetchStoreProducts();
+    } catch (error) {
+      console.error('상점 상품 노출 변경 실패:', error);
+      alert('상품 상태 변경에 실패했습니다.');
+    }
+  };
+
+  // 상점 상품 순서 변경 (같은 product_type 그룹 내에서만 이동)
+  const handleMoveStoreProduct = async (product, direction) => {
+    const group = storeProducts
+      .filter(p => p.product_type === product.product_type)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const index = group.findIndex(p => p.id === product.id);
+
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === group.length - 1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const current = group[index];
+    const target = group[targetIndex];
+
+    try {
+      const currentOrder = current.sort_order ?? index;
+      const targetOrder = target.sort_order ?? targetIndex;
+
+      await supabase.from('store_products').update({ sort_order: targetOrder }).eq('id', current.id);
+      await supabase.from('store_products').update({ sort_order: currentOrder }).eq('id', target.id);
+
+      fetchStoreProducts();
+    } catch (error) {
+      console.error('순서 변경 실패:', error);
+      alert('순서 변경에 실패했습니다.');
+    }
+  };
+
   // 탭 변경 시 데이터 로드
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
     } else if (activeTab === 'notices') {
       fetchNotices();
+    } else if (activeTab === 'store') {
+      fetchStoreProducts();
     }
   }, [activeTab]);
 
@@ -413,6 +656,7 @@ const AdminPage = () => {
             { id: 'dashboard', label: '대시보드', icon: '📊' },
             { id: 'users', label: '회원관리', icon: '👥' },
             { id: 'notices', label: '공지사항', icon: '📢' },
+            { id: 'store', label: '상점', icon: '🛍️' },
             { id: 'settings', label: '설정', icon: '⚙️' }
           ].map((tab) => (
             <button
@@ -720,6 +964,275 @@ const AdminPage = () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* 상점 탭 */}
+          {activeTab === 'store' && (
+            <div className="space-y-4">
+              <h2 className="text-white text-xl font-bold">상점 관리</h2>
+
+              {/* 상품 작성/수정 폼 */}
+              <form onSubmit={handleSaveStoreProduct} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 space-y-3">
+                <h3 className="text-white font-medium">
+                  {editingStoreProduct ? '상품 수정' : '새 상품 등록'}
+                </h3>
+
+                <div className="flex gap-2">
+                  <select
+                    value={storeProductForm.product_type}
+                    onChange={(e) => setStoreProductForm({ ...storeProductForm, product_type: e.target.value })}
+                    disabled={!!editingStoreProduct}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 disabled:opacity-50"
+                  >
+                    <option value="star_item" className="bg-[#1a1a2e]">스타리 별 구매</option>
+                    <option value="star_dust_package" className="bg-[#1a1a2e]">별가루 충전권</option>
+                    <option value="storage_expansion" className="bg-[#1a1a2e]">별 보관소 확장</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={storeProductForm.name}
+                    onChange={(e) => setStoreProductForm({ ...storeProductForm, name: e.target.value })}
+                    placeholder="상품명 (예: 두쪽별)"
+                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={storeProductForm.tag}
+                    onChange={(e) => setStoreProductForm({ ...storeProductForm, tag: e.target.value })}
+                    placeholder="배지 (N/H/인기/추천, 선택)"
+                    className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                  />
+                  <input
+                    type="number"
+                    value={storeProductForm.stock}
+                    onChange={(e) => setStoreProductForm({ ...storeProductForm, stock: e.target.value })}
+                    placeholder="재고 (비우면 무제한)"
+                    className="w-40 px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                {/* 스타리 별 구매: 별가루 가격 + 이미지 업로드 */}
+                {storeProductForm.product_type === 'star_item' && (
+                  <>
+                    <input
+                      type="number"
+                      value={storeProductForm.price_star_dust}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, price_star_dust: e.target.value })}
+                      placeholder="별가루 가격 (예: 20)"
+                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    <div className="flex items-center gap-3">
+                      {storeProductForm.image_url ? (
+                        <img
+                          src={storeProductForm.image_url}
+                          alt="미리보기"
+                          className="w-16 h-16 object-contain bg-white/10 rounded-lg border border-white/20"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 flex items-center justify-center bg-white/10 rounded-lg border border-white/20 text-white/30 text-xs">
+                          없음
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/png,image/svg+xml"
+                        onChange={(e) => handleUploadStarImage(e.target.files?.[0])}
+                        disabled={imageUploading}
+                        className="flex-1 text-white/70 text-sm file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:text-sm file:cursor-pointer disabled:opacity-50"
+                      />
+                      {imageUploading && <span className="text-white/50 text-xs shrink-0">업로드 중...</span>}
+                    </div>
+                  </>
+                )}
+
+                {/* 별가루 충전권: 원화 가격 + 지급/보너스 별가루 */}
+                {storeProductForm.product_type === 'star_dust_package' && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      type="number"
+                      value={storeProductForm.price_krw}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, price_krw: e.target.value })}
+                      placeholder="가격 (원)"
+                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    <input
+                      type="number"
+                      value={storeProductForm.star_dust_amount}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, star_dust_amount: e.target.value })}
+                      placeholder="지급 별가루 개수"
+                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    <input
+                      type="number"
+                      value={storeProductForm.bonus_star_dust}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, bonus_star_dust: e.target.value })}
+                      placeholder="보너스 개수 (선택)"
+                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                )}
+
+                {/* 별 보관소 확장: 원화 가격 + 확장 칸수 */}
+                {storeProductForm.product_type === 'storage_expansion' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      value={storeProductForm.price_krw}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, price_krw: e.target.value })}
+                      placeholder="가격 (원)"
+                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                    <input
+                      type="number"
+                      value={storeProductForm.slot_count}
+                      onChange={(e) => setStoreProductForm({ ...storeProductForm, slot_count: e.target.value })}
+                      placeholder="확장 칸수"
+                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                )}
+
+                <label className="flex items-center gap-2 text-white/70 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={storeProductForm.is_active}
+                    onChange={(e) => setStoreProductForm({ ...storeProductForm, is_active: e.target.checked })}
+                  />
+                  상점에 노출
+                </label>
+
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
+                  >
+                    {editingStoreProduct ? '수정하기' : '등록하기'}
+                  </button>
+                  {editingStoreProduct && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingStoreProduct(null);
+                        setStoreProductForm(emptyStoreProductForm);
+                      }}
+                      className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 text-sm"
+                    >
+                      취소
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {/* 상품 목록 (타입별 그룹) */}
+              {storeProductsLoading ? (
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center text-white/50">
+                  로딩 중...
+                </div>
+              ) : (
+                Object.entries(STORE_PRODUCT_TYPE_LABELS).map(([type, label]) => {
+                  const group = storeProducts
+                    .filter(p => p.product_type === type)
+                    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+                  return (
+                    <div key={type} className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+                      <div className="p-3 border-b border-white/10">
+                        <span className="text-white/70 text-sm">{label} ({group.length}개)</span>
+                      </div>
+                      {group.length === 0 ? (
+                        <div className="p-6 text-center text-white/40 text-sm">등록된 상품이 없습니다.</div>
+                      ) : (
+                        <div className="divide-y divide-white/10">
+                          {group.map((product, index) => (
+                            <div key={product.id} className="p-4 hover:bg-white/5">
+                              <div className="flex items-start justify-between">
+                                <div className="flex flex-col gap-1 mr-3 shrink-0">
+                                  <button
+                                    onClick={() => handleMoveStoreProduct(product, 'up')}
+                                    disabled={index === 0}
+                                    className="p-1 text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                    title="위로 이동"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleMoveStoreProduct(product, 'down')}
+                                    disabled={index === group.length - 1}
+                                    className="p-1 text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                    title="아래로 이동"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </button>
+                                </div>
+
+                                {type === 'star_item' && product.image_url && (
+                                  <img
+                                    src={product.image_url}
+                                    alt={product.name}
+                                    className="w-12 h-12 object-contain bg-white/10 rounded-lg border border-white/20 mr-3 shrink-0"
+                                  />
+                                )}
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    {product.tag && (
+                                      <span className="shrink-0 px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-300">
+                                        {product.tag}
+                                      </span>
+                                    )}
+                                    <span className="text-white font-medium truncate">{product.name}</span>
+                                    {!product.is_active && (
+                                      <span className="shrink-0 px-2 py-0.5 rounded text-xs bg-gray-500/20 text-gray-400">숨김</span>
+                                    )}
+                                    {product.stock !== null && product.stock <= 0 && (
+                                      <span className="shrink-0 px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-300">품절</span>
+                                    )}
+                                  </div>
+                                  <div className="text-white/60 text-sm">
+                                    {type === 'star_item' && `${product.price_star_dust}개 별가루`}
+                                    {type === 'star_dust_package' && `${product.price_krw?.toLocaleString()}원 → ${product.star_dust_amount}개${product.bonus_star_dust ? ` (+${product.bonus_star_dust})` : ''}`}
+                                    {type === 'storage_expansion' && `${product.price_krw?.toLocaleString()}원 → +${product.slot_count}칸`}
+                                    {product.stock !== null && ` · 재고 ${product.stock}`}
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2 ml-4 shrink-0">
+                                  <button
+                                    onClick={() => handleToggleStoreProductActive(product)}
+                                    className="px-3 py-1 bg-white/10 text-white/70 rounded-lg hover:bg-white/20 text-sm"
+                                  >
+                                    {product.is_active ? '숨기기' : '노출'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleEditStoreProduct(product)}
+                                    className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 text-sm"
+                                  >
+                                    수정
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteStoreProduct(product.id)}
+                                    className="px-3 py-1 bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 text-sm"
+                                  >
+                                    삭제
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
 
