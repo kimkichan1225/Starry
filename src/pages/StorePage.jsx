@@ -306,18 +306,24 @@ function StorePage() {
                       <button
                         key={p.id}
                         onClick={handleComingSoon}
-                        className="relative bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center hover:bg-white/10 transition"
+                        className="relative rounded-2xl overflow-hidden border border-white/10 hover:brightness-110 transition"
                       >
                         {p.tag && (
-                          <span className="absolute top-2 right-2 text-[10px] bg-pink-500/30 text-pink-200 px-1.5 py-0.5 rounded">
+                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold bg-white text-[#6155F5] px-2 py-0.5 rounded-full shadow">
                             {p.tag}
                           </span>
                         )}
-                        <span className="text-white font-bold text-sm">
-                          {p.star_dust_amount}개
-                          {p.bonus_star_dust ? <span className="text-[#A199FF]"> (+{p.bonus_star_dust}개)</span> : null}
-                        </span>
-                        <span className="text-white/60 text-sm mt-2">{p.price_krw?.toLocaleString()}원</span>
+                        <div className="bg-[#8B5CF6] px-4 py-3 flex items-center justify-center gap-1.5">
+                          <span className="text-white font-extrabold text-lg">{p.star_dust_amount}개</span>
+                          {p.bonus_star_dust ? (
+                            <span className="text-white text-[11px] font-bold bg-white/25 px-2 py-0.5 rounded-full">
+                              +{p.bonus_star_dust}개
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="px-4 py-3 border-t border-white/20">
+                          <span className="text-white font-bold text-base">{p.price_krw?.toLocaleString()}원</span>
+                        </div>
                       </button>
                     ))}
                   </div>
