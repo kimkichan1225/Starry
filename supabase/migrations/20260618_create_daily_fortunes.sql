@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS daily_fortunes (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   fortune_date DATE NOT NULL,        -- 운세 기준 날짜 (Edge Function에서 UTC 기준으로 계산)
-  fortune JSONB NOT NULL,            -- 운세 JSON (message, explanation, love/health/wealth, luckyItem, emotionImage 등)
+  fortune JSONB NOT NULL,            -- 운세 JSON (message, explanation, love/health/wealth, todayColor, todayColorHex, emotionImage 등)
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, fortune_date)
 );

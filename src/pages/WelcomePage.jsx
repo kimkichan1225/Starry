@@ -177,7 +177,8 @@ function WelcomePage() {
   const FALLBACK_FORTUNE = {
     message: language === 'ko' ? '오늘은 평온한 하루에요!' : 'A peaceful day awaits!',
     emotionImage: '/emotions/emotion-calm,zen,mindful.png',
-    luckyItem: language === 'ko' ? '따뜻한 차 한 잔' : 'a warm cup of tea',
+    todayColor: language === 'ko' ? '차분한 라벤더' : 'calm lavender',
+    todayColorHex: '#B57EDC',
   };
 
   const fetchFortune = async () => {
@@ -273,8 +274,8 @@ function WelcomePage() {
   // step 4 본문 템플릿
   const fortuneBody = fortune
     ? language === 'ko'
-      ? `오늘 ${formData.birthYear}년 ${formData.birthMonth}월 ${formData.birthDay}일생은 ${fortune.message}\n행운 아이템 '${fortune.luckyItem}'을(를) 가까이 두면 행운 지수가 올라갈 거예요!`
-      : `Born on ${formData.birthYear}-${formData.birthMonth}-${formData.birthDay}: ${fortune.message}\nKeep your lucky item '${fortune.luckyItem}' close to boost your luck today!`
+      ? `오늘 ${formData.birthYear}년 ${formData.birthMonth}월 ${formData.birthDay}일생은 ${fortune.message}\n오늘의 컬러 '${fortune.todayColor}'을(를) 가까이 두면 행운 지수가 올라갈 거예요!`
+      : `Born on ${formData.birthYear}-${formData.birthMonth}-${formData.birthDay}: ${fortune.message}\nKeep today's color '${fortune.todayColor}' close to boost your luck today!`
     : '';
 
   return (

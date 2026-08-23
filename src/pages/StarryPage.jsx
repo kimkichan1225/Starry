@@ -208,8 +208,16 @@ function StarryPage() {
                         <div className="flex justify-center gap-0.5">{renderStars(fortune.wealth)}</div>
                       </div>
                       <div className="bg-[#FFFFFF]/20 rounded-xl py-3 px-4 text-center">
-                        <p className="text-white text-sm font-semibold mb-1">{t.fortune.luckyItem}</p>
-                        <p className="text-white text-xs">{fortune.luckyItem}</p>
+                        <p className="text-white text-sm font-semibold mb-1">{t.fortune.todayColor}</p>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {fortune.todayColorHex && (
+                            <span
+                              className="w-3 h-3 rounded-full border border-white/40 shrink-0"
+                              style={{ backgroundColor: fortune.todayColorHex }}
+                            />
+                          )}
+                          <p className="text-white text-xs">{fortune.todayColor}</p>
+                        </div>
                       </div>
                     </div>
 
