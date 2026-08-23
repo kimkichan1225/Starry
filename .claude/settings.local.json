@@ -25,7 +25,14 @@
       "Bash(cmd /c \"taskkill /F /IM node.exe\")",
       "Bash(cmd /c \"wmic process where ProcessId=27240 get Name,ProcessId,CommandLine\")",
       "Bash(dir /s /b)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(ssh:*)",
+      "Bash(supabase link:*)",
+      "Bash(pg_dump:*)",
+      "Bash(find supabase:*)",
+      "Bash(npx vite:*)",
+      "PowerShell(git push *)"
     ]
   }
 }

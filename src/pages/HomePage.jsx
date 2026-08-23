@@ -359,6 +359,8 @@ function HomePage() {
   // 페이지 튜토리얼 (첫 로그인 시 1회만)
   const [showPageTutorial, setShowPageTutorial] = useState(false);
   const [pageTutorialStep, setPageTutorialStep] = useState(1);
+  const [tutorialLinkCopied, setTutorialLinkCopied] = useState(false);
+  const PAGE_TUTORIAL_TOTAL_STEPS = 5;
 
   useEffect(() => {
     if (!user) return;
@@ -378,11 +380,18 @@ function HomePage() {
   };
 
   const handlePageTutorialNext = () => {
-    if (pageTutorialStep < 3) {
+    if (pageTutorialStep < PAGE_TUTORIAL_TOTAL_STEPS) {
       setPageTutorialStep(pageTutorialStep + 1);
     } else {
       handleClosePageTutorial();
     }
+  };
+
+  const handleTutorialCopyLink = () => {
+    if (!user?.id) return;
+    navigator.clipboard.writeText(`${window.location.origin}/survey/${user.id}`);
+    setTutorialLinkCopied(true);
+    setTimeout(() => setTutorialLinkCopied(false), 1500);
   };
 
   // 밤하늘 제작 모드 상태
@@ -1290,96 +1299,97 @@ function HomePage() {
 
       {/* 페이지 튜토리얼 (첫 로그인 시) */}
       {showPageTutorial && (
-        <div
-          className="fixed inset-0 bg-black/60 z-[70] flex flex-col items-center cursor-pointer"
-          style={{ paddingTop: '35vh' }}
-          onClick={handlePageTutorialNext}
-        >
-          {/* 상단 우측 카운터/닫기 - 밤하늘 프레임 안쪽 */}
-          <div className="absolute top-28" style={{ right: 'calc(50% - 175px)' }}>
-            {pageTutorialStep < 3 ? (
-              <button
-                onClick={(e) => { e.stopPropagation(); handlePageTutorialNext(); }}
-                className="flex items-center gap-1 text-white text-sm"
-              >
-                {t.common.next}({pageTutorialStep}/3)
-                <span className="text-xs">&gt;&gt;</span>
-              </button>
-            ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); handleClosePageTutorial(); }}
-                className="flex items-center gap-1 text-white text-sm"
-              >
-                {t.home.pageTutorial.close}(3/3)
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center px-8">
+          <div className="relative bg-white rounded-3xl w-full max-w-[300px] pt-8 pb-6 px-7 flex flex-col items-center shadow-xl">
+            {/* 닫기 버튼 */}
+            <button
+              onClick={handleClosePageTutorial}
+              className="absolute top-4 right-4 text-[#B0B0B0] hover:text-black transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Step 1: 환영 */}
+            {pageTutorialStep === 1 && (
+              <div className="text-center w-full min-h-[272px] flex flex-col justify-center">
+                <h3 className="text-black font-bold text-xl">{nickname}{t.home.pageTutorial.step1Title}</h3>
+                <p className="text-[#727272] text-sm mt-3 whitespace-pre-line leading-relaxed">{t.home.pageTutorial.step1Desc}</p>
+              </div>
             )}
-          </div>
 
-          {/* Step 내용 */}
-          <div className="flex flex-col items-center px-8">
-            {/* Step 라벨 */}
-            <div className="bg-white px-5 py-1.5 rounded-full mb-6">
-              <span className="text-[#6155F5] font-bold text-lg">Step.{pageTutorialStep}</span>
-            </div>
-
-            {/* 설명 텍스트 */}
-            <div className="text-center text-white text-lg leading-relaxed whitespace-pre-line">
-              {pageTutorialStep === 1 && (
-                <>{t.home.pageTutorial.step1}<span className="font-bold">{t.home.pageTutorial.step1Bold}</span></>
-              )}
-              {pageTutorialStep === 2 && (
-                <>{t.home.pageTutorial.step2}<span className="font-bold">{t.home.pageTutorial.step2Bold}</span></>
-              )}
-              {pageTutorialStep === 3 && (
-                <>{t.home.pageTutorial.step3}<span className="font-bold">{t.home.pageTutorial.step3Bold}</span></>
-              )}
-            </div>
-
-          </div>
-
-          {/* 해당 Step의 하이라이트 버튼 (오버레이 위에 실제 버튼 위치와 동일) */}
-          <div className="fixed left-1/2 bottom-44 pointer-events-none" style={{ marginLeft: 'calc(185px - 60px)' }}>
-            <div className="flex flex-col gap-3">
-              {/* 공유 버튼 자리 */}
-              {pageTutorialStep === 1 ? (
-                <div className="relative">
-                  <span className="absolute bottom-14 left-1/2 -translate-x-1/2 text-white text-xs whitespace-nowrap">링크 복사</span>
-                  <div className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                  </div>
+            {/* Step 2: 링크 공유하기 */}
+            {pageTutorialStep === 2 && (
+              <div className="text-center w-full min-h-[272px] flex flex-col justify-center">
+                <h3 className="text-black font-bold text-xl">{t.home.pageTutorial.step2Title}</h3>
+                <p className="text-[#727272] text-sm mt-3 whitespace-pre-line leading-relaxed">{t.home.pageTutorial.step2Desc}</p>
+                <div className="flex justify-center my-3">
+                  <img src="/tutorial-step2-link.svg" alt="" className="h-20 w-auto" />
                 </div>
-              ) : <div className="w-12 h-12" />}
-              {/* 캡쳐 버튼 자리 */}
-              {pageTutorialStep === 3 ? (
-                <div className="relative">
-                  <span className="absolute right-16 top-1/2 -translate-y-1/2 text-white text-xs whitespace-nowrap">내 밤하늘 캡쳐하기</span>
-                  <div className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" d="M2 9V4a1 1 0 011-1h4" />
-                      <path strokeLinecap="round" d="M17 3h4a1 1 0 011 1v5" />
-                      <path strokeLinecap="round" d="M2 16v5a1 1 0 001 1h4" />
-                      <path strokeLinecap="round" d="M17 22h4a1 1 0 001-1v-5" />
-                      <circle cx="12" cy="12" r="3" strokeWidth="2" />
-                    </svg>
-                  </div>
+                <div className="w-full bg-[#F3F3F5] rounded-full px-4 py-2 mb-2 text-xs text-[#8A8A8A] truncate">
+                  {window.location.host}/survey/{user?.id}
                 </div>
-              ) : <div className="w-12 h-12" />}
-              {/* 편집 버튼 자리 */}
-              {pageTutorialStep === 2 ? (
-                <div className="relative">
-                  <span className="absolute right-16 top-1/2 -translate-y-1/2 text-white text-xs whitespace-nowrap">내 별자리 편집하기</span>
-                  <div className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleTutorialCopyLink(); }}
+                  className="w-full bg-[#E5E5EA] text-[#4A4A4A] text-sm font-bold rounded-full py-2.5"
+                >
+                  {tutorialLinkCopied ? t.common.linkCopied : t.home.pageTutorial.step2Copy}
+                </button>
+              </div>
+            )}
+
+            {/* Step 3: 별 수집하기 */}
+            {pageTutorialStep === 3 && (
+              <div className="text-center w-full min-h-[272px] flex flex-col justify-center">
+                <h3 className="text-black font-bold text-xl">{t.home.pageTutorial.step3Title}</h3>
+                <p className="text-[#727272] text-sm mt-3 whitespace-pre-line leading-relaxed">{t.home.pageTutorial.step3Desc}</p>
+                <div className="flex justify-center items-center h-[140px]">
+                  <img src="/tutorial-step3-hand.svg" alt="" className="h-28 w-auto" />
                 </div>
-              ) : <div className="w-12 h-12" />}
+              </div>
+            )}
+
+            {/* Step 4: 별자리 완성 */}
+            {pageTutorialStep === 4 && (
+              <div className="text-center w-full min-h-[272px] flex flex-col justify-center">
+                <h3 className="text-black font-bold text-xl">{t.home.pageTutorial.step4Title}</h3>
+                <p className="text-[#727272] text-sm mt-3 whitespace-pre-line leading-relaxed">{t.home.pageTutorial.step4Desc}</p>
+                <div className="flex justify-center items-center h-[140px]">
+                  <img src="/tutorial-step4-fox.svg" alt="" className="h-28 w-auto" />
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: 오늘의 운세 확인 */}
+            {pageTutorialStep === 5 && (
+              <div className="text-center w-full min-h-[272px] flex flex-col justify-center">
+                <h3 className="text-black font-bold text-xl">{t.home.pageTutorial.step5Title}</h3>
+                <p className="text-[#727272] text-sm mt-3 whitespace-pre-line leading-relaxed">{t.home.pageTutorial.step5Desc}</p>
+                <div className="flex justify-center items-center h-[140px]">
+                  <img src="/tutorial-step5-fortune.svg" alt="" className="h-28 w-auto" />
+                </div>
+              </div>
+            )}
+
+            {/* 다음/시작하기 버튼 */}
+            <button
+              onClick={handlePageTutorialNext}
+              className="w-full bg-[#6155F5] text-white font-bold rounded-full py-3 mt-5"
+            >
+              {pageTutorialStep === 1 || pageTutorialStep === PAGE_TUTORIAL_TOTAL_STEPS ? t.common.start : t.common.next}
+            </button>
+
+            {/* Pagination 인디케이터 */}
+            <div className="flex items-center gap-1.5 mt-4">
+              {Array.from({ length: PAGE_TUTORIAL_TOTAL_STEPS }, (_, i) => i + 1).map((step) => (
+                <div
+                  key={step}
+                  className={`rounded-full transition-all ${
+                    step === pageTutorialStep ? 'w-4 h-1.5 bg-[#6155F5]' : 'w-1.5 h-1.5 bg-[#D9D9D9]'
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </div>
