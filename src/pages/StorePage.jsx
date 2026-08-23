@@ -69,6 +69,16 @@ function StorePage() {
   const [message, setMessage] = useState(null);
   const [showAllStarItems, setShowAllStarItems] = useState(false);
   const confirmingRef = useRef(false);
+  const storeTopRef = useRef(null);
+  const chargeRef = useRef(null);
+
+  const scrollToStoreTop = () => {
+    storeTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const scrollToCharge = () => {
+    chargeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const showMessage = (text) => {
     setMessage(text);
@@ -253,16 +263,35 @@ function StorePage() {
       <div className="relative z-10 flex flex-col min-h-screen pb-24">
         {/* 상단 네비게이션 */}
         <nav className="px-6 py-5">
-          <div className="max-w-[370px] mx-auto flex items-center justify-between">
+          <div className="max-w-[370px] mx-auto">
             <div className="flex items-center gap-1">
               <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
               <span className="text-white font-bold text-2xl">별가루 스토어</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full shrink-0">
-              <span className="w-3.5 h-3.5 rounded-full bg-yellow-300" />
-              <span className="text-white text-sm font-bold">{balance ?? '-'}</span>
+
+            {/* 내 별가루 잔액 */}
+            <div className="flex items-center justify-center gap-2 bg-white/10 rounded-2xl py-3 mt-4">
+              <span className="text-white/70 text-sm">내 별가루</span>
+              <img src="/star-dust-icon.svg" alt="" className="w-5 h-5" />
+              <span className="text-white text-base font-bold">{balance ?? '-'}</span>
+            </div>
+
+            {/* 탭: 밤하늘 상점 / 충전소 */}
+            <div className="flex items-center border-b border-white/15 mt-4">
+              <button
+                onClick={scrollToStoreTop}
+                className="flex-1 text-center pb-2.5 text-white text-sm font-bold border-b-2 border-white"
+              >
+                밤하늘 상점
+              </button>
+              <button
+                onClick={scrollToCharge}
+                className="flex-1 text-center pb-2.5 text-white/50 text-sm font-bold hover:text-white/80 transition"
+              >
+                충전소
+              </button>
             </div>
           </div>
         </nav>
@@ -281,7 +310,7 @@ function StorePage() {
             ) : (
               <>
                 {/* 스타리 별 구매 */}
-                <section>
+                <section ref={storeTopRef}>
                   <h2 className="text-white font-bold text-lg flex items-center gap-1.5">
                     <StarPurchaseIcon /> 스타리 별 구매
                   </h2>
@@ -307,7 +336,7 @@ function StorePage() {
                                 </span>
                               )}
                               <span className="absolute top-2 right-2 flex items-center gap-1 text-white/80 text-xs">
-                                <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
+                                <img src="/star-dust-icon.svg" alt="" className="w-3.5 h-3.5" />
                                 {product.price_star_dust}
                               </span>
 
@@ -391,7 +420,7 @@ function StorePage() {
                             '구매 중...'
                           ) : (
                             <>
-                              <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
+                              <img src="/star-dust-icon.svg" alt="" className="w-3.5 h-3.5" />
                               {p.price_star_dust}개
                             </>
                           )}
@@ -404,7 +433,7 @@ function StorePage() {
                 <div className="border-t border-white/10" />
 
                 {/* 별가루 충전 */}
-                <section>
+                <section ref={chargeRef}>
                   <h2 className="text-white font-bold text-lg flex items-center gap-1.5">
                     <StoreCircleIcon /> 별가루 충전
                   </h2>
