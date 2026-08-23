@@ -31,7 +31,7 @@ function SidebarRow({ label, onClick }) {
   );
 }
 
-function SettingsSidebar({ isOpen, onClose, user, nickname }) {
+function SettingsSidebar({ isOpen, onClose, user, nickname, onCaptureImage }) {
   const navigate = useNavigate();
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
@@ -48,6 +48,11 @@ function SettingsSidebar({ isOpen, onClose, user, nickname }) {
     navigator.clipboard.writeText(surveyLink);
     setCopyMessage('링크가 복사되었습니다.');
     setTimeout(() => setCopyMessage(''), 2000);
+  };
+
+  const handleCaptureImage = () => {
+    onClose();
+    onCaptureImage?.();
   };
 
   const handleLogout = async () => {
@@ -96,6 +101,8 @@ function SettingsSidebar({ isOpen, onClose, user, nickname }) {
         {/* 내 이용 정보 */}
         <SectionLabel>내 이용 정보</SectionLabel>
         <div className="border-t border-gray-200" />
+
+        <SidebarRow label="내 밤하늘 이미지 저장" onClick={handleCaptureImage} />
 
         <button onClick={() => setIsQrOpen((v) => !v)} className="w-full flex items-center px-6 py-4">
           <span className="flex-1 text-left text-black text-[15px]">내 밤하늘 링크(QR)</span>

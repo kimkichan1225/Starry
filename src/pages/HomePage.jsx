@@ -1022,53 +1022,48 @@ function HomePage() {
           </div>
         )}
 
-        {/* 3D 밤하늘 버튼 - 상단 우측 고정 */}
-        <button
-          onClick={() => navigate('/sky')}
-          className={`absolute right-4 top-28 z-40 flex items-center justify-center hover:opacity-80 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        {/* 플로팅 버튼들: 3D 밤하늘 / 링크 공유 / 별자리 편집 */}
+        <div
+          className={`fixed left-1/2 bottom-44 z-40 flex flex-col items-center gap-2 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          style={{ marginLeft: 'calc(185px - 60px)' }}
         >
-          <img src="/3dicon.png" alt="3D 밤하늘" className="w-13 h-13" />
-        </button>
+          {/* 3D 밤하늘 */}
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={() => navigate('/sky')}
+              className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
+            >
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+              </svg>
+            </button>
+            <span className="text-white text-xs font-medium">3D 밤하늘</span>
+          </div>
 
-        {/* 플로팅 버튼들 */}
-        <div className={`fixed left-1/2 bottom-44 z-40 transition-opacity duration-300 ${isConstellationExpanded || isEditMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ marginLeft: 'calc(185px - 60px)' }}>
-          <div className="flex flex-col gap-3">
-          {/* 공유 버튼 */}
-          <button
-            onClick={handleShare}
-            className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
-          >
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-          </button>
-          {/* 이미지 캡쳐 버튼 */}
-          <button
-            onClick={handleCaptureImage}
-            className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              {/* 왼쪽 상단 모서리 */}
-              <path strokeLinecap="round" d="M2 9V4a1 1 0 011-1h4" />
-              {/* 오른쪽 상단 모서리 */}
-              <path strokeLinecap="round" d="M17 3h4a1 1 0 011 1v5" />
-              {/* 왼쪽 하단 모서리 */}
-              <path strokeLinecap="round" d="M2 16v5a1 1 0 001 1h4" />
-              {/* 오른쪽 하단 모서리 */}
-              <path strokeLinecap="round" d="M17 22h4a1 1 0 001-1v-5" />
-              {/* 중앙 카메라 렌즈 */}
-              <circle cx="12" cy="12" r="3" strokeWidth="2" />
-            </svg>
-          </button>
-          {/* 밤하늘 제작 버튼 */}
-          <button
-            onClick={handleEnterEditMode}
-            className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
+          {/* 링크 공유 */}
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={handleShare}
+              className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
+            >
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </button>
+            <span className="text-white text-xs font-medium">링크 공유</span>
+          </div>
+
+          {/* 별자리 편집 */}
+          <div className="flex flex-col items-center gap-1.5">
+            <button
+              onClick={handleEnterEditMode}
+              className="w-12 h-12 bg-[#6155F5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#5044d4] transition"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            <span className="text-white text-xs font-medium">별자리 편집</span>
           </div>
         </div>
 
@@ -1908,6 +1903,7 @@ function HomePage() {
         onClose={() => setIsSidebarOpen(false)}
         user={user}
         nickname={nickname}
+        onCaptureImage={handleCaptureImage}
       />
     </div>
   );
