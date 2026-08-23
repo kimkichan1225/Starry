@@ -177,8 +177,8 @@ function WelcomePage() {
   const FALLBACK_FORTUNE = {
     message: language === 'ko' ? '오늘은 평온한 하루에요!' : 'A peaceful day awaits!',
     emotionImage: '/emotions/emotion-calm,zen,mindful.png',
-    todayColor: language === 'ko' ? '차분한 라벤더' : 'calm lavender',
-    todayColorHex: '#B57EDC',
+    todayColor: language === 'ko' ? '파란색' : 'blue',
+    todayColorHex: '#3B82F6',
   };
 
   const fetchFortune = async () => {
