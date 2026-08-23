@@ -415,23 +415,23 @@ function StorePage() {
                         key={p.id}
                         onClick={() => handlePayment(p)}
                         disabled={payingId === p.id}
-                        className="relative rounded-2xl overflow-hidden border border-white/10 hover:brightness-110 transition disabled:opacity-50"
+                        className="relative rounded-2xl overflow-hidden border-2 border-[#6155F5] hover:brightness-110 transition disabled:opacity-50"
                       >
                         {p.tag && (
                           <span className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold bg-white text-[#6155F5] px-2 py-0.5 rounded-full shadow">
                             {p.tag}
                           </span>
                         )}
-                        <div className="bg-[#8B5CF6] px-4 py-3 flex items-center justify-center gap-1.5">
-                          <span className="text-white font-extrabold text-lg">{p.star_dust_amount}개</span>
+                        <div className="bg-[#6155F5] px-4 py-3 flex items-center justify-center gap-1.5">
+                          <span className="text-white font-semibold text-xl">{p.star_dust_amount}개</span>
                           {p.bonus_star_dust ? (
                             <span className="text-white text-[11px] font-bold bg-white/25 px-2 py-0.5 rounded-full">
                               +{p.bonus_star_dust}개
                             </span>
                           ) : null}
                         </div>
-                        <div className="px-4 py-3 border-t border-white/20">
-                          <span className="text-white font-bold text-base">{p.price_krw?.toLocaleString()}원</span>
+                        <div className="px-4 py-2 border-t border-white/20">
+                          <span className="text-white font-normal text-lg">{p.price_krw?.toLocaleString()}원</span>
                         </div>
                       </button>
                     ))}
