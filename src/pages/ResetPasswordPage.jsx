@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, isPasswordRecoveryPending, clearPasswordRecovery } from '../lib/supabase';
 import Footer from '../components/Footer';
 
 const ResetPasswordPage = () => {
@@ -14,21 +14,18 @@ const ResetPasswordPage = () => {
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    // Supabase auth 상태 변경 감지
+    // 일반 로그인 세션만으로는 비밀번호를 바꿀 수 없다.
+    // 재설정 메일 링크로 들어온 경우(PASSWORD_RECOVERY 이벤트 또는 링크 진입 기록)에만 허용한다.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         // 비밀번호 재설정 링크로 접근한 경우
         setIsValidSession(true);
         setCheckingSession(false);
-      } else if (event === 'SIGNED_IN' && session) {
-        // 세션이 있는 경우 (토큰이 유효한 경우)
+      } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && isPasswordRecoveryPending()) {
+        // 재설정 링크로 들어와 세션이 만들어진 경우
         setIsValidSession(true);
         setCheckingSession(false);
       } else if (event === 'INITIAL_SESSION') {
-        // 초기 세션 확인
-        if (session) {
-          setIsValidSession(true);
-        }
         setCheckingSession(false);
       }
     });
@@ -59,9 +56,9 @@ const ResetPasswordPage = () => {
         }
         setCheckingSession(false);
       } else {
-        // hash가 없으면 기존 세션 확인
+        // hash가 없으면 재설정 링크로 들어온 기록이 있을 때만 기존 세션을 인정한다
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        if (session && isPasswordRecoveryPending()) {
           setIsValidSession(true);
         }
         setCheckingSession(false);
@@ -106,7 +103,8 @@ const ResetPasswordPage = () => {
         throw new Error(updateError.message);
       }
 
-      // 로그아웃 (새 비밀번호로 다시 로그인하도록)
+      // 재설정 링크 진입 기록 정리 후 로그아웃 (새 비밀번호로 다시 로그인하도록)
+      clearPasswordRecovery();
       await supabase.auth.signOut();
 
       setIsComplete(true);

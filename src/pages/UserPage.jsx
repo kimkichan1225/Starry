@@ -333,6 +333,11 @@ function UserPage() {
 
   // 비밀번호 변경
   const handlePasswordChange = async () => {
+    if (!currentPassword) {
+      setError(t.user.enterCurrentPassword);
+      return;
+    }
+
     if (!newPassword || !confirmPassword) {
       setError(t.user.enterNewPassword);
       return;
@@ -353,6 +358,17 @@ function UserPage() {
     setSuccessMessage('');
 
     try {
+      // 현재 비밀번호 확인 (로그인된 기기를 가진 제3자가 비밀번호를 바꿔 계정을 가져가는 것 방지)
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+      if (verifyError) {
+        setError(t.user.currentPasswordIncorrect);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -364,7 +380,8 @@ function UserPage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      setError(error.message || t.user.passwordChangeFailed);
+      console.error('비밀번호 변경 실패:', error);
+      setError(error?.code === 'same_password' ? t.user.samePassword : t.user.passwordChangeFailed);
     } finally {
       setLoading(false);
     }
@@ -488,7 +505,8 @@ function UserPage() {
 
             </div>{/* end 아이디/닉네임/전화번호 */}
 
-            {/* 비밀번호 변경 */}
+            {/* 비밀번호 변경 (이메일 가입 계정만 — 소셜 가입 계정은 비밀번호가 없어 현재 비밀번호 확인이 불가) */}
+            {isEmailAccount && (
             <div className="mt-4 max-w-[260px] mx-auto">
               <label className="text-white text-base font-bold whitespace-nowrap block mb-3">{t.user.password}</label>
               <div className="space-y-2">
@@ -524,6 +542,7 @@ function UserPage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* 소셜 계정 연동 관리 */}
             <div className="mt-6 max-w-[260px] mx-auto">
