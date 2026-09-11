@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 import Footer from '../components/Footer';
+import { getStarImage } from '../utils/starImageCache';
+import { getDeviceId } from '../utils/deviceId';
 
 // 별 생성을 위한 설정
 const palette = [
@@ -135,6 +137,7 @@ function SurveyQuestionPage() {
   const [nightSkyStars, setNightSkyStars] = useState([]);
   const [nightSkyPositions, setNightSkyPositions] = useState([]);
   const [nightSkyConnections, setNightSkyConnections] = useState([]);
+  const [imageLoadTick, setImageLoadTick] = useState(0);
   const canvasRef = useRef(null);
   const sentCanvasRef = useRef(null);
   const nightSkyCanvasRef = useRef(null);
@@ -207,53 +210,46 @@ function SurveyQuestionPage() {
       setSelectedOption(newAnswers[questions[currentQuestion + 1]?.id] || null);
     } else {
       // 설문 완료 - 결과 화면으로 전환
-      console.log('설문 완료:', newAnswers);
       setFinalAnswers(newAnswers);
       setShowResult(true);
     }
   };
 
-  // 별 전송 함수
+  // 서버가 전송을 거절한 사유별 안내 문구
+  const getSendErrorMessage = (result) => {
+    switch (result?.error) {
+      case 'device_cooldown':
+        return t.survey.sendCooldown(Math.max(1, Math.ceil((result.retry_after_seconds || 60) / 60)));
+      case 'too_many_requests':
+        return t.survey.sendTooMany;
+      case 'invalid_name':
+        return t.survey.sendInvalidName;
+      case 'target_not_found':
+        return t.survey.sendTargetNotFound;
+      default:
+        return t.survey.sendFailed;
+    }
+  };
+
+  // 별 전송 함수 (입력 검증·별 속성 계산·밤하늘 슬롯 판정·전송 제한은 서버 함수에서 처리)
   const handleSend = async () => {
     if (!finalAnswers || sending) return;
 
     setSending(true);
     try {
-      // 사용자의 현재 밤하늘 별 개수와 max_sky_slots 확인
-      const { data: profileData } = await supabase
-        .from('public_profiles')
-        .select('max_sky_slots')
-        .eq('id', userId)
-        .single();
-
-      const maxSkySlots = profileData?.max_sky_slots || 11;
-
-      const { count: skyStarsCount } = await supabase
-        .from('stars')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('in_sky', true);
-
-      // 밤하늘 슬롯이 가득 찼으면 창고로, 아니면 밤하늘로
-      const inSky = (skyStarsCount || 0) < maxSkySlots;
-
-      const starData = {
-        user_id: userId,
-        surveyor_name: surveyorName,
-        star_color: optionToNumber(finalAnswers[1]),
-        star_points: optionToNumber(finalAnswers[2]),
-        star_size: optionToNumber(finalAnswers[3]),
-        star_saturation: optionToNumber(finalAnswers[4]),
-        star_sharpness: optionToNumber(finalAnswers[5]),
-        answers: finalAnswers,
-        in_sky: inSky,
-      };
-
-      const { error } = await supabase
-        .from('stars')
-        .insert([starData]);
+      const { data, error } = await supabase.rpc('submit_survey_star', {
+        p_target_user_id: userId,
+        p_surveyor_name: surveyorName,
+        p_answers: finalAnswers,
+        p_device_id: getDeviceId(),
+      });
 
       if (error) throw error;
+
+      if (!data?.success) {
+        alert(getSendErrorMessage(data));
+        return;
+      }
 
       // 전송 완료 화면으로 전환
       setShowSent(true);
@@ -356,18 +352,45 @@ function SurveyQuestionPage() {
 
   // 개별 별 그리기 함수 (밤하늘용)
   const drawStarOnNightSky = (ctx, star, x, y, scale = 1) => {
+    // 상점에서 구매한 이미지 기반 별 (star_color 등 절차적 속성이 없음)
+    if (star.image_url) {
+      const size = 30 * scale * 1.7;
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const glowR = size * 0.65;
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+      glow.addColorStop(0, 'rgba(255, 255, 227, 0.45)');
+      glow.addColorStop(0.5, 'rgba(255, 255, 227, 0.15)');
+      glow.addColorStop(1, 'rgba(255, 255, 227, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, glowR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      const img = getStarImage(star.image_url);
+      if (img) {
+        ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+      }
+      return;
+    }
+
     const colorIdx = star.star_color - 1;
     const pointsIdx = star.star_points - 1;
     const sizeIdx = star.star_size - 1;
     const satIdx = star.star_saturation;
     const sharpIdx = star.star_sharpness;
 
+    // 이미지도 절차적 속성도 없는 손상된 별 데이터는 건너뛴다 (화면 전체가 멈추는 것 방지)
+    const colorData = palette[colorIdx];
+    if (!colorData || !pointsMap[pointsIdx] || !sizeMap[sizeIdx]) return;
+
     const starPoints = pointsMap[pointsIdx];
     const baseSize = 30 * scale;
     const starOuter = baseSize * sizeMap[sizeIdx] * 2;
     const innerRatio = mapRange(sharpIdx, 1, 4, 0.5, 0.2);
     const starInner = starOuter * innerRatio;
-    const colorData = palette[colorIdx];
     const saturation = mapRange(satIdx, 1, 4, 80, 20);
     const lightness = 50;
     const starFill = `hsl(${colorData.h}, ${saturation}%, ${lightness}%)`;
@@ -391,27 +414,26 @@ function SurveyQuestionPage() {
     ctx.restore();
   };
 
-  // 밤하늘 데이터 가져오기
+  // 밤하늘 데이터 가져오기 (그리기용 컬럼과 연결선만 반환하는 서버 함수 사용)
   const fetchNightSkyData = async () => {
     try {
-      // 별 데이터 가져오기 (밤하늘에 있는 별만)
-      const { data: starsData, error: starsError } = await supabase
-        .from('stars')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('in_sky', true)
-        .order('created_at', { ascending: true });
+      const { data, error } = await supabase.rpc('get_survey_night_sky', {
+        p_target_user_id: userId,
+      });
 
-      if (starsError) throw starsError;
+      if (error) throw error;
 
-      setNightSkyStars(starsData || []);
+      const starsData = data?.stars || [];
+      const connectionsData = data?.connections || [];
+
+      setNightSkyStars(starsData);
 
       // 별 위치 계산
       const canvasWidth = 350;
       const canvasHeight = 500;
       const padding = 40;
 
-      const positions = (starsData || []).map((star, index) => {
+      const positions = starsData.map((star, index) => {
         if (star.position_x != null && star.position_y != null) {
           return { x: star.position_x, y: star.position_y };
         }
@@ -419,30 +441,28 @@ function SurveyQuestionPage() {
       });
       setNightSkyPositions(positions);
 
-      // 연결 데이터 가져오기
-      const { data: connectionsData, error: connError } = await supabase
-        .from('star_connections')
-        .select('*')
-        .eq('user_id', userId);
+      // 연결 데이터를 인덱스 기반으로 변환 (밤하늘에 없는 별과의 연결은 제외)
+      const loadedConnections = connectionsData.map(conn => {
+        const fromIndex = starsData.findIndex(s => s.id === conn.from_star_id);
+        const toIndex = starsData.findIndex(s => s.id === conn.to_star_id);
+        return { fromIndex, toIndex };
+      }).filter(conn => conn.fromIndex !== -1 && conn.toIndex !== -1);
 
-      if (connError) throw connError;
-
-      // 연결 데이터를 인덱스 기반으로 변환
-      if (connectionsData && connectionsData.length > 0 && starsData) {
-        const loadedConnections = connectionsData.map(conn => {
-          const fromIndex = starsData.findIndex(s => s.id === conn.from_star_id);
-          const toIndex = starsData.findIndex(s => s.id === conn.to_star_id);
-          return { fromIndex, toIndex };
-        }).filter(conn => conn.fromIndex !== -1 && conn.toIndex !== -1);
-
-        setNightSkyConnections(loadedConnections);
-      }
+      setNightSkyConnections(loadedConnections);
 
       setShowNightSky(true);
     } catch (error) {
       console.error('밤하늘 데이터 가져오기 실패:', error);
     }
   };
+
+  // 이미지 별은 비동기로 로드되므로 로드가 끝나면 밤하늘을 다시 그린다
+  useEffect(() => {
+    if (!showNightSky) return;
+    const handleImageLoaded = () => setImageLoadTick((tick) => tick + 1);
+    window.addEventListener('star-image-loaded', handleImageLoaded);
+    return () => window.removeEventListener('star-image-loaded', handleImageLoaded);
+  }, [showNightSky]);
 
   // 밤하늘 캔버스 그리기
   useEffect(() => {
@@ -476,7 +496,7 @@ function SurveyQuestionPage() {
         drawStarOnNightSky(ctx, star, x, y, 0.5);
       }
     });
-  }, [showNightSky, nightSkyStars, nightSkyPositions, nightSkyConnections]);
+  }, [showNightSky, nightSkyStars, nightSkyPositions, nightSkyConnections, imageLoadTick]);
 
   if (loading) {
     return (

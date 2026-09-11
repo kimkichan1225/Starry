@@ -160,6 +160,7 @@ function SurveyStartPage() {
                   <input
                     type="text"
                     placeholder={t.surveyStart.enterName}
+                    maxLength={20}
                     value={surveyorName}
                     onChange={(e) => {
                       setSurveyorName(e.target.value);

@@ -164,6 +164,10 @@ export const translations = {
       createMyNightSky: '내 밤하늘 만들기',
       nightSky: '님의 밤하늘',
       sendFailed: '별 전송에 실패했습니다. 다시 시도해주세요.',
+      sendCooldown: (minutes) => `이미 이 친구에게 별을 보냈어요. ${minutes}분 후에 다시 보낼 수 있어요.`,
+      sendTooMany: '지금 이 친구에게 별이 너무 많이 몰리고 있어요. 잠시 후 다시 시도해주세요.',
+      sendInvalidName: '이름은 1~20자로 입력해주세요.',
+      sendTargetNotFound: '존재하지 않는 설문 링크예요. 링크를 다시 확인해주세요.',
     },
 
     // 푸터
@@ -539,6 +543,10 @@ export const translations = {
       createMyNightSky: 'Create My Night Sky',
       nightSky: "'s Night Sky",
       sendFailed: 'Failed to send star. Please try again.',
+      sendCooldown: (minutes) => `You already sent a star to this friend. You can send another in ${minutes} min.`,
+      sendTooMany: 'Too many stars are being sent to this friend right now. Please try again in a moment.',
+      sendInvalidName: 'Please enter a name between 1 and 20 characters.',
+      sendTargetNotFound: "This survey link doesn't exist. Please check the link.",
     },
 
     // Footer
