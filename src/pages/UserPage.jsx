@@ -304,7 +304,7 @@ function UserPage() {
 
       if (error) throw error;
 
-      // 2. profiles 테이블 갱신 → public_profiles를 읽는 화면(설문/3D 밤하늘 등)에 반영
+      // 2. profiles 테이블 갱신 → 닉네임 조회 RPC를 쓰는 화면(설문/3D 밤하늘 등)에 반영
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ nickname: trimmed })

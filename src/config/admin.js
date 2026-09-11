@@ -1,11 +1,4 @@
-// 관리자 이메일 목록
-// 이 목록에 있는 이메일로 로그인하면 관리자 페이지로 이동합니다.
-export const ADMIN_EMAILS = [
-  'admin@admin.com',
-  // 필요시 추가 관리자 이메일을 여기에 추가
-];
-
 // 관리자 여부 체크 함수
-export const isAdminEmail = (email) => {
-  return ADMIN_EMAILS.includes(email);
-};
+// 서버에서만 설정할 수 있는 app_metadata.role 기준으로 판정한다. (DB 정책·함수의 public.is_admin()과 같은 기준)
+// 관리자 지정: auth.users.raw_app_meta_data에 "role": "admin" 추가 후 해당 계정 재로그인
+export const isAdminUser = (user) => user?.app_metadata?.role === 'admin';

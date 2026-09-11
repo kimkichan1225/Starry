@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { isAdminEmail } from '../config/admin';
+import { isAdminUser } from '../config/admin';
 
 const AuthContext = createContext({});
 
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
-        setIsAdmin(user ? isAdminEmail(user.email) : false);
+        setIsAdmin(isAdminUser(user));
         if (user?.user_metadata?.nickname) {
           setNickname(user.user_metadata.nickname);
         } else {
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      setIsAdmin(currentUser ? isAdminEmail(currentUser.email) : false);
+      setIsAdmin(isAdminUser(currentUser));
 
       if (currentUser?.user_metadata?.nickname) {
         setNickname(currentUser.user_metadata.nickname);

@@ -274,30 +274,6 @@ const SignupPage = () => {
     }
   };
 
-  // 이메일 중복 체크
-  const checkEmailDuplicate = async () => {
-    if (!formData.email) return;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) return;
-
-    try {
-      const { data: exists, error: checkError } = await supabase
-        .rpc('email_exists', { p_email: formData.email });
-
-      if (checkError) {
-        console.error('이메일 확인 오류:', checkError);
-        return;
-      }
-      if (exists) {
-        setEmailError(t.signup.emailDuplicate);
-      } else {
-        setEmailError('');
-      }
-    } catch (err) {
-      console.error('이메일 중복 체크 오류:', err);
-    }
-  };
-
   // SMS 발송 핸들러
   const handleSendSMS = async () => {
     if (!formData.phone || formData.phone.length !== 13) {
@@ -309,12 +285,7 @@ const SignupPage = () => {
     setError('');
 
     try {
-      const { data: phoneTaken, error: checkError } = await supabase
-        .rpc('phone_exists', { p_phone: formData.phone });
-
-      if (checkError) throw new Error(t.signup.phoneCheckError);
-      if (phoneTaken) throw new Error(t.signup.phoneDuplicate);
-
+      // 가입된 번호인지는 인증번호 확인(verify-sms) 응답으로 알려준다 (번호별 가입 여부 조회 방지)
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
         {
@@ -381,6 +352,11 @@ const SignupPage = () => {
 
       const data = await response.json();
 
+      // 이미 다른 계정에서 인증된 번호 (인증번호를 받은 본인에게만 알려준다)
+      if (data.success && data.verified && data.phoneRegistered) {
+        throw new Error(t.signup.phoneDuplicate);
+      }
+
       if (data.success && data.verified) {
         setSmsVerification(prev => ({
           ...prev,
@@ -405,13 +381,9 @@ const SignupPage = () => {
   };
 
   // Step 1 → Step 2 (환영합니다)
-  const handleStep1Next = () => {
+  const handleStep1Next = async () => {
     setError('');
 
-    if (emailError) {
-      setError(t.signup.emailDuplicate);
-      return;
-    }
     if (!smsVerification.verified || !smsVerification.verificationId) {
       setError(t.signup.phoneVerificationRequired);
       return;
@@ -426,6 +398,24 @@ const SignupPage = () => {
     }
     if (formData.password.length < 6) {
       setError(t.signup.passwordTooShort);
+      return;
+    }
+
+    // 이메일 중복 확인 (휴대폰 인증을 마친 뒤에만 조회 가능 — 로그인 없이 가입 여부를 대량 조회하는 것 방지)
+    const { data: emailCheck, error: emailCheckError } = await supabase.rpc('check_signup_email', {
+      p_email: formData.email,
+      p_verification_id: smsVerification.verificationId
+    });
+
+    if (emailCheckError || !emailCheck?.success) {
+      console.error('이메일 중복 확인 실패:', emailCheckError || emailCheck);
+      setError(emailCheck?.error === 'too_many_requests' ? t.signup.tooManyRequests : t.signup.emailCheckFailed);
+      return;
+    }
+
+    if (emailCheck.exists) {
+      setEmailError(t.signup.emailDuplicate);
+      setError(t.signup.emailDuplicate);
       return;
     }
 
@@ -590,7 +580,6 @@ const SignupPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                onBlur={checkEmailDuplicate}
                 placeholder="user@example.com"
                 required
                 className={`w-full px-4 py-[4px] text-center text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${

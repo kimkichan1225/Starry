@@ -149,18 +149,7 @@ const ProfileSetupPage = () => {
     setError('');
 
     try {
-      // 이미 다른 계정에서 인증된 전화번호인지 확인
-      const { data: phoneTaken, error: phoneError } = await supabase
-        .rpc('phone_exists', { p_phone: formData.phone });
-
-      if (phoneError) {
-        throw new Error('전화번호 확인 중 오류가 발생했습니다.');
-      }
-
-      if (phoneTaken) {
-        throw new Error('이미 가입된 전화번호입니다.');
-      }
-
+      // 가입된 번호인지는 인증번호 확인(verify-sms) 응답으로 알려준다 (번호별 가입 여부 조회 방지)
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
         {
@@ -226,6 +215,11 @@ const ProfileSetupPage = () => {
       );
 
       const data = await response.json();
+
+      // 이미 다른 계정에서 인증된 번호 (인증번호를 받은 본인에게만 알려준다)
+      if (data.success && data.verified && data.phoneRegistered) {
+        throw new Error('이미 가입된 전화번호입니다.');
+      }
 
       if (data.success && data.verified) {
         setSmsVerification(prev => ({

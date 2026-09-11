@@ -146,16 +146,14 @@ function SurveyQuestionPage() {
   useEffect(() => {
     const fetchTargetUser = async () => {
       try {
-        const { data, error } = await supabase
-          .from('public_profiles')
-          .select('nickname')
-          .eq('id', userId)
-          .single();
+        // 전체 회원 목록 대신 id를 알 때만 닉네임을 조회하는 서버 함수 사용
+        const { data: nickname, error } = await supabase
+          .rpc('get_public_nickname', { p_user_id: userId });
 
         if (error) throw error;
 
-        if (data?.nickname) {
-          setTargetUserNickname(data.nickname);
+        if (nickname) {
+          setTargetUserNickname(nickname);
         }
       } catch (error) {
         console.error('Error fetching user:', error);

@@ -27,21 +27,8 @@ const FindPasswordPage = () => {
     setError('');
 
     try {
-      // 이메일로 사용자 존재 여부 확인
-      const { data: exists, error: userError } = await supabase
-        .rpc('email_exists', { p_email: email });
-
-      if (userError) {
-        throw new Error('이메일 확인 중 오류가 발생했습니다.');
-      }
-
-      if (!exists) {
-        setError('가입정보가 없는 이메일입니다.');
-        setLoading(false);
-        return;
-      }
-
-      // 비밀번호 재설정 이메일 발송
+      // 가입 여부와 관계없이 같은 응답을 보여준다 (이메일별 가입 여부 조회 방지)
+      // 비밀번호 재설정 이메일 발송 (가입된 이메일일 때만 실제로 발송됨)
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -123,10 +110,10 @@ const FindPasswordPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                 </svg>
                 <p className="text-white text-lg font-medium mb-2">
-                  비밀번호 재설정 링크가<br />이메일로 발송되었습니다.
+                  가입된 이메일이라면<br />비밀번호 재설정 링크를 보냈어요.
                 </p>
                 <p className="text-white/70 text-sm">
-                  이메일을 확인해주세요.
+                  메일이 오지 않으면 입력한 이메일을 다시 확인해주세요.
                 </p>
               </div>
 

@@ -21,9 +21,6 @@ function json(body: unknown, status: number) {
 // 소셜 가입자가 입력해야 하는 확인 문구 (한국어/영어 화면)
 const CONFIRM_TEXTS = ['탈퇴', 'DELETE'];
 
-// 관리자 계정은 이 경로로 탈퇴할 수 없다 (src/config/admin.js와 동일)
-const ADMIN_EMAILS = ['admin@admin.com'];
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -47,7 +44,8 @@ serve(async (req) => {
       return json({ success: false, error: 'unauthorized' }, 401);
     }
 
-    if (user.email && ADMIN_EMAILS.includes(user.email)) {
+    // 관리자 계정은 이 경로로 탈퇴할 수 없다 (서버에서만 설정 가능한 app_metadata.role 기준)
+    if (user.app_metadata?.role === 'admin') {
       return json({ success: false, error: 'forbidden' }, 403);
     }
 

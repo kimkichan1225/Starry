@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { isAdminEmail } from '../config/admin';
+import { isAdminUser } from '../config/admin';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 import Footer from '../components/Footer';
@@ -21,7 +21,7 @@ const LoadingPage = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        if (isAdminEmail(session.user.email)) {
+        if (isAdminUser(session.user)) {
           navigate('/admin', { replace: true });
         } else {
           navigate('/home', { replace: true });
@@ -54,7 +54,7 @@ const LoadingPage = () => {
 
       if (data.user) {
         // 관리자인 경우 관리자 페이지로 이동
-        if (isAdminEmail(data.user.email)) {
+        if (isAdminUser(data.user)) {
           navigate('/admin');
         } else {
           navigate('/home');

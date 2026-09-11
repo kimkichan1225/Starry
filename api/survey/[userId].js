@@ -24,22 +24,25 @@ export default async function handler(req, res) {
   const host = req.headers.host;
   const origin = `https://${host}`;
 
-  // 대상자 닉네임 조회 (public_profiles)
+  // 대상자 닉네임 조회 (id를 알 때만 닉네임을 반환하는 get_public_nickname RPC)
   let nickname = '';
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/public_profiles?id=eq.${encodeURIComponent(userId)}&select=nickname`,
-      {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(userId));
+  if (isUuid) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_public_nickname`, {
+        method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
         },
-      }
-    );
-    const rows = await r.json();
-    nickname = rows?.[0]?.nickname || '';
-  } catch {
-    // 조회 실패 시 닉네임 없이 기본 문구로 폴백
+        body: JSON.stringify({ p_user_id: userId }),
+      });
+      const value = await r.json();
+      nickname = typeof value === 'string' ? value : '';
+    } catch {
+      // 조회 실패 시 닉네임 없이 기본 문구로 폴백
+    }
   }
 
   const title = nickname

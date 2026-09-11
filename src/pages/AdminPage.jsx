@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { ADMIN_EMAILS } from '../config/admin';
 
 const AdminPage = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -98,7 +97,8 @@ const AdminPage = () => {
       return;
     }
 
-    if (!ADMIN_EMAILS.includes(user.email)) {
+    // 서버에서만 설정 가능한 app_metadata.role 기준 (AuthContext의 isAdmin)
+    if (!isAdmin) {
       navigate('/starry');
       return;
     }
@@ -106,7 +106,7 @@ const AdminPage = () => {
     setLoading(false);
     fetchStats();
     fetchSettings();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isAdmin, navigate]);
 
   // 설정 불러오기
   const fetchSettings = async () => {

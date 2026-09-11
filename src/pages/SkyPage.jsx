@@ -951,11 +951,9 @@ export default function SkyPage() {
         // user_id 목록 추출
         const userIds = [...new Set(rows.map(item => item.user_id))];
 
-        // profiles에서 닉네임 조회
+        // 별자리를 등록한 회원의 닉네임만 조회 (전체 회원 목록은 조회할 수 없음)
         const { data: profilesData } = await supabase
-          .from('public_profiles')
-          .select('id, nickname')
-          .in('id', userIds);
+          .rpc('get_constellation_nicknames', { p_user_ids: userIds });
 
         // user_id -> nickname 맵 생성
         const nicknameMap = {};

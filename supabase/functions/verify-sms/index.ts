@@ -97,9 +97,22 @@ serve(async (req) => {
       );
     }
     if (status === 'success') {
+      // 이미 다른 계정에서 인증된 번호인지 함께 알려준다.
+      // (인증번호를 받은 번호 소유자에게만 알려주므로, 로그인 없이 가입 여부를 대량 조회하는 데 쓰일 수 없다)
+      const { data: phoneRegistered, error: phoneCheckError } = await admin.rpc('phone_exists', { p_phone: phone });
+      if (phoneCheckError) {
+        console.error('phone_exists rpc error:', phoneCheckError);
+      }
+
       // verificationId는 confirm-phone에서 단회성으로 소비되는 비밀 식별자(추측 불가 UUID).
       return json(
-        { success: true, verified: true, verificationId: result.id, message: '휴대전화 인증이 완료되었습니다.' },
+        {
+          success: true,
+          verified: true,
+          verificationId: result.id,
+          phoneRegistered: phoneRegistered === true,
+          message: '휴대전화 인증이 완료되었습니다.',
+        },
         200
       );
     }

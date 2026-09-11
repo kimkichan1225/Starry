@@ -408,6 +408,8 @@ export const translations = {
       signupFailed: '회원가입에 실패했습니다.',
       smsFailed: 'SMS 발송에 실패했습니다.',
       snsComingSoon: 'SNS 연동 기능은 추후 업데이트 예정입니다.',
+      emailCheckFailed: '이메일 확인에 실패했습니다. 휴대전화 인증을 다시 진행해주세요.',
+      tooManyRequests: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
     },
   },
 
@@ -820,6 +822,8 @@ export const translations = {
       signupFailed: 'Sign up failed.',
       smsFailed: 'Failed to send SMS.',
       snsComingSoon: 'SNS linking will be available soon.',
+      emailCheckFailed: 'Failed to check the email. Please verify your phone again.',
+      tooManyRequests: 'Too many requests. Please try again later.',
     },
   },
 };

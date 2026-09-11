@@ -47,20 +47,7 @@ const FindEmailPage = () => {
     setError('');
 
     try {
-      // 전화번호로 가입된 사용자 확인 (존재 여부만)
-      const { data: phoneTaken, error: checkError } = await supabase
-        .rpc('phone_exists', { p_phone: phone });
-
-      if (checkError) {
-        throw new Error('전화번호 확인 중 오류가 발생했습니다.');
-      }
-
-      if (!phoneTaken) {
-        setError('가입정보가 없는 번호입니다.');
-        setLoading(false);
-        return;
-      }
-
+      // 가입 여부는 인증번호 확인 후에만 알려준다 (로그인 없이 번호별 가입 여부를 조회하는 것 방지)
       // SMS 인증번호 발송
       const response = await fetch(
         `https://aifioxdvjtxwxzxgdugs.supabase.co/functions/v1/send-sms`,
