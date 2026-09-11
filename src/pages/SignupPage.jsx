@@ -2,17 +2,27 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getFunctionErrorCode } from '../utils/functionError';
+import {
+  EMPTY_CONSENT,
+  MIN_SIGNUP_AGE,
+  isConsentComplete,
+  isOldEnough,
+  isValidBirthdate,
+  recordConsent
+} from '../utils/consent';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 import Footer from '../components/Footer';
+import ConsentChecklist from '../components/ConsentChecklist';
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const { refreshConsent } = useAuth();
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language];
   const [currentStep, setCurrentStep] = useState(1); // 1~5 단계
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [consent, setConsent] = useState(EMPTY_CONSENT);
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -206,7 +216,9 @@ const SignupPage = () => {
   };
 
   // 년/월/일 옵션 생성
-  const years = Array.from({ length: 100 }, (_, i) => String(2025 - i));
+  // 만 14세 미만이 되는 연도는 선택할 수 없게 한다 (정확한 만 나이는 가입 직전에 다시 확인)
+  const maxBirthYear = new Date().getFullYear() - MIN_SIGNUP_AGE;
+  const years = Array.from({ length: 100 }, (_, i) => String(maxBirthYear - i));
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
 
@@ -404,8 +416,8 @@ const SignupPage = () => {
       setError(t.signup.phoneVerificationRequired);
       return;
     }
-    if (!agreePrivacy) {
-      setError(t.signup.privacyRequired);
+    if (!isConsentComplete(consent)) {
+      setError(t.consent.required);
       return;
     }
     if (formData.password !== formData.passwordConfirm) {
@@ -427,6 +439,16 @@ const SignupPage = () => {
 
     try {
       const birthdate = `${formData.birthYear}-${formData.birthMonth}-${formData.birthDay}`;
+
+      // 계정이 만들어지기 전에 생년월일(존재하는 날짜, 만 14세 이상)을 확인한다
+      if (!isValidBirthdate(birthdate)) {
+        setError(t.consent.invalidBirthdate);
+        return;
+      }
+      if (!isOldEnough(birthdate)) {
+        setError(t.consent.under14);
+        return;
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -477,6 +499,14 @@ const SignupPage = () => {
         if (profileError) {
           console.error('profiles 저장 오류:', profileError);
         }
+
+        // 약관·개인정보 동의 기록 (서버 시각으로 저장, 만 14세 미만이면 서버가 거절)
+        const consentResult = await recordConsent();
+        if (!consentResult?.success) {
+          console.error('동의 기록 실패:', consentResult);
+          throw new Error(consentResult?.error === 'under_14' ? t.consent.under14 : t.consent.saveFailed);
+        }
+        await refreshConsent();
 
         setCurrentStep(5); // 가입완료 화면
       }
@@ -666,50 +696,9 @@ const SignupPage = () => {
               </div>
             </div>
 
-            {/* 개인정보 수집 및 활용 동의 */}
+            {/* 필수 동의 (이용약관 / 개인정보 수집·이용 / 만 14세 이상) */}
             <div className="!mt-4">
-              <div
-                className="flex items-center justify-between text-white/80 text-xs cursor-pointer mb-2"
-                onClick={() => setShowPrivacyPolicy(!showPrivacyPolicy)}
-              >
-                <span>{t.signup.privacyAgreement}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${showPrivacyPolicy ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-
-              {/* 약관 내용 */}
-              {showPrivacyPolicy && (
-                <div className="bg-white rounded-lg p-4 mb-3 text-[#727272]/70 text-[10px] leading-relaxed max-h-40 overflow-y-auto">
-                  <p className="font-semibold mb-3">[개인정보처리방침]<br />
-                    본 개인정보처리방침은 회원가입 및 로그인 기능을 제공하는 개인 웹사이트(이하 "사이트")가 이용자의 개인정보를 어떻게 수집·이용·보관·파기하는지에 대해 설명합니다.
-                  </p>
-                  <p className="font-semibold mb-3">
-                    1. 수집하는 개인정보 항목<br />
-                    사이트는 다음과 같은 개인정보를 수집할 수 있습니다.<br />
-                    ① 회원가입 및 로그인 시(아이디/비밀번호 (암호화 저장)/휴대폰 번호/이메일 주소 (선택))<br />
-                    ② 서비스 이용 과정에서 자동 수집(IP 주소/쿠키(Cookie)/방문 기록/기기 정보 (브라우저, OS 등))<br />
-                    ③ 문의 시(이름/이메일 주소)
-                  </p>
-                  <p className="font-semibold mb-3">... (약관 내용 생략) ...</p>
-                </div>
-              )}
-
-              {/* 동의 체크박스 */}
-              <label className="flex items-center justify-end space-x-2 text-white/80 text-xs cursor-pointer">
-                <span>{t.signup.agree}</span>
-                <input
-                  type="checkbox"
-                  checked={agreePrivacy}
-                  onChange={(e) => setAgreePrivacy(e.target.checked)}
-                  className="w-4 h-4 rounded border-purple-500 text-purple-600 focus:ring-purple-600"
-                />
-              </label>
+              <ConsentChecklist consent={consent} onChange={setConsent} />
             </div>
 
             {/* 다음 버튼 */}

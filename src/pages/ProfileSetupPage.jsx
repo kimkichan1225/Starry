@@ -3,11 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getFunctionErrorCode } from '../utils/functionError';
+import {
+  EMPTY_CONSENT,
+  getMaxBirthdate,
+  isConsentComplete,
+  isOldEnough,
+  isValidBirthdate,
+  recordConsent
+} from '../utils/consent';
 import Footer from '../components/Footer';
+import ConsentChecklist from '../components/ConsentChecklist';
 
 const ProfileSetupPage = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isProfileComplete } = useAuth();
+  const { user, loading: authLoading, isProfileComplete, hasConsented, refreshConsent } = useAuth();
+  const [consent, setConsent] = useState(EMPTY_CONSENT);
   const initializedRef = useRef(false);
 
   // 폼 상태
@@ -257,8 +267,23 @@ const ProfileSetupPage = () => {
       return;
     }
 
+    if (!isValidBirthdate(formData.birthdate)) {
+      setError('올바른 생년월일을 입력해주세요.');
+      return;
+    }
+
+    if (!isOldEnough(formData.birthdate)) {
+      setError('만 14세 미만은 가입할 수 없습니다.');
+      return;
+    }
+
     if (!smsVerification.verified) {
       setError('휴대전화 인증을 완료해주세요.');
+      return;
+    }
+
+    if (!hasConsented && !isConsentComplete(consent)) {
+      setError('필수 항목에 모두 동의해주세요.');
       return;
     }
 
@@ -319,6 +344,20 @@ const ProfileSetupPage = () => {
         }, { onConflict: 'id' });
 
       if (profileError) throw profileError;
+
+      // 약관·개인정보 동의 기록 (이미 동의한 회원은 건너뜀)
+      if (!hasConsented) {
+        const consentResult = await recordConsent();
+        if (!consentResult?.success) {
+          console.error('동의 기록 실패:', consentResult);
+          throw new Error(
+            consentResult?.error === 'under_14'
+              ? '만 14세 미만은 가입할 수 없습니다.'
+              : '동의 내용 저장에 실패했습니다. 다시 시도해주세요.'
+          );
+        }
+        await refreshConsent();
+      }
 
       setSuccessMessage('프로필 설정이 완료되었습니다!');
       setTimeout(() => {
@@ -404,6 +443,7 @@ const ProfileSetupPage = () => {
               <input
                 type="date"
                 name="birthdate"
+                max={getMaxBirthdate()}
                 value={formData.birthdate}
                 onChange={handleChange}
                 required
@@ -495,6 +535,11 @@ const ProfileSetupPage = () => {
                 )}
               </div>
             </div>
+
+            {/* 필수 동의 (아직 동의 기록이 없는 회원만) */}
+            {!hasConsented && (
+              <ConsentChecklist consent={consent} onChange={setConsent} />
+            )}
 
             {/* 완료 버튼 */}
             <button

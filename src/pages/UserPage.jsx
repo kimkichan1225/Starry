@@ -7,6 +7,7 @@ import NavBar from '../components/NavBar';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 import { syncSkyConstellation } from '../utils/syncSkyConstellation';
+import { getFunctionErrorCode } from '../utils/functionError';
 import Footer from '../components/Footer';
 
 function UserPage() {
@@ -56,6 +57,62 @@ function UserPage() {
 
   // 소셜 연동 관련 상태
   const [socialLoading, setSocialLoading] = useState(false);
+
+  // 회원 탈퇴 관련 상태
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  // 이메일 가입자는 비밀번호로, 소셜 가입자는 확인 문구로 본인 확인
+  const isEmailAccount = user?.app_metadata?.provider === 'email';
+
+  const closeDeleteModal = () => {
+    if (deleteLoading) return;
+    setShowDeleteModal(false);
+    setDeletePassword('');
+    setDeleteConfirmText('');
+    setDeleteError('');
+  };
+
+  // 회원 탈퇴 (즉시 삭제, 복구 불가)
+  const handleDeleteAccount = async () => {
+    if (deleteLoading) return;
+    setDeleteError('');
+
+    if (isEmailAccount && !deletePassword) {
+      setDeleteError(t.user.deletePasswordRequired);
+      return;
+    }
+    if (!isEmailAccount && deleteConfirmText.trim() !== t.user.deleteConfirmWord) {
+      setDeleteError(t.user.deleteConfirmRequired(t.user.deleteConfirmWord));
+      return;
+    }
+
+    setDeleteLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: isEmailAccount
+          ? { password: deletePassword }
+          : { confirmText: deleteConfirmText.trim() },
+      });
+
+      if (error || !data?.success) {
+        const errorCode = await getFunctionErrorCode(data, error);
+        setDeleteError(errorCode === 'invalid_password' ? t.user.deleteInvalidPassword : t.user.deleteFailed);
+        return;
+      }
+
+      // 계정이 이미 삭제됐으므로 서버 호출 없이 이 기기의 세션만 정리한다
+      await supabase.auth.signOut({ scope: 'local' });
+      navigate('/', { replace: true });
+    } catch (err) {
+      console.error('회원 탈퇴 실패:', err);
+      setDeleteError(t.user.deleteFailed);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   // 구글 연동 상태 확인
   const isGoogleSignup = user?.app_metadata?.provider === 'google'; // 구글로 가입했는지
@@ -591,12 +648,73 @@ function UserPage() {
                 {t.common.logout}
               </button>
             </div>
+
+            {/* 회원 탈퇴 */}
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="text-white/50 text-xs underline hover:text-white/80 transition-colors"
+              >
+                {t.user.deleteAccount}
+              </button>
+            </div>
           </div>
 
           {/* 푸터 */}
           <Footer />
         </div>
       </div>
+
+      {/* 회원 탈퇴 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+          <div className="w-full max-w-[340px] rounded-2xl bg-[#1E1B3A] p-6 text-white space-y-4">
+            <h2 className="text-lg font-bold">{t.user.deleteTitle}</h2>
+            <ul className="list-disc pl-4 space-y-1 text-xs text-white/80 leading-relaxed">
+              <li>{t.user.deleteNotice1}</li>
+              <li>{t.user.deleteNotice2}</li>
+              <li>{t.user.deleteNotice3}</li>
+            </ul>
+
+            {isEmailAccount ? (
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder={t.user.deletePasswordPlaceholder}
+                className="w-full px-4 py-2.5 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+              />
+            ) : (
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={t.user.deleteConfirmPlaceholder(t.user.deleteConfirmWord)}
+                className="w-full px-4 py-2.5 text-sm rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+              />
+            )}
+
+            {deleteError && <p className="text-red-400 text-xs">{deleteError}</p>}
+
+            <div className="flex gap-2">
+              <button
+                onClick={closeDeleteModal}
+                disabled={deleteLoading}
+                className="flex-1 py-2.5 rounded-lg bg-white/10 text-sm hover:bg-white/20 transition-colors disabled:opacity-50"
+              >
+                {t.user.deleteCancel}
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="flex-1 py-2.5 rounded-lg bg-red-500 text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleteLoading ? t.user.deleting : t.user.deleteSubmit}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 네비게이션 바 */}
       <NavBar />
