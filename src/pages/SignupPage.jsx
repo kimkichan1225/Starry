@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { getFunctionErrorCode } from '../utils/functionError';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../locales/translations';
 import Footer from '../components/Footer';
@@ -433,9 +434,8 @@ const SignupPage = () => {
         options: {
           data: {
             nickname: formData.nickname,
-            birthdate: birthdate,
-            phone: formData.phone
-            // phone_verified는 클라이언트가 쓰지 않는다. 아래 confirm-phone이 서버에서 app_metadata에 확정한다.
+            birthdate: birthdate
+            // 전화번호·인증 여부는 클라이언트가 쓰지 않는다. 아래 confirm-phone이 서버에서 확정한다.
           }
         }
       });
@@ -452,7 +452,12 @@ const SignupPage = () => {
         if (confirmError || !confirmData?.success) {
           // 인증 확정 실패 시 "가입 완료"로 진행하지 않는다(미인증 계정 방지).
           console.error('휴대전화 인증 확정 실패:', confirmError || confirmData);
-          throw new Error('휴대전화 인증 확정에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          const errorCode = await getFunctionErrorCode(confirmData, confirmError);
+          throw new Error(
+            errorCode === 'phone_taken'
+              ? t.signup.phoneDuplicate
+              : '휴대전화 인증 확정에 실패했습니다. 잠시 후 다시 시도해주세요.'
+          );
         }
 
         // 갱신된 app_metadata를 현재 세션에 반영
@@ -460,14 +465,13 @@ const SignupPage = () => {
         if (refreshError) console.error('세션 갱신 실패:', refreshError);
 
         // profiles 테이블에도 저장 (upsert: 있으면 업데이트, 없으면 insert)
+        // 전화번호는 confirm-phone, 이메일은 가입 트리거가 서버에서 기록한다.
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             id: data.user.id,
-            email: formData.email,
             nickname: formData.nickname,
-            birthdate: birthdate,
-            phone: formData.phone
+            birthdate: birthdate
           }, { onConflict: 'id' });
 
         if (profileError) {

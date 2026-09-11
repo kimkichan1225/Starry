@@ -103,7 +103,60 @@ serve(async (req) => {
 
     const phone = consumed.phone_number;
 
-    // 4. 사용자 식별 정보(app_metadata)에 서버가 직접 인증 상태를 기록한다.
+    // 실패 시 소비를 취소해 재시도가 가능하도록 한다(best-effort).
+    const restoreConsumption = () =>
+      admin.from('phone_verifications').update({ consumed_at: null }).eq('id', verificationId);
+
+    const phoneTakenResponse = () =>
+      json({ success: false, error: 'phone_taken', message: '이미 가입된 전화번호입니다.' }, 409);
+
+    // 4. profiles.phone은 서버만 기록한다 (번호 중복 가입 확인의 기준 값).
+    //    같은 번호가 다른 계정에 있으면 → 그 계정이 서버 인증까지 마친 번호면 거절, 미인증 선점이면 해제한다.
+    const { data: holder, error: holderError } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('phone', phone)
+      .neq('id', user.id)
+      .maybeSingle();
+
+    if (holderError) {
+      await restoreConsumption();
+      console.error('confirm-phone holder lookup error:', holderError);
+      throw new Error('인증 상태 저장에 실패했습니다.');
+    }
+
+    if (holder) {
+      const { data: holderData } = await admin.auth.admin.getUserById(holder.id);
+      const holderMeta = holderData?.user?.app_metadata ?? {};
+
+      if (String(holderMeta.phone_verified) === 'true' && holderMeta.phone === phone) {
+        await restoreConsumption();
+        return phoneTakenResponse();
+      }
+
+      await admin.from('profiles').update({ phone: null }).eq('id', holder.id);
+    }
+
+    const { data: ownProfile } = await admin
+      .from('profiles')
+      .select('phone')
+      .eq('id', user.id)
+      .maybeSingle();
+    const previousPhone = ownProfile?.phone ?? null;
+
+    const { error: profileError } = await admin
+      .from('profiles')
+      .upsert({ id: user.id, phone }, { onConflict: 'id' });
+
+    if (profileError) {
+      await restoreConsumption();
+      // 동시에 같은 번호로 인증한 다른 계정이 먼저 기록한 경우 (UNIQUE 위반)
+      if (profileError.code === '23505') return phoneTakenResponse();
+      console.error('confirm-phone profile update error:', profileError);
+      throw new Error('인증 상태 저장에 실패했습니다.');
+    }
+
+    // 5. 사용자 식별 정보(app_metadata)에 서버가 직접 인증 상태를 기록한다.
     //    app_metadata는 클라이언트가 수정할 수 없는 영역이다. 기존 값은 명시적으로 보존한다.
     const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
       app_metadata: {
@@ -114,11 +167,9 @@ serve(async (req) => {
     });
 
     if (updateError) {
-      // 롤백: 소비를 취소해 재시도가 가능하도록 한다(best-effort).
-      await admin
-        .from('phone_verifications')
-        .update({ consumed_at: null })
-        .eq('id', verificationId);
+      // 롤백: 소비 취소 + 프로필 전화번호 원복 (best-effort)
+      await restoreConsumption();
+      await admin.from('profiles').update({ phone: previousPhone }).eq('id', user.id);
 
       console.error('confirm-phone updateUser error:', updateError);
       throw new Error('인증 상태 저장에 실패했습니다.');

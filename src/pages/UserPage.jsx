@@ -425,7 +425,7 @@ function UserPage() {
             <div className="flex items-center mt-2">
               <label className="text-white text-base font-bold whitespace-nowrap">{t.user.phone}</label>
               <div className="flex-1 ml-4 pr-2 pt-1 pb-1 text-white text-base max-w-[130px]">
-                {user?.user_metadata?.phone || '010-xxxx-xxxx'}
+                {user?.app_metadata?.phone || '010-xxxx-xxxx'}
               </div>
             </div>
 

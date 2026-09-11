@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { getFunctionErrorCode } from '../utils/functionError';
 import Footer from '../components/Footer';
 
 const ProfileSetupPage = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isProfileComplete } = useAuth();
+  const initializedRef = useRef(false);
 
   // 폼 상태
   const [formData, setFormData] = useState({
@@ -21,10 +23,6 @@ const ProfileSetupPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [checkingProfile, setCheckingProfile] = useState(true);
 
-  // 기존 회원 여부 상태
-  const [isExistingUser, setIsExistingUser] = useState(false);
-  const [existingProfileId, setExistingProfileId] = useState(null);
-
   // SMS 인증 상태
   const [smsVerification, setSmsVerification] = useState({
     sent: false,
@@ -36,73 +34,46 @@ const ProfileSetupPage = () => {
     verificationId: null
   });
 
-  // 프로필 완성 여부 체크 및 기존 데이터 불러오기
+  // 프로필 완성 여부 체크 및 기존 데이터 불러오기 (화면 진입 시 1회)
+  // 제출 도중 세션 갱신으로 user가 바뀌어도 입력값을 덮어쓰거나 먼저 이동하지 않도록 1회만 수행한다.
   useEffect(() => {
-    const checkProfile = async () => {
-      if (authLoading) return;
+    if (authLoading || initializedRef.current) return;
 
-      if (!user) {
-        navigate('/');
-        return;
-      }
+    if (!user) {
+      navigate('/');
+      return;
+    }
 
-      const metadata = user.user_metadata || {};
-      // phone_verified는 서버가 확정한 app_metadata 값만 신뢰한다.
-      const appMetadata = user.app_metadata || {};
+    // 라우트 가드(RequireAuth)와 같은 기준으로 판단해야 설정 화면과 홈 사이를 무한히 오가지 않는다.
+    if (isProfileComplete) {
+      navigate('/home');
+      return;
+    }
 
-      // 간편 로그인 연동이 완료되고 서버가 휴대전화 인증을 확정한 경우에만 /home으로 이동
-      // (social_linked는 클라이언트가 수정 가능하므로 단독으로 게이트를 통과시키지 않는다.)
-      if ((metadata.social_linked || metadata.google_linked) && appMetadata.phone_verified) {
-        navigate('/home');
-        return;
-      }
+    initializedRef.current = true;
 
-      // 프로필이 이미 완성된 경우 (일반 가입 사용자) 바로 /home으로 이동
-      if (metadata.nickname && metadata.birthdate && appMetadata.phone_verified) {
-        navigate('/home');
-        return;
-      }
+    const metadata = user.user_metadata || {};
+    // 전화번호·인증 여부는 서버가 확정한 app_metadata 값만 신뢰한다.
+    const appMetadata = user.app_metadata || {};
+    const verifiedPhone = appMetadata.phone_verified ? appMetadata.phone || '' : '';
 
-      // 이메일로 기존 회원 조회 (profiles 테이블)
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, nickname, phone, email, birthdate')
-        .eq('email', user.email)
-        .maybeSingle();
+    setFormData(prev => ({
+      ...prev,
+      nickname: metadata.nickname || '',
+      birthdate: metadata.birthdate || '',
+      phone: verifiedPhone
+    }));
 
-      if (existingProfile && !profileError) {
-        // 기존 회원 발견 - 정보 자동 채우기 (수정 불가)
-        setIsExistingUser(true);
-        setExistingProfileId(existingProfile.id);
-        setFormData(prev => ({
-          ...prev,
-          nickname: existingProfile.nickname || '',
-          birthdate: existingProfile.birthdate || '',
-          phone: existingProfile.phone || ''
-        }));
-      } else {
-        // 신규 사용자 - 필드 비워두기
-        setFormData(prev => ({
-          ...prev,
-          nickname: '',
-          birthdate: '',
-          phone: ''
-        }));
-      }
+    // 이미 휴대전화 인증이 확정된 경우 인증 단계는 완료 상태로 표시
+    if (verifiedPhone) {
+      setSmsVerification(prev => ({
+        ...prev,
+        verified: true
+      }));
+    }
 
-      // 이미 전화번호 인증이 완료된 경우 (서버 확정값 기준)
-      if (appMetadata.phone_verified && (appMetadata.phone || metadata.phone)) {
-        setSmsVerification(prev => ({
-          ...prev,
-          verified: true
-        }));
-      }
-
-      setCheckingProfile(false);
-    };
-
-    checkProfile();
-  }, [user, authLoading, navigate]);
+    setCheckingProfile(false);
+  }, [user, authLoading, isProfileComplete, navigate]);
 
   // 전화번호 포맷팅 함수
   const formatPhoneNumber = (value) => {
@@ -168,18 +139,16 @@ const ProfileSetupPage = () => {
     setError('');
 
     try {
-      // 신규 소셜 로그인 사용자일 경우 전화번호 중복 체크
-      if (!isExistingUser) {
-        const { data: phoneTaken, error: phoneError } = await supabase
-          .rpc('phone_exists', { p_phone: formData.phone });
+      // 이미 다른 계정에서 인증된 전화번호인지 확인
+      const { data: phoneTaken, error: phoneError } = await supabase
+        .rpc('phone_exists', { p_phone: formData.phone });
 
-        if (phoneError) {
-          throw new Error('전화번호 확인 중 오류가 발생했습니다.');
-        }
+      if (phoneError) {
+        throw new Error('전화번호 확인 중 오류가 발생했습니다.');
+      }
 
-        if (phoneTaken) {
-          throw new Error('이미 가입된 전화번호입니다.');
-        }
+      if (phoneTaken) {
+        throw new Error('이미 가입된 전화번호입니다.');
       }
 
       const response = await fetch(
@@ -296,15 +265,18 @@ const ProfileSetupPage = () => {
     setLoading(true);
 
     try {
+      const appMeta = user?.app_metadata || {};
+      // 소셜 로그인 사용자만 간편 로그인 연동 완료로 표시한다.
+      const isSocialUser = !!appMeta.provider && appMeta.provider !== 'email';
+
       // Supabase user_metadata 업데이트
-      // phone_verified는 여기서 쓰지 않는다. 아래 confirm-phone이 서버에서 app_metadata에 확정한다.
+      // 전화번호·인증 여부는 여기서 쓰지 않는다. 아래 confirm-phone이 서버에서 확정한다.
       const { error } = await supabase.auth.updateUser({
         data: {
           nickname: formData.nickname,
           birthdate: formData.birthdate,
-          phone: formData.phone,
           profile_completed: true,
-          social_linked: true  // 간편 로그인 연동 완료 표시
+          ...(isSocialUser && { social_linked: true })
         }
       });
 
@@ -312,11 +284,10 @@ const ProfileSetupPage = () => {
 
       // 이미 서버에서 같은 전화번호로 인증 확정된 사용자는 confirm-phone 재호출을 건너뛴다.
       // (과거 인증 기록은 이미 소비되어 재확정이 실패하므로)
-      const appMeta = user?.app_metadata || {};
       const alreadyVerified = appMeta.phone_verified && appMeta.phone === formData.phone;
 
       if (!alreadyVerified) {
-        // 서버에서 휴대전화 인증을 확정한다 (app_metadata에 기록 → 클라이언트 위변조 방지).
+        // 서버에서 휴대전화 인증을 확정한다 (app_metadata·profiles.phone 기록 → 클라이언트 위변조 방지).
         const { data: confirmData, error: confirmError } = await supabase.functions.invoke(
           'confirm-phone',
           { body: { verificationId: smsVerification.verificationId } }
@@ -324,7 +295,12 @@ const ProfileSetupPage = () => {
 
         if (confirmError || !confirmData?.success) {
           console.error('휴대전화 인증 확정 실패:', confirmError || confirmData);
-          throw new Error('휴대전화 인증 확정에 실패했습니다. 다시 시도해주세요.');
+          const errorCode = await getFunctionErrorCode(confirmData, confirmError);
+          throw new Error(
+            errorCode === 'phone_taken'
+              ? '이미 다른 계정에서 인증된 전화번호입니다.'
+              : '휴대전화 인증 확정에 실패했습니다. 다시 시도해주세요.'
+          );
         }
 
         // 갱신된 app_metadata를 현재 세션에 반영
@@ -332,25 +308,17 @@ const ProfileSetupPage = () => {
         if (refreshError) console.error('세션 갱신 실패:', refreshError);
       }
 
-      // 기존 회원인 경우 profiles 테이블에 social_linked 업데이트
-      if (isExistingUser && existingProfileId) {
-        await supabase
-          .from('profiles')
-          .update({ social_linked: true })
-          .eq('id', existingProfileId);
-      } else {
-        // 신규 소셜 로그인 사용자인 경우 profiles 테이블에 저장
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: user.id,
-            email: user.email,
-            nickname: formData.nickname,
-            phone: formData.phone,
-            birthdate: formData.birthdate,
-            social_linked: true
-          });
-      }
+      // profiles 테이블 저장 (전화번호는 confirm-phone, 이메일은 가입 트리거가 서버에서 기록)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          nickname: formData.nickname,
+          birthdate: formData.birthdate,
+          ...(isSocialUser && { social_linked: true })
+        }, { onConflict: 'id' });
+
+      if (profileError) throw profileError;
 
       setSuccessMessage('프로필 설정이 완료되었습니다!');
       setTimeout(() => {
@@ -417,14 +385,6 @@ const ProfileSetupPage = () => {
               </div>
             )}
 
-            {/* 기존 회원 안내 메시지 */}
-            {isExistingUser && (
-              <div className="bg-blue-500/20 border border-blue-400 text-blue-100 px-4 py-2 rounded-lg text-xs text-center">
-                기존 회원 정보가 확인되었습니다.<br />
-                전화번호 인증을 완료해주세요.
-              </div>
-            )}
-
             {/* 이름 또는 닉네임 */}
             <div>
               <label className="block text-white text-sm font-medium mb-2">이름 또는 닉네임</label>
@@ -434,12 +394,7 @@ const ProfileSetupPage = () => {
                 value={formData.nickname}
                 onChange={handleChange}
                 required
-                disabled={isExistingUser}
-                className={`w-full px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
-                  isExistingUser
-                    ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
-                    : 'bg-white border-purple-500 focus:ring-purple-600'
-                }`}
+                className="w-full px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 bg-white border-purple-500 focus:ring-purple-600"
               />
             </div>
 
@@ -452,12 +407,7 @@ const ProfileSetupPage = () => {
                 value={formData.birthdate}
                 onChange={handleChange}
                 required
-                disabled={isExistingUser && formData.birthdate}
-                className={`w-full px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
-                  isExistingUser && formData.birthdate
-                    ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
-                    : 'bg-white border-purple-500 focus:ring-purple-600'
-                }`}
+                className="w-full px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 bg-white border-purple-500 focus:ring-purple-600"
               />
             </div>
 
@@ -474,9 +424,9 @@ const ProfileSetupPage = () => {
                     placeholder="010-1234-5678"
                     required
                     maxLength="13"
-                    disabled={smsVerification.verified || isExistingUser}
+                    disabled={smsVerification.verified}
                     className={`flex-1 min-w-0 px-4 py-3 text-sm rounded-lg text-gray-800 placeholder-gray-400 border-2 shadow-[inset_6px_6px_6px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 ${
-                      smsVerification.verified || isExistingUser
+                      smsVerification.verified
                         ? 'bg-gray-200 border-gray-400 cursor-not-allowed'
                         : 'bg-white border-purple-500 focus:ring-purple-600'
                     }`}

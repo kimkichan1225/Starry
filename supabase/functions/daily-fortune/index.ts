@@ -99,6 +99,14 @@ serve(async (req) => {
       );
     }
 
+    // 휴대전화 인증을 마친 계정만 이용 가능 (인증 없이 대량 생성한 계정으로 OpenAI 비용을 유발하는 것 방지)
+    if (String(user.app_metadata?.phone_verified) !== 'true') {
+      return new Response(
+        JSON.stringify({ error: '휴대전화 인증 후 이용할 수 있습니다.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { birthdate } = await req.json();
 
     // 입력 검증: YYYY-MM-DD 형식만 허용 (prompt injection / 과대 입력 방지)

@@ -28,10 +28,12 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 
 // 로그인 필요 라우트 가드 (미인증 시 로그인 화면으로)
+// 휴대전화 인증·프로필 설정을 마치지 않은 사용자는 프로필 설정 화면으로 보낸다 (관리자 제외)
 function RequireAuth({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isProfileComplete, isAdmin } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/" replace />;
+  if (!isProfileComplete && !isAdmin) return <Navigate to="/profile-setup" replace />;
   return children;
 }
 
