@@ -147,7 +147,6 @@ export function StarsProvider({ children }) {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('새 별 추가됨:', payload.new);
           const newStar = payload.new;
 
           setStars(prev => [...prev, newStar]);
@@ -176,7 +175,6 @@ export function StarsProvider({ children }) {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('별 삭제됨:', payload.old);
           const deletedId = payload.old.id;
 
           setStars(prev => prev.filter(star => star.id !== deletedId));
@@ -208,7 +206,6 @@ export function StarsProvider({ children }) {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('별 업데이트됨:', payload.new);
           const updatedStar = payload.new;
 
           setStars(prev => prev.map(star =>

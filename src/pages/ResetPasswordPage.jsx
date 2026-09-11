@@ -16,8 +16,6 @@ const ResetPasswordPage = () => {
   useEffect(() => {
     // Supabase auth 상태 변경 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event, session);
-
       if (event === 'PASSWORD_RECOVERY') {
         // 비밀번호 재설정 링크로 접근한 경우
         setIsValidSession(true);

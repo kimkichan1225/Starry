@@ -87,7 +87,8 @@ function App() {
 
           {/* 3D 밤하늘 */}
           <Route path="/sky" element={<RequireAuth><SkyPage /></RequireAuth>} />
-          <Route path="/sky-demo" element={<SkyDemoPage />} />
+          {/* 3D 밤하늘 데모는 개발 환경에서만 노출 */}
+          {import.meta.env.DEV && <Route path="/sky-demo" element={<SkyDemoPage />} />}
 
           {/* 추후 페이지 라우트 추가 예정 */}
           {/* <Route path="/login" element={<LoginPage />} /> */}

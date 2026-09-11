@@ -185,7 +185,8 @@ serve(async (req) => {
       {
         success: false,
         error: 'internal_error',
-        message: error instanceof Error ? error.message : '처리에 실패했습니다.',
+        // 내부 오류 원문은 서버 로그에만 남기고 클라이언트에는 고정 문구만 반환한다.
+        message: '처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
       },
       500
     );

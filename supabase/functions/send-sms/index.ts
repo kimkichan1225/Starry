@@ -238,8 +238,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Send SMS error:', error);
+    // 내부 오류 원문(환경변수 누락, SMS 업체 오류 등)은 서버 로그에만 남기고 클라이언트에는 고정 문구만 반환한다.
     return json(
-      { success: false, error: 'internal_error', message: error instanceof Error ? error.message : 'SMS 발송에 실패했습니다.' },
+      { success: false, error: 'internal_error', message: 'SMS 발송에 실패했습니다. 잠시 후 다시 시도해주세요.' },
       500
     );
   }

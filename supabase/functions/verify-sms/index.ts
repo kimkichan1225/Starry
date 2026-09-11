@@ -108,7 +108,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Verify SMS error:', error);
     return json(
-      { success: false, error: 'internal_error', message: error instanceof Error ? error.message : '인증 검증에 실패했습니다.' },
+      // 내부 오류 원문(환경변수 누락, DB 오류 등)은 서버 로그에만 남기고 클라이언트에는 고정 문구만 반환한다.
+      { success: false, error: 'internal_error', message: '인증 검증에 실패했습니다. 잠시 후 다시 시도해주세요.' },
       500
     );
   }

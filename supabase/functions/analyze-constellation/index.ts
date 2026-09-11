@@ -225,7 +225,9 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : '별자리 분석에 실패했습니다.' }), {
+    // 내부 오류 원문(OpenAI 오류 등)은 서버 로그에만 남기고 클라이언트에는 고정 문구만 반환한다.
+    console.error('analyze-constellation error:', error);
+    return new Response(JSON.stringify({ error: '별자리 분석에 실패했습니다. 잠시 후 다시 시도해주세요.' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

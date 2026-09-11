@@ -17,6 +17,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# 로컬 도구 설정 (Supabase CLI 링크 정보, Claude Code 로컬 권한)
+supabase/.temp/
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
